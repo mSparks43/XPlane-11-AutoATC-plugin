@@ -1,7 +1,7 @@
 #PLUGIN ?= AUTOATC
 #PLUGIN ?= JAVA
-#OS ?= WINDOWS64
-OS ?= LINUX
+OS ?= WINDOWS64
+#OS ?= LINUX
 #OS ?= MACOS
 TARGET          := AutoATC
 #TARGET          := Java
