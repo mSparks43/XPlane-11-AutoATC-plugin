@@ -1,8 +1,8 @@
 #PLUGIN ?= AUTOATC
 #PLUGIN ?= JAVA
-OS ?= WINDOWS64
+#OS ?= WINDOWS64
 #OS ?= LINUX
-#OS ?= MACOS
+OS ?= MACOS
 TARGET          := AutoATC
 #TARGET          := Java
 ifeq ($(OS), MACOS)
@@ -17,7 +17,7 @@ SOURCES = \
 	src/SettingsWidget.cpp \
 	src/datarefs.cpp
 
-LIBS = -FSDK/Libraries/Mac/ -framework XPLM -L/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/jre/lib/server -lstdc++ -framework OpenAL
+LIBS = -FSDK/Libraries/Mac/ -framework XPLM -framework XPWidgets -L/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/jre/lib/server -lstdc++ -framework OpenAL
 
 #-L/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/jre/lib/server \
 #        -l XPLM_64 -ljvm -lstdc++
@@ -234,10 +234,10 @@ TARGET		:= AutoATC
 
 SOURCES =\
 	src/AutoATCv0.8.7.cpp \
-	src/AIPlanesv0.6.cpp \
 	src/AISound.cpp \
 	src/jvm.cpp \
 	src/SettingsWidget.cpp \
+	src/AIPlanesv0.6.cpp \
 	src/datarefs.cpp
 
 LIBS = -LSDK/Libraries/Win/ -l XPLM_64 -l XPWidgets_64 -LSDK/Libraries/Win64/ -lOpenAL32

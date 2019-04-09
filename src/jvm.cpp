@@ -127,8 +127,11 @@ void JVM::activateJVM(void){
              createMenu();
             return;
         }
-        else
+        else{
             JNI_CreateJavaVM = (JNI_CreateJavaVM_t) dlsym(libnativehelper, "JNI_CreateJavaVM");
+            JNI_GetCreatedJavaVMs = (JNI_GetCreatedJavaVMs_t) dlsym(libnativehelper, "JNI_GetCreatedJavaVMs");
+            //JNI_AttachCurrentThread =(JNI_AttachCurrentThread_t)dlsym(libnativehelper, "AttachCurrentThread");
+        }
     sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm dll\n");
     XPLMDebugString(gBob_debstr2);
  #elif defined(_WIN64)
@@ -250,6 +253,25 @@ char *JVM::trim (char * s)
   /* Copy finished string */
   strcpy (s, s1);
   return s;
+}
+void JVM::testExistingJVM (){
+    jsize nVMs;
+    JNIEnv *local_env;
+    JNI_GetCreatedJavaVMs(NULL, 0, &nVMs); // 1. just get the required array length
+    JavaVM** jvms = new JavaVM*[nVMs];
+    JNI_GetCreatedJavaVMs(jvms, nVMs, &nVMs);
+    if(nVMs==1){
+        jvms[0]->AttachCurrentThread((void**)&local_env, NULL);
+         if(local_env == NULL)
+            printf("failed to attached \n");
+            else{
+                jclass apiClass = local_env->FindClass("api/XPJVMAPI");  // try to find the class
+                if(apiClass != NULL)
+                    printf("searched and found XPJVMAPI \n");
+                else
+                    printf("searched and NOT found XPJVMAPI \n");
+            }
+    }
 }
 void JVM::init_parameters ()
 {

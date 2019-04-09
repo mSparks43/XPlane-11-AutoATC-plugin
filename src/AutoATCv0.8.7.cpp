@@ -1,23 +1,4 @@
    
- // *************************************************
- // DRAW TERRAIN OBJECT
- //
- // This example illustrates drawing a terrain object that moves in relation to the aircraft.  In this case 
- // the object is located directly forward of the cockpit.  
- // 
- // For this example to work it is necessary to create an object in the aircraft folder.  Example:
- // "Aircraft/General Aviation/FP404/objects/TestObject.obj".  See line 143.
- //
- // To turn the object on and off it is nececssary to place generic triggers on the panel of your aircraft keyed 
- // to the command: BSUB/ShowObject/TestObject and BSUB/HideObject/TestObject.  
- //
- // Blue Side Up, 
- // Bob.  
- //
- // Bob@RogerThat.ca
- // 
- // *************************************************
- //cpp help https://stackoverflow.com/questions/14345031/confused-with-object-arrays-in-c 
  #include "XPLMPlugin.h"
 
  #include "XPLMGraphics.h"
@@ -224,6 +205,7 @@ void registerDatarefs();
     if(jvmO->hasjvm)
         {
             jvmO->broadcast();
+            //jvmO->testExistingJVM();
         }
      return 0;
  }

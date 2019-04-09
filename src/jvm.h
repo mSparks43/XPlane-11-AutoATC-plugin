@@ -34,6 +34,8 @@ public:
     int airframe;
 };
 typedef int (*JNI_CreateJavaVM_t)(void *, void *, void *);
+typedef jint (*JNI_GetCreatedJavaVMs_t)(JavaVM**, jsize, jsize*);
+typedef jint (*JNI_AttachCurrentThread_t)(JavaVM *vm, void **p_env, void *thr_args);
 float	SendATCData(
                                    float                inElapsedSinceLastCall,    
                                    float                inElapsedTimeSinceLastFlightLoop,    
@@ -51,6 +53,8 @@ private:
   
   JavaVM *jvm;                      // Pointer to the JVM (Java Virtual Machine)
   JNI_CreateJavaVM_t JNI_CreateJavaVM;
+  JNI_GetCreatedJavaVMs_t JNI_GetCreatedJavaVMs;
+  JNI_AttachCurrentThread_t JNI_AttachCurrentThread;
     // The index of our menu item in the Plugins menu
    bool log_visible;
    bool loginVR;
@@ -105,6 +109,7 @@ public:
     void updateAirframes();
     void toggleLogWindow();
     void getCommandData();
+    void testExistingJVM();
 };
 
 //static JVM jvmO;
