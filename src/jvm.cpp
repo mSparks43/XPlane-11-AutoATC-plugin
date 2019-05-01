@@ -389,10 +389,11 @@ void JVM::updateAirframes(void){
         }
         if(airframeDefs.size()==0){
             //we dont have any definitions
-            printf("no airframes found, using Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj as default\n");
-            XPLMDebugString("no airframes found, using Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj as default");
+            printf("no airframes found, using Resources/default scenery/airport scenery/Aircraft/General_Aviation/KingAirC90B.obj as default\n");
+            XPLMDebugString("no airframes found, using Resources/default scenery/airport scenery/Aircraft/General_Aviation/KingAirC90B.objj as default");
             AirframeDef def=AirframeDef();
-            def.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0");
+            //def.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0");
+            def.setData("Resources/default scenery/airport scenery/Aircraft/General_Aviation/KingAirC90B.obj,0.0,1,0");
             airframeDefs.push_back(def);
         }
     }
