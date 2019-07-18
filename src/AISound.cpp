@@ -359,6 +359,8 @@ void AircraftSounds::update(){
         v diff=apos-s;
         
         float dist=(diff/diff);//get the magnitude
+		if(aircrafts[i].data.engineoff)
+			dist=6000.0f;
         if(soundIndex==0){
 			for(int n=0;n<3;n++){
 				if(dist<jetsnd[n].dist){

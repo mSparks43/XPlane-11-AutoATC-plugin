@@ -12,7 +12,8 @@ public:
 	float		the;//pitch
 	float		phi;//roll
 	float		psi;//heading
-	float		gear_deploy[5];
+	float		gear_deploy;
+	bool		engineoff;
 	float		throttle[8];
 	clock_t		time;
 	double      remoteTimestamp;

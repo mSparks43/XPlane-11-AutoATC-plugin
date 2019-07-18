@@ -29,7 +29,7 @@ using namespace std;
  const char* plugin_version = "About:0.8.6.5b7";
 char gBob_debstr2[128];
 char xp_path[512];
-char* CONFIG_FILE_DEFAULT_AIRFRAMES ="Resources/plugins/java/airframes_860.txt";
+char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/java/airframes_860.txt";
  bool file_exists (const std::string& name);
  void				draw_atc_text(XPLMWindowID in_window_id, void * in_refcon);
 void				draw_about_text(XPLMWindowID in_window_id, void * in_refcon);
@@ -47,7 +47,7 @@ void menu_handler(void *, void *);
  XPLMDataRef  longitudeRef = NULL;
  XPLMDataRef  altitudeRef = NULL;
  XPLMDataRef  battery_onRef = NULL;
-
+XPLMDataRef  com1_onRef = NULL;
 XPLMDataRef  iasRef = NULL;
 XPLMDataRef gyroHeadingRef = NULL;
 XPLMDataRef altPressureRef = NULL;
@@ -166,7 +166,8 @@ void JVM::activateJVM(void){
      
         JavaVMInitArgs vm_args;                        // Initialization arguments
        JavaVMOption* options = new JavaVMOption[1];   // JVM invocation options
-       options[0].optionString = "-Djava.class.path=Resources/plugins/java/AutoATCPlugin.jar";   // where to find java .class
+       char opt[]= "-Djava.class.path=Resources/plugins/java/AutoATCPlugin.jar";
+       options[0].optionString = opt;//"-Djava.class.path=Resources/plugins/java/AutoATCPlugin.jar";   // where to find java .class
        vm_args.version = JNI_VERSION_1_6;             // minimum Java version
        vm_args.nOptions = 1;                          // number of options
        vm_args.options = options;
@@ -286,6 +287,7 @@ void JVM::init_parameters ()
     longitudeRef = XPLMFindDataRef("sim/flightmodel/position/longitude");
     altitudeRef = XPLMFindDataRef ("sim/flightmodel/position/elevation");
     battery_onRef = XPLMFindDataRef ("sim/cockpit/electrical/battery_on");
+    com1_onRef = XPLMFindDataRef ("sim/cockpit2/radios/actuators/com1_power");
     com1_freq_hzRef = XPLMFindDataRef ("sim/cockpit/radios/com1_freq_hz");
     com1_stdby_freq_hz = XPLMFindDataRef ("sim/cockpit/radios/com1_stdby_freq_hz");
     iasRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/airspeed_kts_pilot");
@@ -468,10 +470,6 @@ PlaneData JVM::getPlaneData(int id){
     retVal.timeStamp=element[8];
     retVal.airframe=(int)element[9];
     env->ReleaseDoubleArrayElements(jplanedata,element,0);
-    /*double v=planedata[0];*/
-    /*jsize index(0);
-    jdouble v = (jdouble)env->GetDoubleArrayElements(planedata,index);;*/
-    //retVal.the=v;
     return retVal;
 }
 void JVM::getCommandData(){
@@ -480,8 +478,6 @@ void JVM::getCommandData(){
     jstring jstr = (jstring) env->CallStaticObjectMethod(commandsClass, commandString);
     char buffer[1024];
     const char* nativeString = env->GetStringUTFChars(jstr, JNI_FALSE);
-    //char* astring=(char *)nativeString; 
-    //sprintf(Buffer, "%s",astring); 
     size_t length = strlen(nativeString);
     if(length>0){
        XPLMCommandRef cmd= XPLMFindCommand(nativeString);
@@ -535,8 +531,7 @@ void initJVM(){
 }
 
 JVM* getJVM(){
-    //if(jvmO==NULL)
-     //  XPLMDebugString("Fatal Error:JVM didn't persist");
+
     return &jvmO;
 }
 
@@ -544,8 +539,7 @@ void JVM::createMenu(){
     if(g_menu_container_idx==-1)
         g_menu_container_idx = XPLMAppendMenuItem(XPLMFindPluginsMenu(), "AutoATC", 0, 0);
 	g_menu_id = XPLMCreateMenu("AutoATC", XPLMFindPluginsMenu(), g_menu_container_idx, menu_handler, NULL);
-    //if(jvmO->hasjvm)
-    //    XPLMAppendMenuItem(g_menu_id, "Toggle AI Planes", (void *)"Menu Item 3", 1);
+
 	if(hasjvm){
         XPLMAppendMenuItem(g_menu_id, "Toggle Log", (void *)"Menu Item 1", 1);
     
@@ -651,25 +645,7 @@ void menu_handler(void * in_menu_ref, void * in_item_ref)
         else
             jvmO->popupNoJVM();
     }
-    /*if(!strcmp((const char *)in_item_ref, "Menu Item 3")){
-         if(jvmO->hasjvm){
-        if(!enabledATCPro){
-            char icao[256];
-            XPLMGetDatab(dr_plane_ICAO,icao,0,40);
-            jstring jstr = jvmO->getData(icao);
-            const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
-            char* astring=(char *)nativeString;   
-            jvmO->env->ReleaseStringUTFChars(jstr, nativeString);
-            initPlanes();
-            enabledATCPro=true;
-        }else{
-            stopPlanes();
-            enabledATCPro=false;
-        }
-         }
-        else
-            popupNoJVM();
-    }*/
+
     if(!strcmp((const char *)in_item_ref, "Menu Item 4"))
 	{
 		 
@@ -750,7 +726,8 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
     
     }
     else{
-        XPLMDrawString(col_white, l + 10, t - 20, "Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n", &ww, xplmFont_Proportional);
+        char text[]="Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n";
+        XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
 }
   void	draw_atc_text(XPLMWindowID in_window_id, void * in_refcon)
@@ -774,9 +751,6 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
     int ww=r-l;
     JVM* jvmO=getJVM();
     if(jvmO->hasjvm){
-       /* const char* myName = "Default";
-        char icao[256];
-        XPLMGetDatab(dr_plane_ICAO,icao,0,40);*/
         jstring jstr = jvmO->getData("Console");
         const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
     
@@ -786,7 +760,8 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
     
     }
     else{
-        XPLMDrawString(col_white, l + 10, t - 20, "Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n", &ww, xplmFont_Proportional);
+        char text[]="Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n";
+        XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
 }
 float SendATCData(float                inElapsedSinceLastCall,    
@@ -798,16 +773,8 @@ float SendATCData(float                inElapsedSinceLastCall,
     JVM* jvmO=getJVM();
     if(!jvmO->hasjvm)
         return 1;
-   /* if(!hot){
 
-        jvmO->start();
 
-        hot=true;
-    }*/
-    /*if(!battery_on&&hot){
-        jvmO->stop();
-        hot=false;
-    }*/
     if(jvmO->hasjvm){
         jfloat planeData[13]={};
         planeData[0]=(jfloat)(XPLMGetDatai(transponder_codeRef)*1.0);
@@ -823,10 +790,14 @@ float SendATCData(float                inElapsedSinceLastCall,
         planeData[10]=XPLMGetDataf(fpmRef);
         planeData[11]=XPLMGetDataf(pitchRef);
         planeData[12]=XPLMGetDataf(rollRef);
-        planeData[13]=(jfloat)(XPLMGetDatai(battery_onRef)*1.0);
+        planeData[13]=(jfloat)(XPLMGetDatai(com1_onRef)*XPLMGetDatai(battery_onRef)*1.0);
         jvmO->setData(planeData);
         PlaneData thisData=jvmO->getPlaneData(-1);
         jvmO->getCommandData();
+        if(!jvmO->setIcaov){
+            jvmO->setICAO();
+            jvmO->setIcaov=true;
+        }
         if(!enabledATCPro){
             
             if(thisData.live){ 
@@ -897,7 +868,7 @@ void JVM::popupNoJVM(){
 	
 	float col_white[] = {1.0, 1.0, 1.0}; // red, green, blue
     int ww=r-l;
-   
-        XPLMDrawString(col_white, l + 10, t - 20, "Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n", &ww, xplmFont_Proportional);
+        char text[]="Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n";
+        XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     
 }

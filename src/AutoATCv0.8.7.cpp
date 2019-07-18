@@ -55,8 +55,8 @@ XPLMCommandRef logViewCommand = NULL;
                         int                  inIsBefore,    
                         void *               inRefcon);*/
 
-char* CONFIG_FILE_DEFAULT ="Resources/plugins/java/defaultjvm.txt";
-char* CONFIG_FILE_USER ="Resources/plugins/java/jvmsettings.txt";
+char CONFIG_FILE_DEFAULT[] ="Resources/plugins/java/defaultjvm.txt";
+char CONFIG_FILE_USER[] ="Resources/plugins/java/jvmsettings.txt";
 
 //char* CONFIG_FILE_USER_AIRFRAMES ="Resources/plugins/java/airframes_user.txt";
  bool file_exists (const std::string& name) {
@@ -131,9 +131,6 @@ void registerDatarefs();
      
     registerDatarefs();
     jvmO->start();
-
-    
-       
   
      return 1;
  }

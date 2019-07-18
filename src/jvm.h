@@ -73,6 +73,7 @@ public:
     char lin[MAXLEN];
     char mac[MAXLEN];
     bool hasjvm;
+    bool setIcaov;
     bool loadedLibrary=false;
     JNIEnv *env;                      // Pointer to native interface
     jclass commandsClass;

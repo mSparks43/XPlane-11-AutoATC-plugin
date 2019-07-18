@@ -12,6 +12,7 @@ JVM* getJVM();//jvm.cpp
 static  XPWidgetID	w_window;
 static XPWidgetID jvmField;
 static XPWidgetID ipField;
+static XPWidgetID isSlaveField;
 static XPWidgetID setButton;
 static XPWidgetID testButton;
 static XPWidgetID resetButton;
@@ -31,11 +32,25 @@ void SettingsWidget::setIP(char * jvmBuffer,char *ipbuffer){
     char text[512];
     sprintf(text,"Apply %s\n",jvmBuffer);
      printf(text);
+     char com[512];
+     sprintf(com,"Network mobile:phone=%s",ipbuffer);
+      JVM* jvmO;
+      jvmO=getJVM();
+     jstring jstr = jvmO->getData(com);
      XPLMUnregisterFlightLoopCallback(displaySettingsStatus, NULL);
 	XPDestroyWidget(w_window, 1);
     hasSettingsWindow=false;
 }
-
+void SettingsWidget::setSlave(int isSlave){
+    char text[512];
+    sprintf(text,"Apply Slave %d\n",isSlave);
+     printf(text);
+    char com[512];
+     sprintf(com,"Network mobile:isSlave=%d",isSlave);
+      JVM* jvmO;
+      jvmO=getJVM();
+     jstring jstr = jvmO->getData(com);
+}
 
 void SettingsWidget::test(char * jvmBuffer,char *ipbuffer){
     /*char text[512];
@@ -192,14 +207,19 @@ XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Trans
 					1, "Device IP:", 0, w_window,
 					xpWidgetClass_Caption);
     //XPSetWidgetProperty(ipCaption, xpProperty_CaptionLit, 1);
-    ipField = XPCreateWidget(x+70, y-50, x2-20, y-60,
+    ipField = XPCreateWidget(x+70, y-50, x2-20, y-70,
 					1, "any", 0, w_window,
 					xpWidgetClass_TextField);
     XPSetWidgetProperty(ipField, xpProperty_TextFieldType, xpTextEntryField);
 	XPSetWidgetProperty(ipField, xpProperty_Enabled, 1);
     
-   
-    
+    isSlaveField = XPCreateWidget(x+10, y-70, x+50, y-100, 1, "", 0, w_window, xpWidgetClass_Button);
+    XPSetWidgetProperty(isSlaveField, xpProperty_ButtonType, xpButtonBehaviorCheckBox);
+    XPSetWidgetProperty(isSlaveField, xpProperty_ButtonBehavior, xpButtonBehaviorCheckBox);
+    XPSetWidgetProperty(isSlaveField, xpProperty_ButtonState, (long)0);
+    XPWidgetID isSlaveFieldCaption = XPCreateWidget(x+51, y-70, x+160, y-100,
+					1, "Extended Cockpit", 0, w_window,
+					xpWidgetClass_Caption);
 
     testButton = XPCreateWidget(x2-160, y-70, x2-100, y-90,
 					1, "Connect", 0, w_window,
@@ -266,6 +286,14 @@ int SettingsWidgetsHandler(
         }else if (inParam1 == (intptr_t)setButton)
         {
             settings.setIP(jvmBuffer,ipbuffer);
+            return 1;
+        }
+    }
+    if (inMessage == xpMsg_ButtonStateChanged){
+        if (inParam1 == (intptr_t)isSlaveField)
+        {
+            int tmp = (int)XPGetWidgetProperty(isSlaveField, xpProperty_ButtonState, NULL);
+            settings.setSlave(tmp);
             return 1;
         }
     }
