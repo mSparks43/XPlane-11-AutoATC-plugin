@@ -1,8 +1,8 @@
 #PLUGIN ?= AUTOATC
 #PLUGIN ?= JAVA
 #OS ?= WINDOWS64
-#OS ?= LINUX
-OS ?= MACOS
+OS ?= LINUX
+#OS ?= MACOS
 TARGET          := AutoATC
 #TARGET          := Java
 ifeq ($(OS), MACOS)
