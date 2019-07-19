@@ -72,6 +72,8 @@ public:
     char win[MAXLEN];
     char lin[MAXLEN];
     char mac[MAXLEN];
+    char device[MAXLEN];
+    char slave[MAXLEN];
     bool hasjvm;
     bool setIcaov;
     bool loadedLibrary=false;
@@ -110,6 +112,10 @@ public:
     void updateAirframes();
     void toggleLogWindow();
     void getCommandData();
+    char* getDevice();
+    long getisSlave();
+    void setDevice(char*);
+    void setisSlave(long);
     void testExistingJVM();
 };
 

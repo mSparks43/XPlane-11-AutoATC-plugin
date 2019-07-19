@@ -57,7 +57,7 @@ XPLMCommandRef logViewCommand = NULL;
 
 char CONFIG_FILE_DEFAULT[] ="Resources/plugins/java/defaultjvm.txt";
 char CONFIG_FILE_USER[] ="Resources/plugins/java/jvmsettings.txt";
-
+char CONFIG_FILE_ANDROID[] ="Resources/plugins/java/usermobilesettings.txt";
 //char* CONFIG_FILE_USER_AIRFRAMES ="Resources/plugins/java/airframes_user.txt";
  bool file_exists (const std::string& name) {
     if (FILE *file = fopen(name.c_str(), "r")) {
@@ -91,11 +91,8 @@ void registerDatarefs();
      else{
         jvmO->parse_config(CONFIG_FILE_DEFAULT);
     }
-    /*if(!file_exists(CONFIG_FILE_DEFAULT_AIRFRAMES))
-        XPLMDebugString("ERROR:AUTOATC Can't find airframes definitions");
-    else{
-        jvmO->parse_config(CONFIG_FILE_DEFAULT_AIRFRAMES);
-    }*/
+    if(file_exists(CONFIG_FILE_ANDROID))
+        jvmO->parse_config(CONFIG_FILE_ANDROID);
  
     jvmO->activateJVM();
    // jvmO->stop();

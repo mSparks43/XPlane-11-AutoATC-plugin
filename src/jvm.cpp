@@ -306,6 +306,8 @@ void JVM::init_parameters (char * jvmfilename)
   strncpy (win,jvmfilename, MAXLEN);
   strncpy (lin,jvmfilename, MAXLEN);
   strncpy (mac,jvmfilename, MAXLEN);
+  strncpy (device,"any", MAXLEN);
+  strncpy (slave,"0", MAXLEN);
   //airframeDefs.clear();
   XPLMGetSystemPath(xp_path);
 }
@@ -348,6 +350,10 @@ void JVM::parse_config (char * filename)
       strncpy (lin, value, MAXLEN);
     else if (strcmp(name, "mac")==0)
       strncpy (mac, value, MAXLEN);
+    else if (strcmp(name, "phone")==0)
+      strncpy (device, value, MAXLEN);
+    else if (strcmp(name, "isSlave")==0)
+      strncpy (slave, value, MAXLEN);
     else{
         /*sprintf(gBob_debstr2,"WARNING: %s/%s: Unknown name/value pair!\n",
         name, value);
@@ -848,7 +854,20 @@ void JVM::popupNoJVM(){
 	XPLMSetWindowTitle(g_window, "Java Error");
  }
  
+ char* JVM::getDevice(){
+     return device;
+ }
+ long JVM::getisSlave(){
+
+     return atol(slave);
+ }
+void JVM::setDevice( char* newdevice){
+    strncpy (device,newdevice, MAXLEN);
  
+ }
+ void JVM::setisSlave(long newslave){
+     sprintf(slave, "%ld", newslave);
+ }
   void	draw_jvm_text(XPLMWindowID in_window_id, void * in_refcon)
 {
 	// Mandatory: We *must* set the OpenGL state before drawing
@@ -872,3 +891,4 @@ void JVM::popupNoJVM(){
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     
 }
+

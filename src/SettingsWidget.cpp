@@ -50,6 +50,7 @@ void SettingsWidget::setSlave(int isSlave){
       JVM* jvmO;
       jvmO=getJVM();
      jstring jstr = jvmO->getData(com);
+     jvmO->setisSlave((long)isSlave);
 }
 
 void SettingsWidget::test(char * jvmBuffer,char *ipbuffer){
@@ -207,8 +208,9 @@ XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Trans
 					1, "Device IP:", 0, w_window,
 					xpWidgetClass_Caption);
     //XPSetWidgetProperty(ipCaption, xpProperty_CaptionLit, 1);
+    char* device=jvmO->getDevice();
     ipField = XPCreateWidget(x+70, y-50, x2-20, y-70,
-					1, "any", 0, w_window,
+					1, device, 0, w_window,
 					xpWidgetClass_TextField);
     XPSetWidgetProperty(ipField, xpProperty_TextFieldType, xpTextEntryField);
 	XPSetWidgetProperty(ipField, xpProperty_Enabled, 1);
@@ -216,12 +218,13 @@ XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Trans
     isSlaveField = XPCreateWidget(x+10, y-70, x+50, y-100, 1, "", 0, w_window, xpWidgetClass_Button);
     XPSetWidgetProperty(isSlaveField, xpProperty_ButtonType, xpButtonBehaviorCheckBox);
     XPSetWidgetProperty(isSlaveField, xpProperty_ButtonBehavior, xpButtonBehaviorCheckBox);
-    XPSetWidgetProperty(isSlaveField, xpProperty_ButtonState, (long)0);
+    long isSlave=jvmO->getisSlave();
+    XPSetWidgetProperty(isSlaveField, xpProperty_ButtonState, isSlave);
     XPWidgetID isSlaveFieldCaption = XPCreateWidget(x+51, y-70, x+160, y-100,
 					1, "Extended Cockpit", 0, w_window,
 					xpWidgetClass_Caption);
 
-    testButton = XPCreateWidget(x2-160, y-70, x2-100, y-90,
+    testButton = XPCreateWidget(x2-140, y-70, x2-80, y-90,
 					1, "Connect", 0, w_window,
 					xpWidgetClass_Button);
 
