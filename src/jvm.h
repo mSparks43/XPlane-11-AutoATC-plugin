@@ -92,6 +92,8 @@ public:
     void parse_config (char * filename);
     void activateJVM(void);
     void deactivateJVM(void);
+    void addSystemClassLoaderPath(const char* filePath);
+    bool connectJVM();
     char *trim (char * s);
 //class methods
     void start(void);

@@ -103,6 +103,154 @@ JVM::JVM(void)
 {
 
 }
+/*
+addSystemClassLoaderPath
+Adds a jar to an existing JVM connection
+Curtosy of 
+dpospisi
+Dominik Pospisil, Airfoillabs
+May 15 2019
+See
+https://forums.x-plane.org/index.php?/forums/topic/175706-sharing-the-jvm/
+*/
+void JVM::addSystemClassLoaderPath(const char* filePath) {
+    
+    // construct URL from file path
+    
+    jstring fpStr = env->NewStringUTF(filePath);
+        
+    jclass cls = env->FindClass("java/io/File");
+    jmethodID mtdId = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;)V");
+    jobject file = env->NewObject(cls, mtdId, fpStr);
+    
+    mtdId = env->GetMethodID(cls, "toURI", "()Ljava/net/URI;");
+    jobject uri = env->CallObjectMethod(file, mtdId);
+    
+    cls = env->FindClass("java/net/URI");
+    mtdId = env->GetMethodID(cls, "toURL", "()Ljava/net/URL;");
+    jobject url = env->CallObjectMethod(uri, mtdId);    
+        
+    // get system classloader
+    jclass classloaderClass = env->FindClass("java/lang/ClassLoader");
+    mtdId = env->GetStaticMethodID(classloaderClass, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
+    jobject sysClsLoader = env->CallStaticObjectMethod(classloaderClass, mtdId);
+        
+    // get addURL method 
+    jclass urlClassloaderClass = env->FindClass("java/net/URLClassLoader");
+    mtdId = env->GetMethodID(urlClassloaderClass, "addURL", "(Ljava/net/URL;)V");
+    
+    // add url
+    env->CallVoidMethod(sysClsLoader, mtdId, url);        
+}
+/*
+connectJVM
+Connect to an existing JVM or create a new on
+Curtosy of 
+dpospisi
+Dominik Pospisil, Airfoillabs
+May 15 2019
+(with modifications - mSparks, July 2019)
+See
+https://forums.x-plane.org/index.php?/forums/topic/175706-sharing-the-jvm/
+*/
+bool JVM::connectJVM() {
+    
+
+    //getcreatedjvms = (jint(*)(JavaVM**, jsize, jsize *)) dlsym(jvmlib, "JNI_GetCreatedJavaVMs");
+#if defined(__linux__)
+     sprintf(gBob_debstr2,"AutoATC:Loading jvm dll '%s' \n", lin);
+     XPLMDebugString(gBob_debstr2);
+     libnativehelper = dlopen(lin, RTLD_NOW);//"libjvm.so"
+        if (libnativehelper==NULL) {
+            hasjvm=false;
+            dlerror();
+            popupNoJVM();
+             createMenu();
+            return false;
+        }
+        else{
+            JNI_CreateJavaVM = (JNI_CreateJavaVM_t) dlsym(libnativehelper, "JNI_CreateJavaVM");
+            JNI_GetCreatedJavaVMs = (JNI_GetCreatedJavaVMs_t) dlsym(libnativehelper, "JNI_GetCreatedJavaVMs");
+        }
+    sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm .so\n");
+    XPLMDebugString(gBob_debstr2);
+ #elif defined(_WIN64)
+  sprintf(gBob_debstr2,"AutoATC:Loading jvm dll '%s' \n", win);
+     XPLMDebugString(gBob_debstr2);
+     SetErrorMode(0); 
+    libnativehelper = LoadLibraryA(win); //"jvm.dll"
+    if (!libnativehelper) {
+            hasjvm=false;
+            popupNoJVM();
+             createMenu();
+            return false;
+     }
+    else{
+        sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm dll\n");
+        JNI_CreateJavaVM = (JNI_CreateJavaVM_t) GetProcAddress(libnativehelper, "JNI_CreateJavaVM");
+        JNI_GetCreatedJavaVMs = (JNI_GetCreatedJavaVMs_t) GetProcAddress(libnativehelper, "JNI_GetCreatedJavaVMs");
+    }
+    sprintf(gBob_debstr2,"AutoATC:found CreateJavaVM\n");
+    XPLMDebugString(gBob_debstr2);
+#elif defined(__APPLE__)
+    libnativehelper = dlopen(mac, RTLD_NOW);//"/usr/local/jre/lib/server/libjvm.dylib"
+    if (!libnativehelper) {
+        hasjvm=false;
+        dlerror();
+        popupNoJVM();
+         createMenu();
+          return false;
+     }
+      else{
+          JNI_CreateJavaVM = (JNI_CreateJavaVM_t) dlsym(libnativehelper, "JNI_CreateJavaVM");
+          JNI_GetCreatedJavaVMs = (JNI_GetCreatedJavaVMs_t) dlsym(libnativehelper, "JNI_GetCreatedJavaVMs");
+    }
+    sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm .so\n");
+    XPLMDebugString(gBob_debstr2);
+#endif
+    jsize nVMs;
+    JNI_GetCreatedJavaVMs(NULL, 0, &nVMs); // 1. just get the required array length
+    JavaVM** jvms = new JavaVM*[nVMs];
+    JNI_GetCreatedJavaVMs(jvms, nVMs, &nVMs);
+
+    if (nVMs > 0) {
+        sprintf(gBob_debstr2,"AutoATC:JVM already created!\n");
+        XPLMDebugString(gBob_debstr2);      
+       //env = jvms[0];
+        
+        jint jret = jvms[0]->GetEnv((void**) &env, JNI_VERSION_1_6);
+        
+        if (jret == JNI_EDETACHED) {
+            sprintf(gBob_debstr2,"AutoATC:JVM detached!\n");
+            XPLMDebugString(gBob_debstr2);          
+            return false;
+        }
+        if (jret != JNI_OK) {
+            sprintf(gBob_debstr2,"AutoATC:JVM GetEnv failed:%d\n",jret);
+            XPLMDebugString(gBob_debstr2);          
+            return false;            
+        }
+        jint ver = env->GetVersion();
+        sprintf(gBob_debstr2,"AutoATC:Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
+        XPLMDebugString(gBob_debstr2);                
+        return true;
+    }
+    else{
+        //no existing JVM, make a new one
+        JavaVMInitArgs vm_args;                        // Initialization arguments
+       vm_args.version = JNI_VERSION_1_6;             // minimum Java version
+       vm_args.nOptions = 0;                          // number of options
+       vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
+           //=============== load and initialize Java VM and JNI interface =============
+       jint rc = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);  // YES !!
+      
+      
+       jint ver = env->GetVersion();
+       sprintf(gBob_debstr2,"AutoATC:Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
+       XPLMDebugString(gBob_debstr2);
+       return true;
+    }
+}
 void JVM::deactivateJVM(void){
     if(hasjvm){
         stop();
@@ -116,69 +264,10 @@ void JVM::activateJVM(void){
     
     hasjvm=false;
     if(!loadedLibrary){
-#if defined(__linux__)
-     sprintf(gBob_debstr2,"AutoATC:Loading jvm dll '%s' \n", lin);
-     XPLMDebugString(gBob_debstr2);
-     libnativehelper = dlopen(lin, RTLD_NOW);//"libjvm.so"
-        if (libnativehelper==NULL) {
-            hasjvm=false;
-            dlerror();
-            popupNoJVM();
-             createMenu();
+        if(!connectJVM())
             return;
-        }
-        else{
-            JNI_CreateJavaVM = (JNI_CreateJavaVM_t) dlsym(libnativehelper, "JNI_CreateJavaVM");
-            JNI_GetCreatedJavaVMs = (JNI_GetCreatedJavaVMs_t) dlsym(libnativehelper, "JNI_GetCreatedJavaVMs");
-            //JNI_AttachCurrentThread =(JNI_AttachCurrentThread_t)dlsym(libnativehelper, "AttachCurrentThread");
-        }
-    sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm dll\n");
-    XPLMDebugString(gBob_debstr2);
- #elif defined(_WIN64)
-  sprintf(gBob_debstr2,"AutoATC:Loading jvm dll '%s' \n", win);
-     XPLMDebugString(gBob_debstr2);
-     SetErrorMode(0); 
-    libnativehelper = LoadLibraryA(win); //"jvm.dll"
-    if (!libnativehelper) {
-            hasjvm=false;
-            popupNoJVM();
-             createMenu();
-            return;
-     }
-    else{
-        sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm dll\n");
-        JNI_CreateJavaVM = (JNI_CreateJavaVM_t) GetProcAddress(libnativehelper, "JNI_CreateJavaVM");
-    }
-    sprintf(gBob_debstr2,"AutoATC:found CreateJavaVM\n");
-    XPLMDebugString(gBob_debstr2);
-#elif defined(__APPLE__)
-    libnativehelper = dlopen(mac, RTLD_NOW);//"/usr/local/jre/lib/server/libjvm.dylib"
-    if (!libnativehelper) {
-            hasjvm=false;
-            dlerror();
-            popupNoJVM();
-             createMenu();
-            return;
-        }
-        else
-        JNI_CreateJavaVM = (JNI_CreateJavaVM_t) dlsym(libnativehelper, "JNI_CreateJavaVM");
-#endif
-     
-        JavaVMInitArgs vm_args;                        // Initialization arguments
-       JavaVMOption* options = new JavaVMOption[1];   // JVM invocation options
-       char opt[]= "-Djava.class.path=Resources/plugins/java/AutoATCPlugin.jar";
-       options[0].optionString = opt;//"-Djava.class.path=Resources/plugins/java/AutoATCPlugin.jar";   // where to find java .class
-       vm_args.version = JNI_VERSION_1_6;             // minimum Java version
-       vm_args.nOptions = 1;                          // number of options
-       vm_args.options = options;
-       vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
-           //=============== load and initialize Java VM and JNI interface =============
-       jint rc = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);  // YES !!
-       delete options;    // we then no longer need the initialisation options. 
-      
-       jint ver = env->GetVersion();
-       sprintf(gBob_debstr2,"Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
-       XPLMDebugString(gBob_debstr2);
+        addSystemClassLoaderPath("Resources/plugins/java/AutoATCPlugin.jar");
+        connectJVM();
        
        commandsClass = env->FindClass("jni/Commands");  // try to find the class
     if(commandsClass == NULL) {
