@@ -267,7 +267,7 @@ void JVM::activateJVM(void){
         if(!connectJVM())
             return;
         addSystemClassLoaderPath("Resources/plugins/java/AutoATCPlugin.jar");
-        connectJVM();
+
        
        commandsClass = env->FindClass("jni/Commands");  // try to find the class
     if(commandsClass == NULL) {
