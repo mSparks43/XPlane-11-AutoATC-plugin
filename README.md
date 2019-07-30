@@ -5,9 +5,9 @@ Requires the rest of the plugin available from
 https://forums.x-plane.org/index.php?/files/file/45663-main-installation-files-for-autoatc-for-xplane-11/
 
 2 android companion applications are available.
-Free:
+# Free:
 https://play.google.com/store/apps/details?id=org.zem.atctrans
-Paid:
+# Paid:
 https://play.google.com/store/apps/details?id=org.zem.atctranspro
 
 makefile for Linux/Windows and Mac
