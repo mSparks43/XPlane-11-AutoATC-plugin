@@ -144,7 +144,7 @@ void JVM::addSystemClassLoaderPath(const char* filePath) {
 }
 /*
 connectJVM
-Connect to an existing JVM or create a new on
+Connect to an existing JVM or create a new one
 Curtosy of 
 dpospisi
 Dominik Pospisil, Airfoillabs
@@ -205,6 +205,7 @@ bool JVM::connectJVM() {
           JNI_CreateJavaVM = (JNI_CreateJavaVM_t) dlsym(libnativehelper, "JNI_CreateJavaVM");
           JNI_GetCreatedJavaVMs = (JNI_GetCreatedJavaVMs_t) dlsym(libnativehelper, "JNI_GetCreatedJavaVMs");
     }
+    
     sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm .so\n");
     XPLMDebugString(gBob_debstr2);
 #endif
@@ -315,7 +316,7 @@ void JVM::activateJVM(void){
     }
     else{
         printf("AutoATC active !\n");
-         hasjvm=true;
+         //hasjvm=true;
     }
     }
 catch(...){
