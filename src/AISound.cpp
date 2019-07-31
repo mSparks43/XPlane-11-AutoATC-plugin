@@ -336,7 +336,7 @@ void AircraftSounds::update(){
     XPLMCameraPosition_t camera;
     XPLMReadCameraPosition(&camera);
     ALfloat	zero[3] = { 0,0,0 } ;//sin(camera.heading*PI/180.0)
-    ALfloat	listenerOri[]={sin(camera.heading*PI/180.0),0.0,cos(camera.heading*PI/180.0), 0.0,-1.0,0.0};	// Listener facing into the screen
+    ALfloat	listenerOri[]={(ALfloat)sin(camera.heading*PI/180.0f),0.0f,(ALfloat)cos(camera.heading*PI/180.0f), 0.0f,-1.0f,0.0f};	// Listener facing into the screen
     alListenerfv(AL_POSITION,zero);
     alListenerfv(AL_VELOCITY,zero);
     alListenerfv(AL_ORIENTATION,listenerOri); 	// Orientation ...
