@@ -36,7 +36,7 @@ void SettingsWidget::setIP(char * jvmBuffer,char *ipbuffer){
      sprintf(com,"Network mobile:phone=%s",ipbuffer);
       JVM* jvmO;
       jvmO=getJVM();
-     jstring jstr = jvmO->getData(com);
+     jvmO->getData(com);
      XPLMUnregisterFlightLoopCallback(displaySettingsStatus, NULL);
 	XPDestroyWidget(w_window, 1);
     hasSettingsWindow=false;
@@ -49,7 +49,7 @@ void SettingsWidget::setSlave(int isSlave){
      sprintf(com,"Network mobile:isSlave=%d",isSlave);
       JVM* jvmO;
       jvmO=getJVM();
-     jstring jstr = jvmO->getData(com);
+     jvmO->getData(com);
      jvmO->setisSlave((long)isSlave);
 }
 
@@ -83,11 +83,11 @@ void SettingsWidget::test(char * jvmBuffer,char *ipbuffer){
                 sprintf(com,"Network path:mac=%s",jvmBuffer);
             #endif
              
-             jstring jstr = jvmO->getData(com);
+            jvmO->getData(com);
          }
           jvmO->start();
             sprintf(com,"Network mobile:phone=%s",ipbuffer);
-             jstring jstr = jvmO->getData(com);
+            jvmO->getData(com);
      }catch(...){
 		printf("Exception during JVM test\n");
 		return;
@@ -186,7 +186,7 @@ XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Trans
   //  XPSetWidgetProperty(w_bottom, xpProperty_SubWindowType, xpMainWindowStyle_Translucent);
        XPAddWidgetCallback(w_window, SettingsWidgetsHandler); 
 
-    XPWidgetID jvmCaption = XPCreateWidget(x+10, y-20, x+60, y-40,
+    XPCreateWidget(x+10, y-20, x+60, y-40,
 					1, "JVM:", 0, w_window,
 					xpWidgetClass_Caption);
 //XPSetWidgetProperty(jvmCaption, xpProperty_CaptionLit, 1);
@@ -204,7 +204,7 @@ XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Trans
     XPSetWidgetProperty(jvmField, xpProperty_TextFieldType, xpTextEntryField);
 	XPSetWidgetProperty(jvmField, xpProperty_Enabled, !jvmO->loadedLibrary);
 
-    XPWidgetID ipCaption = XPCreateWidget(x+10, y-50, x+60, y-60,
+    XPCreateWidget(x+10, y-50, x+60, y-60,
 					1, "Device IP:", 0, w_window,
 					xpWidgetClass_Caption);
     //XPSetWidgetProperty(ipCaption, xpProperty_CaptionLit, 1);
@@ -220,7 +220,7 @@ XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Trans
     XPSetWidgetProperty(isSlaveField, xpProperty_ButtonBehavior, xpButtonBehaviorCheckBox);
     long isSlave=jvmO->getisSlave();
     XPSetWidgetProperty(isSlaveField, xpProperty_ButtonState, isSlave);
-    XPWidgetID isSlaveFieldCaption = XPCreateWidget(x+51, y-70, x+160, y-100,
+    XPCreateWidget(x+51, y-70, x+160, y-100,
 					1, "Extended Cockpit", 0, w_window,
 					xpWidgetClass_Caption);
 

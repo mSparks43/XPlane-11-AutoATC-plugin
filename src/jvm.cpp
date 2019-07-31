@@ -257,13 +257,13 @@ void JVM::deactivateJVM(void){
         stop();
         destroyMenu(); 
     }   
-    hasjvm=false;  
+    //hasjvm=false;  
 }
 void JVM::activateJVM(void){
     destroyMenu();
     try{
     
-    hasjvm=false;
+    //hasjvm=false;
     if(!loadedLibrary){
         if(!connectJVM())
             return;
@@ -310,17 +310,23 @@ void JVM::activateJVM(void){
             return;
         }
         printf("AutoATC active !\n");
+        sprintf(gBob_debstr2,"AutoATC active !\n");
+         XPLMDebugString(gBob_debstr2); 
          hasjvm=true;
     }
     loadedLibrary=true;
     }
     else{
         printf("AutoATC active !\n");
+        sprintf(gBob_debstr2,"AutoATC active !\n");
+         XPLMDebugString(gBob_debstr2);  
          //hasjvm=true;
     }
     }
 catch(...){
 		printf("Exception during JVM test\n");
+        sprintf(gBob_debstr2,"Exception during JVM test\n");
+         XPLMDebugString(gBob_debstr2);  
 		return;
 	}  
     createMenu();
@@ -872,7 +878,7 @@ float SendATCData(float                inElapsedSinceLastCall,
 
 
     if(jvmO->hasjvm){
-        jfloat planeData[13]={};
+        jfloat planeData[14]={};
         planeData[0]=(jfloat)(XPLMGetDatai(transponder_codeRef)*1.0);
         planeData[1]=XPLMGetDataf(latitudeRef);
         planeData[2]=XPLMGetDataf(longitudeRef);

@@ -469,7 +469,7 @@ void AircraftSounds::start()
     live=false;
     CHECK_ERR();
 
-	char buf[2048];
+	//char buf[2048];
 	
 	// We have to save the old context and restore it later, so that we don't interfere with X-Plane
 	// and other plugins.
