@@ -24,7 +24,6 @@
 #include "Settings.h"
 
 
-
 char gBob_debstr[128];
 
  
@@ -34,19 +33,34 @@ char gBob_debstr[128];
 XPLMCommandRef nextComCommand = NULL;
 XPLMCommandRef prevComCommand = NULL;
 XPLMCommandRef logViewCommand = NULL;
-  int	TriggerBroadcastHandler(XPLMCommandRef   inCommand,    
+XPLMCommandRef logPageCommand = NULL;
+XPLMCommandRef playpauseCommand = NULL;
+XPLMCommandRef playnextCommand = NULL;
+XPLMCommandRef playbackCommand = NULL;
+ int TriggerBroadcastHandler(XPLMCommandRef   inCommand,    
                             XPLMCommandPhase      inPhase,    
                             void *                inRefcon);
-  int	nextComHandler(XPLMCommandRef   inCommand,    
+ int nextComHandler(XPLMCommandRef   inCommand,    
                             XPLMCommandPhase      inPhase,    
                             void *                inRefcon);
- int	prevComHandler(XPLMCommandRef   inCommand,    
+ int prevComHandler(XPLMCommandRef   inCommand,    
                             XPLMCommandPhase      inPhase,    
                             void *                inRefcon);
-  int	logViewHandler(XPLMCommandRef   inCommand,    
+ int logViewHandler(XPLMCommandRef   inCommand,    
                             XPLMCommandPhase      inPhase,    
                             void *                inRefcon);
- 
+ int logPageHandler(XPLMCommandRef   inCommand,    
+                            XPLMCommandPhase      inPhase,    
+                            void *                inRefcon);
+ int playpauseCommandHandler(XPLMCommandRef   inCommand,    
+                            XPLMCommandPhase      inPhase,    
+                            void *                inRefcon);
+ int playnextCommandCommandHandler(XPLMCommandRef   inCommand,    
+                            XPLMCommandPhase      inPhase,    
+                            void *                inRefcon);
+ int playbackCommandCommandHandler(XPLMCommandRef   inCommand,    
+                            XPLMCommandPhase      inPhase,    
+                            void *                inRefcon);
 // Callbacks we will register when we create our window
 
  
@@ -95,7 +109,7 @@ void registerDatarefs();
         jvmO->parse_config(CONFIG_FILE_ANDROID);
  
     jvmO->activateJVM();
-   // jvmO->stop();
+
      BroadcastObjectCommand = XPLMCreateCommand("AutoATC/Transmit", "Transmit");
 
     XPLMRegisterCommandHandler(BroadcastObjectCommand,          // in Command name
@@ -123,6 +137,31 @@ void registerDatarefs();
                             logViewHandler,       // in Handler
                             1,                              // Receive input before plugin windows.
                             (void *) 0);                    // inRefcon. */
+    logPageCommand = XPLMCreateCommand("AutoATC/nextLog", "Next Log Page");
+
+    XPLMRegisterCommandHandler(logPageCommand,          // in Command name
+                            logPageHandler,       // in Handler
+                            1,                              // Receive input before plugin windows.
+                            (void *) 0);                    // inRefcon. */
+
+    playpauseCommand = XPLMCreateCommand("AutoATC/playpause", "Play Music");
+
+    XPLMRegisterCommandHandler(playpauseCommand,          // in Command name
+                            playpauseCommandHandler,       // in Handler
+                            1,                              // Receive input before plugin windows.
+                            (void *) 0);                    // inRefcon. */
+    playnextCommand = XPLMCreateCommand("AutoATC/playnext", "Next Track");
+
+    XPLMRegisterCommandHandler(playnextCommand,          // in Command name
+                            playnextCommandCommandHandler,       // in Handler
+                            1,                              // Receive input before plugin windows.
+                            (void *) 0);   
+    playbackCommand = XPLMCreateCommand("AutoATC/playback", "Previous Track");
+
+    XPLMRegisterCommandHandler(playbackCommand,          // in Command name
+                            playbackCommandCommandHandler,       // in Handler
+                            1,                              // Receive input before plugin windows.
+                            (void *) 0);  
      com1_freq_hzRef = XPLMFindDataRef ("sim/cockpit/radios/com1_freq_hz");
     com1_stdby_freq_hz = XPLMFindDataRef ("sim/cockpit/radios/com1_stdby_freq_hz");
      
@@ -242,7 +281,7 @@ void registerDatarefs();
      }
      return 0;
  }
-    int    logViewHandler(XPLMCommandRef     inCommand,    
+int    logViewHandler(XPLMCommandRef     inCommand,    
                                    XPLMCommandPhase    inPhase,    
                                    void *              inRefcon)
  {
@@ -252,6 +291,44 @@ void registerDatarefs();
      }
      return 0;
  }
-
-
+ int    logPageHandler(XPLMCommandRef     inCommand,    
+                                   XPLMCommandPhase    inPhase,    
+                                   void *              inRefcon)
+ {
+     if(inPhase==xplm_CommandBegin){
+     JVM* jvmO=getJVM();
+     jvmO->LogPageWindowPlus();
+     }
+     return 0;
+ }
+ int    playpauseCommandHandler(XPLMCommandRef     inCommand,    
+                                   XPLMCommandPhase    inPhase,    
+                                   void *              inRefcon)
+ {
+     if(inPhase==xplm_CommandBegin){
+     JVM* jvmO=getJVM();
+     jvmO->getData("doCommand:playpause");
+     }
+     return 0;
+ }
+ int    playnextCommandCommandHandler(XPLMCommandRef     inCommand,    
+                                   XPLMCommandPhase    inPhase,    
+                                   void *              inRefcon)
+ {
+     if(inPhase==xplm_CommandBegin){
+     JVM* jvmO=getJVM();
+     jvmO->getData("doCommand:nextTrack");
+     }
+     return 0;
+ }
+ int    playbackCommandCommandHandler(XPLMCommandRef     inCommand,    
+                                   XPLMCommandPhase    inPhase,    
+                                   void *              inRefcon)
+ {
+     if(inPhase==xplm_CommandBegin){
+     JVM* jvmO=getJVM();
+     jvmO->getData("doCommand:backTrack");
+     }
+     return 0;
+ }
   

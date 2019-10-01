@@ -45,7 +45,8 @@ class AircraftSounds
     ALCcontext *		my_ctx		= NULL;
     bool live;
     AircraftSound landsnd;
-    AircraftSound snd2;
+    AircraftSound propsnd;
+    AircraftSound helisnd;
     AircraftSound jetsnd[3];
    // AircraftSound landsnd;
     Aircraft *aircrafts;

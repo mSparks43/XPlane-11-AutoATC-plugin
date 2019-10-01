@@ -25,7 +25,7 @@
  #include <dlfcn.h>
  #include <stdlib.h>
  #endif
-using namespace std;
+
  const char* plugin_version = "About:0.8.6.5b7";
 char gBob_debstr2[128];
 char xp_path[512];
@@ -243,7 +243,7 @@ bool JVM::connectJVM() {
        vm_args.nOptions = 0;                          // number of options
        vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
            //=============== load and initialize Java VM and JNI interface =============
-       jint rc = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);  // YES !!
+       JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);  // YES !!
       
       
        jint ver = env->GetVersion();
@@ -395,6 +395,11 @@ void JVM::init_parameters ()
     rollRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/roll_vacuum_deg_pilot");
     standbyAirframe=AirframeDef();
     standbyAirframe.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0");
+    std::ifstream t("Resources/plugins/AutoATC/notepad.txt");
+    std::stringstream notepadss;
+    notepadss << t.rdbuf();
+    sprintf(notepad,notepadss.str().c_str());
+    XPLMDebugString(notepad);
 }
 void JVM::init_parameters (char * jvmfilename)
 {
@@ -552,7 +557,7 @@ PlaneData JVM::getPlaneData(int id){
     }
     jdoubleArray    jplanedata   = (jdoubleArray) env->CallStaticObjectMethod( commandsClass, getPlaneDataMethod,id-1 );
     jdouble *element = env->GetDoubleArrayElements(jplanedata, 0);
-    jsize len = env->GetArrayLength(jplanedata);
+   // jsize len = env->GetArrayLength(jplanedata);
     /*double v=element[0];
     retVal.phi=(float)v;*/
     if(element[0]==0&&element[1]==0&&element[2]==0)
@@ -578,7 +583,7 @@ void JVM::getCommandData(){
     if(!hasjvm)
         return;
     jstring jstr = (jstring) env->CallStaticObjectMethod(commandsClass, commandString);
-    char buffer[1024];
+    //char buffer[1024];
     const char* nativeString = env->GetStringUTFChars(jstr, JNI_FALSE);
     size_t length = strlen(nativeString);
     if(length>0){
@@ -662,7 +667,7 @@ void JVM::destroyMenu(){
         XPLMUnregisterFlightLoopCallback(SendATCData, NULL);
 }
 void JVM::setICAO(){
-    JVM* jvmO=getJVM();
+   //JVM* jvmO=getJVM();
     char icao[256];
     XPLMDataRef	dr_plane_ICAO = XPLMFindDataRef ("sim/aircraft/view/acf_ICAO");
     XPLMGetDatab(dr_plane_ICAO,icao,0,40);
@@ -670,8 +675,11 @@ void JVM::setICAO(){
     jstring jstr = getData(icao);
 
     const char* nativeString = env->GetStringUTFChars(jstr, JNI_FALSE);
-    char* astring=(char *)nativeString;   
+   // char* astring=(char *)nativeString;   
     env->ReleaseStringUTFChars(jstr, nativeString);
+}
+void JVM::LogPageWindowPlus(){
+    logPage=!logPage;
 }
 void JVM::toggleLogWindow(){
     XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
@@ -715,7 +723,7 @@ void JVM::toggleLogWindow(){
             XPLMSetWindowPositioningMode(log_window, xplm_WindowPositionFree, -1);
         // Limit resizing our window: maintain a minimum width/height of 100 boxels and a max width/height of 300 boxels
         XPLMSetWindowResizingLimits(log_window, 200, 200, 500, 500);
-        XPLMSetWindowTitle(log_window, "AutoATC Log");
+        XPLMSetWindowTitle(log_window, "AutoATC Pad");
         log_visible=true;
     }
     else if(!log_visible){
@@ -856,7 +864,12 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
         jstring jstr = jvmO->getData("Console");
         const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
     
-        char* astring=(char *)nativeString;   
+        //char* astring=(char *)nativeString; 
+        char* astring;
+        if(jvmO->logPage)
+           astring =(char *)jvmO->notepad; 
+        else
+            astring=(char *)nativeString; 
 	    XPLMDrawString(col_white, l + 10, t - 20, astring, &ww, xplmFont_Proportional);
         jvmO->env->ReleaseStringUTFChars(jstr, nativeString);
     

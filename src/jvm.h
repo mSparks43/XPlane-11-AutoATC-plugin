@@ -3,6 +3,8 @@
  #include "XPLMMenus.h"
   #include "XPLMDisplay.h"
    #include "XPLMDataAccess.h"
+   #include <sstream>
+#include <fstream>
 #define MAXLEN 255
 class AirframeDef{
     private:
@@ -66,6 +68,7 @@ private:
    #elif defined(__APPLE__)
    void *libnativehelper;
    #endif
+   
 public:
     XPLMMenuID g_menu_id;
     int g_menu_container_idx=-1;
@@ -77,6 +80,7 @@ public:
     bool hasjvm;
     bool setIcaov;
     bool loadedLibrary=false;
+    bool logPage;
     JNIEnv *env;                      // Pointer to native interface
     jclass commandsClass;
     jmethodID getPlaneDataMethod;
@@ -86,6 +90,8 @@ public:
     jmethodID commandString;
     jmethodID getStndbyMethod;
     AirframeDef standbyAirframe;
+    
+    char notepad[1024];
     JVM();
     void init_parameters (void);
     void init_parameters (char * jvmfilename);
@@ -113,6 +119,7 @@ public:
     void setICAO();
     void updateAirframes();
     void toggleLogWindow();
+    void LogPageWindowPlus();
     void getCommandData();
     char* getDevice();
     long getisSlave();

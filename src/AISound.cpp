@@ -23,7 +23,7 @@
  #include "aiplane.h"
 #include "AISound.h"
 #define PI 3.14159265
-using namespace std;
+
 WaveFile::WaveFile(){
 
 }
@@ -50,8 +50,8 @@ char * WaveFile::chunk_end(char * chunk_start, int swapped)
 	return chunk_start + (swapped ? SWAP_32(h->size) : h->size);
 }
 int sound_id=0;
-ALuint buffers[3];
-ALuint snd_srcs[5];
+ALuint buffers[4];
+ALuint snd_srcs[6];
 ALuint WaveFile::load_wave(const char * file_name)
 {
 	// First: we open the file and copy it into a single large memory buffer for processing.
@@ -157,7 +157,7 @@ ALuint WaveFile::load_wave(const char * file_name)
 	//ALuint buf_id = buffers[sound_id];
 	//CHECK_ERR();
 	if(sound_id==0)
-	alGenBuffers(3, buffers);
+		alGenBuffers(4, buffers);
 	//CHECK_ERR();
 	if(buffers[sound_id] == 0) FAIL("Could not generate buffer id.\n");
 	
@@ -177,22 +177,7 @@ AircraftSound::AircraftSound()
 {
    // WaveFile wav;
     ALfloat	zero[3] = { 0 } ;
-    /*char buf[2048];
-	char dirchar = *XPLMGetDirectorySeparator();
-	XPLMGetPluginInfo(XPLMGetMyID(), NULL, buf, NULL, NULL);
-	char * p = buf;
-	char * slash = p;
-	while(*p)
-	{
-		if(*p==dirchar) slash = p;
-		++p;
-	}
-	++slash;
-	*slash=0;
-	strcat(buf,"sound2.wav");*/
 
-	//snd_src=sound_id;
-	// Generate 1 source and load a buffer of audio.
 	
 	CHECK_ERR();
 	float looping=1.0f;
@@ -214,12 +199,20 @@ AircraftSound::AircraftSound()
 	}
 	else if(sound_id==2){
 		snd_src=snd_srcs[sound_id];
+		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/java/audio/heli2.wav");//heli
+		snd_buffer=wav.load_wave(path);//"/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/java/jet.wav");
+		sound_id++;
+	}
+	else if(sound_id==3){
+		snd_src=snd_srcs[sound_id];
 		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/java/audio/jet.wav");
 		snd_buffer=wav.load_wave(path);//"/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/java/jet.wav");
 		sound_id++;
-	}else{
+	}
+	
+	else{
 		snd_src=snd_srcs[sound_id];
-		snd_buffer=buffers[2];
+		snd_buffer=buffers[3];
 		sound_id++;
 	}
 	
@@ -348,9 +341,12 @@ void AircraftSounds::update(){
     	jetsnd[i].pos=v(0,0,0);
    		jetsnd[i].velocity=v(0,0,0);
 	}
-    snd2.dist=3000.0f;
-    snd2.pos=v(0,0,0);
-    snd2.velocity=v(0,0,0);
+    propsnd.dist=3000.0f;
+    propsnd.pos=v(0,0,0);
+    propsnd.velocity=v(0,0,0);
+	helisnd.dist=3000.0f;
+    helisnd.pos=v(0,0,0);
+    helisnd.velocity=v(0,0,0);
     for(int i=0;i<30;i++){
         v apos = aircrafts[i].getSndSrc();
         int soundIndex= aircrafts[i].soundIndex;
@@ -372,14 +368,20 @@ void AircraftSounds::update(){
 				}
 			}
         }
-        if(soundIndex==1&&dist<snd2.dist){
-			snd2.aircraftid=i;
-            snd2.pos=diff;
-            snd2.dist=dist;
-            snd2.velocity= aircrafts[i].getVelocity();
+        else if(soundIndex==1&&dist<propsnd.dist){
+			propsnd.aircraftid=i;
+            propsnd.pos=diff;
+            propsnd.dist=dist;
+            propsnd.velocity= aircrafts[i].getVelocity();
             
         }
-        
+        else if(soundIndex==2&&dist<helisnd.dist){
+			helisnd.aircraftid=i;
+            helisnd.pos=diff;
+            helisnd.dist=dist;
+            helisnd.velocity= aircrafts[i].getVelocity();
+            
+        }
         
     }
 	char debugStr[512];
@@ -401,7 +403,7 @@ void AircraftSounds::update(){
                 jetsnd[n].play();
                 jetsnd[n].paused=false;
             }
-            if(jetsnd[n].velocity/jetsnd[n].velocity>0.0f){
+            if((jetsnd[n].velocity/jetsnd[n].velocity)>0.1f){
 				//if(jetsnd[n].targetPitch!=2.0f)
 				//	land(jetsnd[n].aircraftid);
                 jetsnd[n].setPitch(2.0f);
@@ -417,49 +419,70 @@ void AircraftSounds::update(){
             
         }
 	}
-        if(snd2.dist<3000.0f&&aircrafts[snd2.aircraftid].airFrameIndex>=0){
+    if(propsnd.dist<3000.0f&&aircrafts[propsnd.aircraftid].airFrameIndex>=0){
         //float	*apos = aircrafts[closest].getSndSrc();
        // printf("got plane %f %f %f %f %f %f\n",closest.x,closest.y,closest.z,velocity.x,velocity.y,velocity.z);
-       if(snd2.lastAFID!=snd2.aircraftid){
-		   sprintf(debugStr,"got plane snd2 af=%d index=%d %f %f %f %f %f %f %d %d\n",snd2.aircraftid,aircrafts[snd2.aircraftid].airFrameIndex,snd2.pos.x,snd2.pos.y,snd2.pos.z, snd2.velocity.x, snd2.velocity.y, snd2.velocity.z,snd2.snd_src,snd2.snd_buffer);
+       if(propsnd.lastAFID!=propsnd.aircraftid){
+		   sprintf(debugStr,"got plane snd2 af=%d index=%d %f %f %f %f %f %f %d %d\n",propsnd.aircraftid,aircrafts[propsnd.aircraftid].airFrameIndex,propsnd.pos.x,propsnd.pos.y,propsnd.pos.z, propsnd.velocity.x, propsnd.velocity.y, propsnd.velocity.z,propsnd.snd_src,propsnd.snd_buffer);
 		   XPLMDebugString(debugStr);
-		   snd2.lastAFID=snd2.aircraftid;
+		   propsnd.lastAFID=propsnd.aircraftid;
 	   }
-        ALfloat	pos[3] = { snd2.pos.x/50.0f,snd2.pos.y/50.0f,snd2.pos.z/50.0f } ;
-        ALfloat	vel[3] = { snd2.velocity.x/50.0f,snd2.velocity.z/50.0f,snd2.velocity.y/50.0f } ;
+        ALfloat	pos[3] = { propsnd.pos.x/50.0f,propsnd.pos.y/50.0f,propsnd.pos.z/50.0f } ;
+        ALfloat	vel[3] = { propsnd.velocity.x/50.0f,propsnd.velocity.z/50.0f,propsnd.velocity.y/50.0f } ;
 
        // pos[2]=9.0f;
-       if(!snd2.playing){
+       if(!propsnd.playing){
 		   //printf("got plane 2 %f %f %f %f %f %f %d %d\n",snd2.pos.x,snd2.pos.y,snd2.pos.z, snd2.velocity.x, snd2.velocity.y, snd2.velocity.z,snd2.snd_src,snd2.snd_buffer);
-                snd2.playing=true;
-                snd2.play();
-                snd2.paused=false;
+                propsnd.playing=true;
+                propsnd.play();
+                propsnd.paused=false;
             }
-            if(snd2.velocity/snd2.velocity>0.0f){
-                snd2.setPitch(1.0f);
+            if(propsnd.velocity/propsnd.velocity>0.1f){
+                propsnd.setPitch(1.0f);
 
             }
             else
-                snd2.setPitch(0.7f);
-         snd2.setPosition(pos);
-        snd2.setVelocity(vel);
+                propsnd.setPitch(0.7f);
+         propsnd.setPosition(pos);
+        propsnd.setVelocity(vel);
        // printf("set listener %f %f %f\n",apos[0],apos[1],apos[2]);
     }
-    else if(!snd2.paused){
-            snd2.pause();
+    else if(!propsnd.paused){
+            propsnd.pause();
             
-        }
-    /*clock_t now=clock();
-    float p=(now/CLOCKS_PER_SEC)%60;
-    if(p<30){
-        pos[0]=p-15.0f;
-        //printf("set source x=%f",pos[0]);
     }
-    else{
-        pos[2]=p-45.0f;
-       // printf("set source z=%f",pos[2]);
+   if(helisnd.dist<3000.0f&&aircrafts[helisnd.aircraftid].airFrameIndex>=0){
+        //float	*apos = aircrafts[closest].getSndSrc();
+       // printf("got plane %f %f %f %f %f %f\n",closest.x,closest.y,closest.z,velocity.x,velocity.y,velocity.z);
+       if(helisnd.lastAFID!=helisnd.aircraftid){
+		   sprintf(debugStr,"got plane snd2 af=%d index=%d %f %f %f %f %f %f %d %d\n",helisnd.aircraftid,aircrafts[helisnd.aircraftid].airFrameIndex,helisnd.pos.x,helisnd.pos.y,helisnd.pos.z, helisnd.velocity.x, helisnd.velocity.y, helisnd.velocity.z,helisnd.snd_src,helisnd.snd_buffer);
+		   XPLMDebugString(debugStr);
+		   helisnd.lastAFID=helisnd.aircraftid;
+	   }
+        ALfloat	pos[3] = { helisnd.pos.x/50.0f,helisnd.pos.y/50.0f,helisnd.pos.z/50.0f } ;
+        ALfloat	vel[3] = { helisnd.velocity.x/50.0f,helisnd.velocity.z/50.0f,helisnd.velocity.y/50.0f } ;
+
+       // pos[2]=9.0f;
+       if(!helisnd.playing){
+		   //printf("got plane 2 %f %f %f %f %f %f %d %d\n",snd2.pos.x,snd2.pos.y,snd2.pos.z, snd2.velocity.x, snd2.velocity.y, snd2.velocity.z,snd2.snd_src,snd2.snd_buffer);
+                helisnd.playing=true;
+                helisnd.play();
+                helisnd.paused=false;
+            }
+            if(helisnd.velocity/propsnd.velocity>0.1f){
+                propsnd.setPitch(0.85f);
+
+            }
+            else
+                propsnd.setPitch(0.8f);
+        helisnd.setPosition(pos);
+        helisnd.setVelocity(vel);
+       // printf("set listener %f %f %f\n",apos[0],apos[1],apos[2]);
     }
-    snd.setPosition(pos);*/
+    else if(!helisnd.paused){
+            helisnd.pause();
+            
+    }
     
 }
 void AircraftSounds::start()

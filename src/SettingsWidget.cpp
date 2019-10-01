@@ -7,7 +7,7 @@
 #include "jvm.h"
 
 
-using namespace std;
+
 JVM* getJVM();//jvm.cpp
 static  XPWidgetID	w_window;
 static XPWidgetID jvmField;
