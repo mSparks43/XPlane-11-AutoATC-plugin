@@ -1,0 +1,31 @@
+Simple C++ Numerical Toolkit (SCPPNT)
+http://www.smallwaters.com/software/cpp/scppnt.html
+
+This release updates original work contributed by 
+Brad Hanson (http://www.b-a-h.com/) in 2001.
+
+This directory contains the Simple C++
+Numerical Toolkit (SCPPNT) source files. 
+
+The doc directory contains documentation for SCPPNT.
+The file scppnt.html contains a brief description
+of SCPPNT. The latest version of this file is
+available at 
+http://www.smallwaters.com/software/cpp/scppnt.html.
+
+The directory src within the doc directory contains
+source code documentation created using doxygen
+(http://www.stack.nl/~dimitri/doxygen/index.html).
+Open the file index.html in the doc/src directory
+with a web browser to view this documentation.
+The file scppnt.dox contains the doxygen 
+configuration file used to produce the source
+code documentation.
+
+The examples directory contains some example programs using
+SCPPNT. The file Makefile contains a makefile for compiling
+the examples, running them, and checking the example program
+output using gcc and cygwin under Windows Vista. Makefile is
+easily modified to run with gcc under various Unix types, and
+under MacOS. The file Makefile.bcc is an analogous makefile 
+using Borland C++ 5.5 under Windows.

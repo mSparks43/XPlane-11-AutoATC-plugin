@@ -20,6 +20,8 @@
 #endif
 #include <time.h>
 #include "XPLMCamera.h"
+#include "jvm.h"
+#include "Simulation.h"
  #include "aiplane.h"
 #include "AISound.h"
 #define PI 3.14159265
@@ -253,12 +255,12 @@ void AircraftSound::pause(){
 }
 void AircraftSound::setPosition(ALfloat pos[]){
     double nowT=clock()/(CLOCKS_PER_SEC*1.0f);
-    if(nowT<(startPitchChange+1)){
+    if(nowT<(startPitchChange+5)){
         double achange=targetPitch-pitch;
-        double change=achange*((nowT-startPitchChange)/1.0f);
+        double change=achange*((nowT-startPitchChange)/5.0f);
         
         float thisPitch=(pitch+change);
-       // printf("setPitch %f %f %f %f\n",achange,change,thisPitch,(nowT-startPitchChange));
+        //printf("setPitch %f %f %f %f\n",achange,change,thisPitch,(nowT-startPitchChange));
         alSourcef(snd_src,AL_PITCH,thisPitch);
     }
     else
@@ -278,7 +280,17 @@ void AircraftSound::stop(){
 void AircraftSound::setPitch(float setpitch){
     if(setpitch==targetPitch)
         return;
-    pitch=targetPitch;
+    //pitch=targetPitch;
+	double nowT=clock()/(CLOCKS_PER_SEC*1.0f);
+	if(nowT<(startPitchChange+5)){
+        double achange=targetPitch-pitch;
+        double change=achange*((nowT-startPitchChange)/5.0f);
+        
+        pitch=(pitch+change);
+        
+    }
+    else
+        pitch=targetPitch;
     startPitchChange=clock()/CLOCKS_PER_SEC*1.0f; 
     targetPitch= setpitch;  
 }
@@ -403,7 +415,7 @@ void AircraftSounds::update(){
                 jetsnd[n].play();
                 jetsnd[n].paused=false;
             }
-            if((jetsnd[n].velocity/jetsnd[n].velocity)>0.1f){
+            if((jetsnd[n].velocity/jetsnd[n].velocity)>0.0f){
 				//if(jetsnd[n].targetPitch!=2.0f)
 				//	land(jetsnd[n].aircraftid);
                 jetsnd[n].setPitch(2.0f);

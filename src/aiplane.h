@@ -1,14 +1,16 @@
 #include "XPLMInstance.h"
 #include <time.h>
+
+#include <mutex>
 /*struct planeid { 
 	int			id;
 };*/
 class AircraftData
 {
 public:
-    float		x;
-	float		y;
-	float		z;
+    double		x;
+	double		y;
+	double		z;
 	float		the;//pitch
 	float		phi;//roll
 	float		psi;//heading
@@ -39,6 +41,7 @@ public:
     AircraftFrames(void);
 	AircraftFrame* getFrame(int id);
 };*/
+
 class Aircraft
 {
 private:
@@ -99,7 +102,8 @@ private:
 	"cjs/world_traffic/engine_rpm1",
 	"cjs/world_traffic/engine_rpm2",
 	"cjs/world_traffic/engine_rotation_angle1",
-	"cjs/world_traffic/engine_rotation_angle2", NULL };
+	"cjs/world_traffic/engine_rotation_angle2",
+	"libxplanemp/controls/speed_brake_ratio", NULL };
 	int ref_style=0;
 	bool wt3;
 	XPLMProbeRef ground_probe;
@@ -110,9 +114,15 @@ private:
 	double startMoveTime;
 	double rpm;
 	double yOffset;
-	
+	double headingRollover;
+	bool rolledOver;
 	v velocity;
 	bool inHover;//for helo taxi
+	Simulation* ll;
+	Simulation* ahs;
+	Simulation* rp;
+	PlaneData thisData;
+	std::mutex data_mutex;
 public:
 	int id;
 	int soundIndex;
@@ -125,7 +135,10 @@ public:
 	//Aircraft(int AircraftNo,double yOffsetp);
 	//Aircraft(int AircraftNo);
 	Aircraft();
-	void GetAircraftData(AircraftData userdata);
+	//void GetAircraftData(AircraftData userdata);
+	void GetAircraftData();
+	void GetAircraftThreadData();
+	void PrepareAircraftData();
 	void SetAircraftData(void);
 	v getSndSrc();
 	v getVelocity();

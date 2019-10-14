@@ -1,0 +1,159 @@
+Release notes for Simple C++ Numerical Toolkit (SCPPNT)
+Files associated with each item are given in brackets.
+
+Release	071215	(December 15, 2007)
+
+	This version received some general housekeeping/clean-up to ensure 
+	compilation under gcc 3.4.4 and cygwin 1.5.24-2 and correct 
+	execution of all test problems. These changes required adding 
+	"typename" keywords where needed, correcting a mistyped variable 
+	name (in cmat.h), adding "std::" namespace keyword to several 
+	instances of "endl", commenting out non-functional code sections
+	(in region2d.h), and refactoring most "...col..." matrix variables 
+	and iterators to a "...column..." convention. In addition, the use
+	of the SCPPNT_NO_DIR_PREFIX preprossesor macro was standardized, 
+	and	the code was reformatted for readability.
+	
+Release 0.010619 (June 19, 2001)
+
+	Replace instances of rowit_iterator with rows_iterator, and
+	instances of columnit_iterator with columns_iterator in matalg.h.
+	[matalg.h]
+
+
+Release 0.010516 (May 16, 2001)
+	
+	Corrected initialize method of Region2D and const_Region2D classes
+	so that an exception is not thrown when SCPPNT_BOUNDS_CHECK is
+	defined. [region2d.h]
+	
+	Make private member function diagonal_size() constant in
+	matrix classes. [cmat.h, region2d.h]
+
+
+Release 0.010515 (May 15, 2001)
+
+	Renamed the rows(), columns(), row(), column(), and diagonal()
+	member functions of the matrix classes to begin_rows(),
+	begin_columns(), begin_row(), begin_column() and begin_diagonal(),
+	respectively. Added member functions end_rows(), end_columns(),
+	end_row(), end_column(), and end_diagonal() to return an iterator to
+	one past the last element of the sequences for which the
+	associated begin function return an iterator to the first
+	element. [cmat.h, region2d.h, transv.h, trisolve.h, matalg.h,
+	cholesky.h, qr.h, lu.h, matop.h, rowcolfunc.h]
+	
+	The begin_diagonal() member functions of the matrix classes
+	now take two arguments: the row and column corresponding to
+	the first element of the diagonal the iterator points to.
+	[cmat.h, transv.h, region2d.h, qr.h, lu.h, cholesky.h,
+	trisolve.h]
+
+	Symbol BOOST_MSVC can be define when using Microsoft
+	Visual C++ 6. Defining this symbol will NOT allow all
+	elements of SCPPNT to be compiled with Microsoft Visual
+	C++, but the basic matrix and vector operations defined
+	in vec.h and cmat.h should compile. Currently, BOOST_MSVC
+	is only used in vec.h. [vec.h, scppnt.h]
+
+
+Release 0.010409 (April 9, 2001)
+
+	Added Matrix<T>::Matrix(Subscript num_rows, Subscript num_cols)
+	constructor which constructs a matrix of a particular size
+	but does not initialize the elements of the matrix. This
+	may change the behavior of programs which use a constructor
+	with two Subscript arguments (e.g., Matrix<double> m(2, 2)).
+	In previous versions of SCPPNT all elements of m would be
+	initialized to zero, whereas in this version the elements of m 
+	are uninitialized. To construct a matrix with all elements
+	initialized to zero use: Matrix<double> m(2, 2, 0.0).
+	[cmat.h]
+
+    Changed name of types Matrix<T>::rowit_iterator and
+    Matrix<T>::columnit_iterator to Matrix<T>::rows_iterator
+    and Matrix<T>::columns_iterator, respectively. 
+    [cmat.h, rowcolfunc.h]
+    
+    Added version of TNT files region2d.h, index.h. 
+    [region2d.h, index.h]
+    
+    Added file matop.h containing template functions
+    that implement matrix operations used in several
+    other files. [matop.h, cmat.h, transv.h, region2d.h]
+    
+    Changed name of file matalg.h to rowcolfunc.h.
+    [rowcolfunc.h]
+    
+    Symbol BOOST_NO_STDC_NAMESPACE can be defined for
+    compilers that do not include the standard C library
+    in the std namespace (like Microsoft Visual C++ 6).
+    [scppnt.h]
+    
+    The class slice_pointer was given two additional template
+    parameters and renamed slice_pointer_base, which allows
+    both constant and non-constant types to be defined using
+    a single class. Modifications were made to other
+    parts of SCPPNT that use the slice_pointer class.
+    [slice_pointer.h]
+
+    The source file comments were written to be compatable with the 
+    doxygen (http://www.stack.nl/~dimitri/doxygen/index.html)
+    documentation sytem. Doxygen was used to create HTML
+    documentation of the source files. [all source files]
+    
+    Replaced symbol SCPPNT_DIR_PREFIX with SCPPNT_NO_DIR_PREFIX
+    so that default behavior is now to use the scppnt/ directory
+    prefix in includes. [all source files]
+    
+    Added symbol SCPPNT_MEMBER_COMPARISONS which if defined results in
+    comparison operators for iterators being defined using member
+    functions rather than non-member friend functions for compilers
+    (like gcc) that do not support the definition of iterator conparison
+    operators as non-member friend functions. [scppnt.h]
+
+
+Release 0.000908 (September 8, 2000)
+
+    Replace assert in lu.h with exceptions from scppnt_error.h.
+    [lu.h]
+    
+    Constructor from string is not created if SCPPNT_NO_IO is
+    defined. [cmat.h, vec.h]
+    
+    If SCPPNT_DIR_PREFIX is defined then SCPPNT included files
+    have a directory prefix such as '#include scppnt/vec.h'.
+    [any SCPPNT file that includes another SCPPNT file]
+    
+    Changed name of file 'subscrpt.h' to 'subscript.h'.
+    [subscript.h]
+    
+    Added versions of TNT files cholesky.h, trisolve.h and qr.h
+    that use iterators rather than subscripting. [cholesky.h,
+    trisolve.h, qr.h]
+    
+    Added versions of TNT files transv.h and triang.h. 
+    [transv.h, triang.h]
+    
+    Changed constructors of vectors and matrices that had
+    a pointer argument to be template members taking
+    an iterator argument. [vec.h, cmat.h]
+    
+    Added matalg.h which contains functions that can apply
+    function objects to rows or columns of matrices. [matalg.h]
+    
+    Added statfunc.h which contains function objects implementing
+    some simple statistical functions which can be used
+    with the functions in matalg.h. [statfunc.h]
+    
+    Added scppnt.h which contains some #defines that
+    can be used to control the compilation of SCPPNT.
+    [scppnt.h]
+    
+    Revised several functions in cmat.h to use iterators
+    and assignment operators included in SCPPNT. [cmat.h]
+    
+
+Release 0.000323 (March 23, 2000)
+
+    Initial release.
