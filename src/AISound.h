@@ -14,7 +14,7 @@ class AircraftSound
     
     double			pitch		= 1.0f;			// Start with 1.0 pitch - no pitch shift
      		// Start with 1.0 pitch - no pitch shift.
-     double startPitchChange;
+     float startPitchChange;
     public:
     double			targetPitch		= 1.0f;	
     ALuint			snd_src		=0;				// Sample source and buffer - this is one "sound" we play.

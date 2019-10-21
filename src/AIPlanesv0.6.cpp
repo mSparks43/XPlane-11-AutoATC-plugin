@@ -50,7 +50,7 @@ static float	AircraftLoopCallback(
                                    int                  inCounter,    
                                    void *               inRefcon);   
 AircraftData::AircraftData(){
-	time=clock();
+	//time=clock();
  }
 
 Aircraft::Aircraft()
@@ -158,7 +158,7 @@ void Aircraft::GetAircraftThreadData(){
 		thisData.phi=newData.phi;
 		thisData.psi=newData.psi;
     	thisData.timeStamp=newData.timeStamp;
-		clock_t timeNow = clock();
+		float timeNow = jvmO->getSysTime();//clock();
 		if(lastData.time==nextData.time){
 			lastData.remoteTimestamp=thisData.timeStamp;
 			lastData.time=timeNow;
@@ -224,7 +224,10 @@ void Aircraft::PrepareAircraftData()
 					XPLMDestroyInstance(g_instance[0]);
 					g_instance[0]=NULL;
 					airFrameIndex=-1;
+					toLoadAirframe=false;
+					inLoading=false;
 				}
+				
 		data_mutex.unlock();
 		return;
 	}
@@ -235,7 +238,7 @@ void Aircraft::PrepareAircraftData()
 		char debugStr[512];
 		if(g_instance[0])
 	    {
-			printf("dropping object for load id= %d\n",id);
+			printf("dropping inloading object for load id= %d\n",id);
 			XPLMDestroyInstance(g_instance[0]);
 					
 		}
@@ -249,9 +252,9 @@ void Aircraft::PrepareAircraftData()
 	}
 
    
-    clock_t timeNow = clock();
-	clock_t lastTime= lastData.time;
-	double duration=((double)timeNow-(double)lastTime)/CLOCKS_PER_SEC;
+    float timeNow = jvmO->getSysTime();//clock();
+	float lastTime= lastData.time;
+	double duration=((double)timeNow-(double)lastTime);// /CLOCKS_PER_SEC;
 	if(duration<0)
 		duration=0;
     double htWindow=(nextData.remoteTimestamp-lastData.remoteTimestamp)/1000.0;//the time it should take us in seconds
@@ -275,19 +278,40 @@ void Aircraft::PrepareAircraftData()
 	data.z = z;
 	data.the=thisData.the;
     data.phi=thisData.phi;
-	if(thisData.gearDown==2.0){
+	if(thisData.gearDown==3.0){
+		data.inTransit=true;
+		data.engineoff=false;
+		//printf("%d in transit\n",id);
+	}
+	else if(thisData.gearDown==2.0){
 		data.engineoff=true;
+		data.inTransit=false;
 	}
 	else{
 		data.engineoff=false;//false;
+		data.inTransit=false;
 	}
     
 	XPLMProbeInfo_t outInfo;
 	outInfo.structSize = sizeof(outInfo);
 	//XPLMProbeResult ground= 
-	XPLMProbeTerrainXYZ(ground_probe,data.x,data.y,data.z,&outInfo);
-	double requestedAGL=data.y-outInfo.locationY;
-	double targetAGL=ahs->getX()-outInfo.locationY;
+	double requestedAGL=1000.0;
+	double targetAGL=1000.0;
+	//XPLMProbeTerrainXYZ(ground_probe,data.x,data.y,data.z,&outInfo);
+	double thisRequestedAGL=data.y-outInfo.locationY;
+	if(!data.inTransit){
+	 	XPLMProbeTerrainXYZ(ground_probe,data.x,data.y,data.z,&outInfo);
+		requestedAGL=data.y-outInfo.locationY;
+		targetAGL=ahs->getX()-outInfo.locationY;
+	}/*else{
+		if(thisRequestedAGL<100)
+			printf("%d hit terrain\n");
+		float now=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
+		if(now>(data.updateAlt+30)){
+			data.updateAlt=now;
+			printf("%f above terrain\n",thisRequestedAGL);
+		}
+	}*/
 	double gearDown=0.0;
 	if(requestedAGL<200)
 		gearDown=1.0;
@@ -311,15 +335,15 @@ void Aircraft::PrepareAircraftData()
 		if(requestedAGL<18.0){
 			data.y=outInfo.locationY;
 			if(inTouchDown&&targetAGL<0.5){
-				touchDownTime=clock()/CLOCKS_PER_SEC;
+				touchDownTime=jvmO->getSysTime();///CLOCKS_PER_SEC;
 				soundSystem.land(id-1);
 				inTouchDown=false;
 			}
-			data.the=0.0;
+			data.the=-1.0;
     		data.phi=0.0;
 			if(soundIndex==2){//Heli
 				float speed=velocity/velocity;
-				double now=((double)clock())/(CLOCKS_PER_SEC*1.0f);
+				float now=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
 				if(speed>0.1f){
 					
 					if(now<(startMoveTime+3))
@@ -399,250 +423,7 @@ void Aircraft::PrepareAircraftData()
 	}
 	data_mutex.unlock();
 }
-/*void Aircraft::PrepareAircraftData()
-{
-   
-    
-	
-	
-	clock_t timeNow = clock();
-	JVM* jvmO=getJVM();
 
-    
-
-	
-	
-	if(!thisData.live){
-		lastData.time=timeNow;
-		nextData.time=timeNow;
-		
-		        if(g_instance[0])
-		        {
-					printf("dropping object for id= %d\n",id);
-					XPLMDestroyInstance(g_instance[0]);
-					g_instance[0]=NULL;
-					airFrameIndex=-1;
-				}
-		
-		return;
-	}
-	
-	if(!inLoading&&toLoadAirframe){
-		toLoadAirframe=false;
-		char* af=jvmO->getModel(airFrameIndex);
-		char debugStr[512];
-		if(g_instance[0])
-	    {
-			printf("dropping object for load id= %d\n",id);
-			XPLMDestroyInstance(g_instance[0]);
-					
-		}
-		XPLMDebugString("toLoadAirframe\n");
-		sprintf(debugStr,"searching for id=%d afI=%d to %s sound=%d\n",id,airFrameIndex,af,soundIndex);
-		XPLMDebugString(debugStr);
-		int *pid=&id;
-		inLoading=true;
-		XPLMLoadObjectAsync(af, loadedobject, pid);
-		
-	}
-
-    if(lastData.time==nextData.time){
-        lastData.remoteTimestamp=thisData.timeStamp;
-        lastData.time=timeNow;
-        lastData.x=thisData.x;
-		lastData.y=thisData.y;
-		lastData.z=thisData.z;
-        lastData.the=thisData.the;
-		lastData.phi=thisData.phi;
-		lastData.psi=thisData.psi;
-        return;
-    }
-
-    if(lastData.remoteTimestamp==(double)thisData.timeStamp){
-        //we dont have new data
-        return;
-    }
-    if(nextData.time<lastData.time){
-        nextData.remoteTimestamp=thisData.timeStamp;
-        nextData.time=timeNow+CLOCKS_PER_SEC;
-        nextData.x=thisData.x;
-		nextData.y=thisData.y;
-		nextData.z=thisData.z;
-        nextData.the=thisData.the;
-		nextData.phi=thisData.phi;
-		nextData.psi=thisData.psi;
-
-    }
-    clock_t lastTime= lastData.time;
-	double duration=((double)timeNow-(double)lastTime)/CLOCKS_PER_SEC;
-	if(duration<0)
-		duration=0;
-    double htWindow=(nextData.remoteTimestamp-lastData.remoteTimestamp)/1000.0;//the time it should take us in seconds
-    if(htWindow<1)
-		htWindow=1;
-
-		double pComplete=duration/(htWindow);
-		double vx=nextData.x-lastData.x;
-		double vy=nextData.y-lastData.y;
-		double vz=nextData.z-lastData.z;
-		velocity=v((nextData.x-lastData.x)/htWindow,(nextData.y-lastData.y)/htWindow,(nextData.z-lastData.z)/htWindow);
-
-
-		double x=lastData.x+(vx*pComplete);
-		double y=lastData.y+(vy*pComplete);
-		double z=lastData.z+(vz*pComplete);
-
-
-		data.x = x;
-		data.y = y;
-		data.z = z;
-
-        data.the=thisData.the;
-        data.phi=thisData.phi;
-        //data.psi=thisData.psi;
-		if(thisData.gearDown==2.0){
-			//printf("engine off\n");
-			data.engineoff=true;
-		}
-		else{
-			//printf("engine on\n");
-			data.engineoff=false;//false;
-		}
-    if(nextData.remoteTimestamp<(thisData.timeStamp-50)){
-        //we have a new position to get to
-        //set last data to where we are now
-
-        lastData.remoteTimestamp= nextData.remoteTimestamp;
-        lastData.time=timeNow;
-        lastData.x=nextData.x-(vx*(1.0-pComplete));
-		lastData.y=nextData.y-(vy*(1.0-pComplete));
-		lastData.z=nextData.z-(vz*(1.0-pComplete));
-        lastData.the=nextData.the;
-		lastData.phi=nextData.phi;
-		lastData.psi=nextData.psi;
-        //set next data to this new position
-        nextData.remoteTimestamp=thisData.timeStamp;
-        nextData.time=timeNow+CLOCKS_PER_SEC;
-        nextData.x=thisData.x;
-		nextData.y=thisData.y;
-		nextData.z=thisData.z;
-        nextData.the=thisData.the;
-		nextData.phi=thisData.phi;
-		nextData.psi=thisData.psi;
-    }
-	XPLMProbeInfo_t outInfo;
-	outInfo.structSize = sizeof(outInfo);
-	//XPLMProbeResult ground= 
-	XPLMProbeTerrainXYZ(ground_probe,data.x,data.y,data.z,&outInfo);
-	//double requestedAGL=data.y-outInfo.locationY;
-
-	double requestedAGL=data.y-outInfo.locationY;
-	double targetAGL=ahs->getX()-outInfo.locationY;
-	double gearDown=0.0;
-	if(requestedAGL<200)
-		gearDown=1.0;
-	else if(requestedAGL<250){
-		gearDown=(50.0f-(requestedAGL-200.0f))/50.0f;
-	}	
-	//for (int Gear=0; Gear<5; Gear++)
-	{
-		data.gear_deploy = gearDown;//thisData.gearDown;
-		
-	}
-    for (int Throttle=0; Throttle<8; Throttle++)
-	{
-		data.throttle[Throttle] = 0.0;//thisData.throttle;
-		
-	}
-
-	
-    {
-	
-		
-		if(requestedAGL<18.0){
-			data.y=outInfo.locationY;
-			if(inTouchDown&&targetAGL<0.5){
-				touchDownTime=clock()/CLOCKS_PER_SEC;
-				soundSystem.land(id-1);
-				inTouchDown=false;
-			}
-			
-			if(soundIndex==2){//Heli
-				float speed=velocity/velocity;
-				double now=((double)clock())/(CLOCKS_PER_SEC*1.0f);
-				if(speed>0.1f){
-					
-					if(now<(startMoveTime+3))
-					{
-						double sComplete=(now-startMoveTime)/3.0;
-						//printf("lift off %f %f\n",sComplete,startMoveTime);
-						if(sComplete>0.5f)
-							inHover=true;
-						data.y+=(2.0*sComplete);
-						data.the-=(2.0*sComplete);
-					}
-					else if(speed<5&&rpm==1500){//we're moving but in the frame before we ascend
-						data.y+=2.0;//always air taxi
-						data.the-=2.0;//lift nose
-					}else if(rpm>100){
-						//inHover=true;
-						data.y+=2;//always air taxi
-						data.the-=3.0;//drop nose
-					}
-					
-				}
-				else if(now<(startMoveTime+3))
-				{
-						double sComplete=1.0-((now-startMoveTime)/3.0);
-						if(sComplete<0.5f)
-							inHover=false;
-						//printf("land %f %f\n",sComplete,startMoveTime);
-						data.y+=(2.0*sComplete);
-						data.the=0.0;
-				}
-				else if(inHover){//we're stopped, but in the frame before we descend
-					data.y+=2.0;
-					//printf("ready land %f\n",startMoveTime);
-				}
-				if(data.the>-1.0)
-					data.the=-1.0;
-			}
-		}
-		else if(requestedAGL<=198.0){
-			if(soundIndex!=2)//no screech for helos
-				inTouchDown=true;
-			requestedAGL=((requestedAGL-18.0)*1.1);
-			if(soundIndex==2){
-				requestedAGL+=2;
-				if(data.the>-1.0)
-					data.the=-1.0;
-			}
-			data.y=outInfo.locationY+requestedAGL;
-		}else if(soundIndex==2){
-			if(data.the>-1.0)
-				data.the=-1.0;
-			data.y+=2;		
-		}
-
-		if( data.the>0){
-			double lift=15.0*tan(data.the*PI/180.0);
-			data.y=data.y+lift;
-		}
-		//check model
-		if(airFrameIndex==-1&&airFrameIndex!=thisData.airframe){
-
-			soundIndex=jvmO->getSound(thisData.airframe);
-			yOffset=jvmO->getOffset(thisData.airframe);
-
-			ref_style=jvmO->getDrefStyle(thisData.airframe);
-			sprintf(gBob_debstr3,"AutoATC switch Airframe %d. at %f style=%d\n",thisData.airframe,yOffset,ref_style);
-        	XPLMDebugString(gBob_debstr3);
-			airFrameIndex=thisData.airframe;
-			toLoadAirframe=true;
-			
-		}
-	}
-}*/
 float useNavLights=0.0;
 v Aircraft::getSndSrc(){
 	v retVal(data.x,data.z,data.y);
@@ -657,6 +438,7 @@ void Aircraft::SetAircraftData(void)
 {
 	if(!thisData.live)
 		return;
+		JVM* jvmO=getJVM();
     XPLMDrawInfo_t		dr;
 	ll->xPos=data.x;
 	ll->yPos=data.z;
@@ -733,9 +515,10 @@ void Aircraft::SetAircraftData(void)
 	dr.heading = ahs->getY();//data.psi;
 	dr.roll = rp->getY();//data.phi;
 
-	clock_t timeNow = (clock()*60/CLOCKS_PER_SEC)%90+id*10.0;
+	float timeNow = (clock()*60/CLOCKS_PER_SEC)%90+id*10.0;
 	float touchDownSmoke=0.0;
-	if(((double)clock())/CLOCKS_PER_SEC<(touchDownTime+3))
+	//if(((double)clock())/CLOCKS_PER_SEC<(touchDownTime+3))
+	if(jvmO->getSysTime()<(touchDownTime+3))
 		touchDownSmoke=1.0;
 	float thrust=timeNow+171.0;
 	float gear=data.gear_deploy;
@@ -743,12 +526,12 @@ void Aircraft::SetAircraftData(void)
 	if(velocity/velocity>0.1f){
 		if(rpm<=100){
 			//begin move
-			startMoveTime=((double)clock())/(CLOCKS_PER_SEC*1.0f); 
+			startMoveTime=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f); 
 			//printf(" 1 start %f %f %f\n", startMoveTime,rpm,velocity/velocity);
 			rpm=110;
 		}
 		else if(rpm!=1500){
-			double nowT=((double)clock())/(CLOCKS_PER_SEC*1.0f);
+			float nowT=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
 			if(nowT<(startMoveTime+1)){
 				
         		double change=((nowT-startMoveTime)/1.0f);
@@ -761,12 +544,12 @@ void Aircraft::SetAircraftData(void)
 		}
 	}else if(!data.engineoff){
 		if(rpm==1500){
-			startMoveTime=((double)clock())/(CLOCKS_PER_SEC*1.0f); 
+			startMoveTime=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f); 
 			rpm=1400;
 			//printf(" 2 start %f %f\n", startMoveTime,rpm);
 		}
 		else if(rpm!=100){
-			double nowT=((double)clock())/(CLOCKS_PER_SEC*1.0f);
+			float nowT=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
 			if(nowT<(startMoveTime+1)){
 				
         		double change=((nowT-startMoveTime)/1.0f);
@@ -844,17 +627,25 @@ void do_model(){
 	}
 	printf("plane thread woke up\n");
 	
-	
+	int rolls=0;
 	//printf("thread ready\n");
 	while(liveThread&&run){
 		sendData();
-		jvmO->getThreadCommandData();
+		
+		rolls++;
+		if(rolls==10){
+			jvmO->getThreadCommandData();
+			jvmO->retriveLogData();
+			rolls=0;
+		}
+			
 		for(int i=0;i<30;i++){
 			//g_ac_mutex[i].lock();
 			
 			
 			//printf("thread %d\n",i);
 			aircraft[i].GetAircraftThreadData();
+			//printf("%d is index %d waiting for %d live =%d\n",i,aircraft[i].airFrameIndex,aircraft[i].thisData.airframe,aircraft[i].thisData.live);
 			//g_ac_mutex[i].unlock();
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -885,6 +676,7 @@ void initPlanes(){
 	gOverRidePlanePosition = XPLMFindDataRef("sim/operation/override/override_planepath");
 	gAGL = XPLMFindDataRef("sim/flightmodel/position/y_agl");
 	gdaylight = XPLMFindDataRef("sim/graphics/scenery/airport_lights_on");
+	sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
 	//XPLMRegisterFlightLoopCallback(	MyFlightLoopCallback0,/* Callback */-1.0,/* Interval */NULL);/* refcon not used. */
 	BeginAI();
 	

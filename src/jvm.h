@@ -54,6 +54,7 @@ static XPLMDataRef  com1_stdby_freq_hz = NULL;
 static XPLMDataRef  nav1_stdby_freq_hz = NULL;
 static XPLMDataRef  nav2_stdby_freq_hz = NULL;
 static XPLMDataRef  adf1_stdby_freq_hz = NULL;
+static XPLMDataRef  sysTimeRef = NULL;
 static XPLMDataRef  adf2_stdby_freq_hz = NULL;
 static XPLMDataRef  com1_freq_hzRef = NULL;
 static XPLMDataRef  nav1_freq_hzRef = NULL;
@@ -105,7 +106,9 @@ private:
    #endif
    
    std::vector<String *> commandsList;
-   
+   char logpageString[128]={0};
+   char logpageData[2048]={0};
+   double getLogTime=0;
 public:
     
     XPLMMenuID g_menu_id;
@@ -119,7 +122,7 @@ public:
     bool setIcaov;
     bool loadedLibrary=false;
     int logPage;
-    double lastNavAudio;
+    float lastNavAudio;
     int lastFoundNav;
     JavaVM *jvm;                      // Pointer to the JVM (Java Virtual Machine)
     JNIEnv *env;                      // Pointer to native interface
@@ -131,6 +134,7 @@ public:
     jmethodID broadcastMethod;
     jmethodID setThreadDataMethod;
     jmethodID midToString;
+    jmethodID midToThreadString;
     jmethodID commandString;
     jmethodID getStndbyMethod;
     AirframeDef standbyAirframe;
@@ -149,9 +153,12 @@ public:
 //class methods
     void start(void);
     void stop(void);
+    void systemstop(void);
     void broadcast(void);
     int getStndbyFreq(int roll);
     jstring getData(const char*);
+    char *getLogData(const char*);//inline function to get cached log window data
+    void retriveLogData();//queue up log window data
     void setData(jfloat data[]);
     void setThreadData();
     PlaneData getPlaneData(int id,JNIEnv *caller_env);
@@ -174,6 +181,7 @@ public:
     void setisSlave(long);
     void getMorse();
     void joinThread();
+    float getSysTime();
     //void testExistingJVM();
 };
 

@@ -16,9 +16,11 @@ public:
 	float		psi;//heading
 	float		gear_deploy;
 	bool		engineoff;
+	bool		inTransit;
 	float		throttle[8];
-	clock_t		time;
+	float		time;
 	double      remoteTimestamp;
+	float      updateAlt=0;
     AircraftData(void);
 
 };
@@ -109,9 +111,9 @@ private:
 	XPLMProbeRef ground_probe;
     bool inTouchDown;
 
-	clock_t touchDownTime;
+	float touchDownTime;
 
-	double startMoveTime;
+	float startMoveTime;
 	double rpm;
 	double yOffset;
 	double headingRollover;
@@ -121,12 +123,13 @@ private:
 	Simulation* ll;
 	Simulation* ahs;
 	Simulation* rp;
-	PlaneData thisData;
+//	PlaneData thisData;
 	std::mutex data_mutex;
 public:
 	int id;
 	int soundIndex;
 	int airFrameIndex=-1;
+	PlaneData thisData;
 	AircraftData data;
 	AircraftData lastData;
 	AircraftData nextData;
@@ -152,4 +155,5 @@ public:
  
 
 void initPlanes();   
-void stopPlanes();                                
+void stopPlanes();
+                                

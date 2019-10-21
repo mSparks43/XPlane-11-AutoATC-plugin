@@ -254,7 +254,8 @@ void AircraftSound::pause(){
     playing=false;
 }
 void AircraftSound::setPosition(ALfloat pos[]){
-    double nowT=clock()/(CLOCKS_PER_SEC*1.0f);
+	JVM* jvmO=getJVM();
+    float nowT=jvmO->getSysTime();//clock()/(CLOCKS_PER_SEC*1.0f);
     if(nowT<(startPitchChange+5)){
         double achange=targetPitch-pitch;
         double change=achange*((nowT-startPitchChange)/5.0f);
@@ -281,7 +282,8 @@ void AircraftSound::setPitch(float setpitch){
     if(setpitch==targetPitch)
         return;
     //pitch=targetPitch;
-	double nowT=clock()/(CLOCKS_PER_SEC*1.0f);
+	JVM* jvmO=getJVM();
+	float nowT=jvmO->getSysTime();//clock()/(CLOCKS_PER_SEC*1.0f);
 	if(nowT<(startPitchChange+5)){
         double achange=targetPitch-pitch;
         double change=achange*((nowT-startPitchChange)/5.0f);
@@ -291,7 +293,7 @@ void AircraftSound::setPitch(float setpitch){
     }
     else
         pitch=targetPitch;
-    startPitchChange=clock()/CLOCKS_PER_SEC*1.0f; 
+    startPitchChange=jvmO->getSysTime();//clock()/CLOCKS_PER_SEC*1.0f; 
     targetPitch= setpitch;  
 }
 AircraftSounds::AircraftSounds(Aircraft *aircraft)
@@ -467,7 +469,7 @@ void AircraftSounds::update(){
         //float	*apos = aircrafts[closest].getSndSrc();
        // printf("got plane %f %f %f %f %f %f\n",closest.x,closest.y,closest.z,velocity.x,velocity.y,velocity.z);
        if(helisnd.lastAFID!=helisnd.aircraftid){
-		   sprintf(debugStr,"got plane snd2 af=%d index=%d %f %f %f %f %f %f %d %d\n",helisnd.aircraftid,aircrafts[helisnd.aircraftid].airFrameIndex,helisnd.pos.x,helisnd.pos.y,helisnd.pos.z, helisnd.velocity.x, helisnd.velocity.y, helisnd.velocity.z,helisnd.snd_src,helisnd.snd_buffer);
+		   sprintf(debugStr,"got plane snd3 af=%d index=%d %f %f %f %f %f %f %d %d\n",helisnd.aircraftid,aircrafts[helisnd.aircraftid].airFrameIndex,helisnd.pos.x,helisnd.pos.y,helisnd.pos.z, helisnd.velocity.x, helisnd.velocity.y, helisnd.velocity.z,helisnd.snd_src,helisnd.snd_buffer);
 		   XPLMDebugString(debugStr);
 		   helisnd.lastAFID=helisnd.aircraftid;
 	   }

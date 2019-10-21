@@ -181,7 +181,7 @@ PLUGIN_API int XPluginStart(
     nav2_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/nav2_stdby_freq_hz");
     adf1_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/adf1_stdby_freq_hz");
     adf2_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/adf2_stdby_freq_hz");
-    
+    sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
     
     HSI_source = XPLMFindDataRef("sim/cockpit2/radios/actuators/HSI_source_select_pilot");
     registerDatarefs();
@@ -195,7 +195,7 @@ PLUGIN_API void XPluginStop(void)
     JVM *jvmO = getJVM();
     if (jvmO->hasjvm)
     {
-        jvmO->stop();
+        jvmO->systemstop();
         jvmO->deactivateJVM();
     }
 }
@@ -205,7 +205,8 @@ PLUGIN_API void XPluginDisable(void)
     JVM *jvmO = getJVM();
     if (jvmO->hasjvm)
     {
-        jvmO->deactivateJVM();
+        jvmO->systemstop();
+       // jvmO->deactivateJVM();
     }
 }
 
@@ -228,7 +229,7 @@ PLUGIN_API int XPluginEnable(void)
         }
     }
     jvmO->activateJVM();
-
+    jvmO->start();
     return 1;
 }
 

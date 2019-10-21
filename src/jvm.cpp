@@ -43,6 +43,7 @@ void				dummy_key_handler(XPLMWindowID in_window_id, char key, XPLMKeyFlags flag
 //bool hot=false;
 bool enabledATCPro;
 std::mutex command_mutex;
+std::mutex string_mutex;
 void menu_handler(void *, void *);
 
  XPLMDataRef  transponder_codeRef = NULL;
@@ -416,7 +417,7 @@ void JVM::getMorse (){
          //printf("doCommand:stopMorse %d %d\n", lastFoundNav, thisFoundNav);
          lastFoundNav=thisFoundNav;
     }
-    double nowT=clock()/(CLOCKS_PER_SEC*1.0f);
+    float nowT=getSysTime();//clock()/(CLOCKS_PER_SEC*1.0f);
     if(nowT<lastNavAudio+30)
         return;
     
@@ -524,6 +525,7 @@ void JVM::init_parameters ()
     fpmRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/vvi_fpm_pilot");
     pitchRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/pitch_vacuum_deg_pilot");
     rollRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/roll_vacuum_deg_pilot");
+    sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
     standbyAirframe=AirframeDef();
     standbyAirframe.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0");
     std::ifstream t("Resources/plugins/AutoATC/notepad.txt");
@@ -600,6 +602,11 @@ void JVM::parse_config (char * filename)
   /* Close file */
   fclose (fp);
 }
+float JVM::getSysTime(void){
+    float retVal=XPLMGetDataf(sysTimeRef);
+    //printf("getTime %f\n",retVal);
+    return retVal;
+}
 void JVM::start(void)
 {
     if(!hasjvm)
@@ -613,7 +620,7 @@ void JVM::start(void)
     
      jmethodID startMethod=env->GetStaticMethodID(commandsClass, "start", "()V");  // find method
      env->CallStaticVoidMethod(commandsClass, startMethod);                      // call method
-     
+     setIcaov=false;
 }
 void JVM::joinThread(void){
     JavaVMAttachArgs args;
@@ -640,6 +647,11 @@ void JVM::joinThread(void){
     commandString=plane_env->GetStaticMethodID(threadcommandsClass, "getCommandData", "()Ljava/lang/String;");  // find method
         if(commandString == NULL){
             XPLMDebugString("ERROR: method void getCommandData() not found !\n");
+            return;
+        }
+    midToThreadString=env->GetStaticMethodID(threadcommandsClass, "getData", "(Ljava/lang/String;)Ljava/lang/String;");  // find method
+        if(midToThreadString == NULL){
+            XPLMDebugString("ERROR: method void getData() not found !\n");
             return;
         }
     printf("thread jvm join\n");
@@ -680,6 +692,19 @@ void JVM::stop(void)
     }
     
 
+    systemstop();
+    jvm->DetachCurrentThread();
+     printf("AutoATC Stop!\n");
+     hasjvm=false;
+     //XPLMDebugString(gBob_debstr2);
+}
+void JVM::systemstop(void)
+{
+    if(!hasjvm)
+        return;
+    
+    
+
     jmethodID stopMethod=env->GetStaticMethodID(commandsClass, "stop", "()V");  // find method
      if(stopMethod == NULL)
       {
@@ -689,15 +714,49 @@ void JVM::stop(void)
      }
      else
         env->CallStaticVoidMethod(commandsClass, stopMethod);                      // call method*/
-    jvm->DetachCurrentThread();
-     printf("AutoATC Stop!\n");
-     hasjvm=false;
+    
      //XPLMDebugString(gBob_debstr2);
 }
 void JVM::broadcast(void){
     if(!hasjvm)
         return;
     env->CallStaticVoidMethod(commandsClass, broadcastMethod);                      // call method
+}
+char* JVM::getLogData(const char* reference){
+    string_mutex.lock();
+    sprintf(logpageString,"%s",reference);
+    getLogTime=clock()/(CLOCKS_PER_SEC*1.0f);
+    //printf("getLogData %s\n",logpageString);
+    string_mutex.unlock();
+    return logpageData;
+}
+void JVM::retriveLogData(){
+    if(!hasjvm){
+        string_mutex.lock();
+        sprintf(logpageData,"No JVM|");
+        string_mutex.unlock();
+        return;
+    }   
+    string_mutex.lock();
+    if(strlen(logpageString)<2){
+        string_mutex.unlock();
+        return;
+    }
+    double nowT=clock()/(CLOCKS_PER_SEC*1.0f);
+    if(nowT>(getLogTime+5)){
+        string_mutex.unlock();
+        return;
+    }
+    jstring stringArg1 = plane_env->NewStringUTF(logpageString);
+    string_mutex.unlock();
+    jstring jstr = (jstring) plane_env->CallStaticObjectMethod(threadcommandsClass, midToThreadString,stringArg1);
+    env->DeleteLocalRef(stringArg1);
+    const char* nativeString = plane_env->GetStringUTFChars(jstr, JNI_FALSE);
+    string_mutex.lock();
+    sprintf(logpageData,"%s",(char *)nativeString);
+    //printf("retriveLogData %s\n",logpageString);
+    string_mutex.unlock();
+    plane_env->ReleaseStringUTFChars(jstr, nativeString);
 }
 jstring JVM::getData(const char* reference){
     //jmethodID 
@@ -706,6 +765,7 @@ jstring JVM::getData(const char* reference){
     jstring stringArg1 = env->NewStringUTF(reference);
     jstring jstr = (jstring) env->CallStaticObjectMethod(commandsClass, midToString,stringArg1);
     env->DeleteLocalRef(stringArg1);
+    
     return jstr;
 }
 int JVM::getStndbyFreq(int roll){
@@ -718,13 +778,17 @@ void JVM::setThreadData(){
     if(!hasjvm)
         return;
     jfloatArray planeDataV=plane_env->NewFloatArray(14);
+    command_mutex.lock();
     plane_env->SetFloatArrayRegion(planeDataV, 0, 14, planeData);
+    command_mutex.unlock();
     plane_env->CallStaticVoidMethod(threadcommandsClass, setThreadDataMethod,planeDataV); 
     plane_env->DeleteLocalRef(planeDataV);
 }
 void JVM::setData(jfloat jplaneData[]){
+    command_mutex.lock();
     for(int i=0;i<14;i++)
         planeData[i]=jplaneData[i];
+    command_mutex.unlock();
 }
 PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
     PlaneData retVal;
@@ -958,7 +1022,7 @@ void menu_handler(void * in_menu_ref, void * in_item_ref)
         if(jvmO->hasjvm){
             if(enabledATCPro){
             printf("JVM MENU STOP\n");
-            stopPlanes();
+                jvmO->systemstop();
             }
            jvmO->start();
         }
@@ -1071,16 +1135,17 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
     int ww=r-l;
     JVM* jvmO=getJVM();
     if(jvmO->hasjvm){
-        jstring jstr;
+        //jstring jstr;
+        char* nativeString;
         if(jvmO->logPage==3)
-         jstr= jvmO->getData("Console:vor");
+         nativeString= jvmO->getLogData("Console:vor");
         else if(jvmO->logPage==4)
-         jstr= jvmO->getData("Console:ndb");
+         nativeString= jvmO->getLogData("Console:ndb");
         else if(jvmO->logPage==2)
-         jstr= jvmO->getData("Console:freq");
+         nativeString= jvmO->getLogData("Console:freq");
         else
-         jstr= jvmO->getData("Console");
-        const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
+         nativeString= jvmO->getLogData("Console");
+        //const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
     
         //char* astring=(char *)nativeString; 
         char* astring;
@@ -1092,7 +1157,7 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
 
             
 	    XPLMDrawString(col_white, l + 10, t - 20, astring, &ww, xplmFont_Proportional);
-        jvmO->env->ReleaseStringUTFChars(jstr, nativeString);
+        //jvmO->env->ReleaseStringUTFChars(jstr, nativeString);
     
     }
     else{
@@ -1142,7 +1207,7 @@ float SendATCData(float                inElapsedSinceLastCall,
             jvmO->setICAO();
             jvmO->setIcaov=true;
         }
-        double nowT=clock()/(CLOCKS_PER_SEC*1.0f);
+        float nowT=jvmO->getSysTime();//clock()/(CLOCKS_PER_SEC*1.0f);
         if(jvmO->lastFoundNav>0||nowT>jvmO->lastNavAudio+30){
             //jvmO->getData("doCommand:playMorse:VAL");
             jvmO->getMorse();
@@ -1160,7 +1225,7 @@ float SendATCData(float                inElapsedSinceLastCall,
             //enabledATCPro=false;
         }*/
     }
-    return 0.5;
+    return -1;
 }
 void JVM::popupNoJVM(){
      XPLMCreateWindow_t params;
