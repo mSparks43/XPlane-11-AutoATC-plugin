@@ -46,6 +46,7 @@ float	SendATCData(
                                    float                inElapsedTimeSinceLastFlightLoop,    
                                    int                  inCounter,    
                                    void *               inRefcon); 
+void aircraftLoop();	
 //static  // The menu container we'll append all our menu items to                                   
 void menu_handler(void * in_menu_ref, void * in_item_ref);
 //static 

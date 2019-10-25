@@ -1165,6 +1165,7 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
 }
+int rolls=0;
 float SendATCData(float                inElapsedSinceLastCall,    
                                    float                inElapsedTimeSinceLastFlightLoop,    
                                    int                  inCounter,    
@@ -1173,58 +1174,59 @@ float SendATCData(float                inElapsedSinceLastCall,
    
     JVM* jvmO=getJVM();
     if(!jvmO->hasjvm)
-        return 1;
+        return -1;
 
 
     if(jvmO->hasjvm){
-        jfloat tplaneData[14]={};
+        
+            jfloat tplaneData[14]={};
 
-        tplaneData[0]=(jfloat)(XPLMGetDatai(transponder_codeRef)*1.0);
-        tplaneData[1]=XPLMGetDataf(latitudeRef);
-        tplaneData[2]=XPLMGetDataf(longitudeRef);
-        tplaneData[3]=XPLMGetDataf(altitudeRef)*3.28084;
-        tplaneData[4]=(jfloat)(XPLMGetDatai(com1_freq_hzRef)*1.0);
-        tplaneData[5]=(jfloat)(XPLMGetDatai(com1_stdby_freq_hz)*1.0);
-        tplaneData[6]=XPLMGetDataf(iasRef);
-        tplaneData[7]=XPLMGetDataf(gyroHeadingRef);
-        tplaneData[8]=XPLMGetDataf(altPressureRef);
-        tplaneData[9]=XPLMGetDataf(mslPressureRef);
-        tplaneData[10]=XPLMGetDataf(fpmRef);
-        tplaneData[11]=XPLMGetDataf(pitchRef);
-        tplaneData[12]=XPLMGetDataf(rollRef);
-        int battery_array[4];
-        XPLMGetDatavi(battery_onRef, battery_array, 0, 4);
-        float b_on=0.0;
-        for(int i=0;i<4;i++)
-            if(battery_array[i]>0)
-                b_on=1.0;   
-        tplaneData[13]=(jfloat)(XPLMGetDatai(com1_onRef)*b_on);
-        jvmO->setData(tplaneData);
-        //PlaneData localData=jvmO->getPlaneData(-1,jvmO->env);
-        //jvmO->live=localData.live;
-        jvmO->getCommandData();
-        if(!jvmO->setIcaov){
-            jvmO->setICAO();
-            jvmO->setIcaov=true;
-        }
-        float nowT=jvmO->getSysTime();//clock()/(CLOCKS_PER_SEC*1.0f);
-        if(jvmO->lastFoundNav>0||nowT>jvmO->lastNavAudio+30){
-            //jvmO->getData("doCommand:playMorse:VAL");
-            jvmO->getMorse();
-        }
-        if(!enabledATCPro){
-            
-            if(jvmO->live){ 
-                jvmO->updateAirframes();
-                initPlanes();
-                enabledATCPro=true;
+            tplaneData[0]=(jfloat)(XPLMGetDatai(transponder_codeRef)*1.0);
+            tplaneData[1]=XPLMGetDataf(latitudeRef);
+            tplaneData[2]=XPLMGetDataf(longitudeRef);
+            tplaneData[3]=XPLMGetDataf(altitudeRef)*3.28084;
+            tplaneData[4]=(jfloat)(XPLMGetDatai(com1_freq_hzRef)*1.0);
+            tplaneData[5]=(jfloat)(XPLMGetDatai(com1_stdby_freq_hz)*1.0);
+            tplaneData[6]=XPLMGetDataf(iasRef);
+            tplaneData[7]=XPLMGetDataf(gyroHeadingRef);
+            tplaneData[8]=XPLMGetDataf(altPressureRef);
+            tplaneData[9]=XPLMGetDataf(mslPressureRef);
+            tplaneData[10]=XPLMGetDataf(fpmRef);
+            tplaneData[11]=XPLMGetDataf(pitchRef);
+            tplaneData[12]=XPLMGetDataf(rollRef);
+            int battery_array[4];
+            XPLMGetDatavi(battery_onRef, battery_array, 0, 4);
+            float b_on=0.0;
+            for(int i=0;i<4;i++)
+                if(battery_array[i]>0)
+                    b_on=1.0;   
+            tplaneData[13]=(jfloat)(XPLMGetDatai(com1_onRef)*b_on);
+            jvmO->setData(tplaneData);
+            //PlaneData localData=jvmO->getPlaneData(-1,jvmO->env);
+            //jvmO->live=localData.live;
+            jvmO->getCommandData();
+            if(!jvmO->setIcaov){
+                jvmO->setICAO();
+                jvmO->setIcaov=true;
             }
-        }
-       /* else if(!thisData.live&&enabledATCPro){
-            //stopPlanes();
-            //enabledATCPro=false;
-        }*/
+            float nowT=jvmO->getSysTime();//clock()/(CLOCKS_PER_SEC*1.0f);
+            if(jvmO->lastFoundNav>0||nowT>jvmO->lastNavAudio+30){
+                //jvmO->getData("doCommand:playMorse:VAL");
+                jvmO->getMorse();
+            }
+            if(!enabledATCPro){
+                
+                if(jvmO->live){ 
+                    jvmO->updateAirframes();
+                    initPlanes();
+                    enabledATCPro=true;
+                }
+            }
+          
+       
     }
+    
+    aircraftLoop();
     return -1;
 }
 void JVM::popupNoJVM(){

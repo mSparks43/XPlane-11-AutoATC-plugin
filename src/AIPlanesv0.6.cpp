@@ -44,11 +44,12 @@ float	BeginAI();
 
 // Used to update each aircraft every frame.
 
-static float	AircraftLoopCallback(
+/*static float	AircraftLoopCallback(
                                    float                inElapsedSinceLastCall,    
                                    float                inElapsedTimeSinceLastFlightLoop,    
                                    int                  inCounter,    
-                                   void *               inRefcon);   
+                                   void *               inRefcon);*/  
+							    
 AircraftData::AircraftData(){
 	//time=clock();
  }
@@ -467,7 +468,7 @@ void Aircraft::SetAircraftData(void)
 	/*if(speed>0&&(ll->last_x[2][0]>0.01||ll->last_x[2][0]<-0.01)&&(ll->last_x[3][0]>0.01||ll->last_x[3][0]<-0.01)){
 		data.psi=(atan2(ll->last_x[2][0],-ll->last_x[3][0])* (180.0/3.141592653589793238463));
 	}*/
-	if(speed>0){
+	if(speed>0.1){
 		data.psi=(atan2(velocity.x,-velocity.z)* (180.0/3.141592653589793238463));
 	}
 	//printf("flying %f %f %f %f %f\n",data.psi,ll->last_x[0][0],ll->last_x[1][0],ll->last_x[2][0],ll->last_x[3][0]);
@@ -575,11 +576,11 @@ void Aircraft::SetAircraftData(void)
     {
 
 		if(ref_style==0){	//cls_drefs	
-			float tire[17] = {0,0,gear,gear*0.5,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,NULL};
+			float tire[17] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,NULL};
 			XPLMInstanceSetPosition(g_instance[0], &dr, tire);
 		}
 		else if(ref_style==1){//wt3_drefs
-			float tire[19] = {0,0,gear,gear*0.5,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,NULL};
+			float tire[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,NULL};
 			XPLMInstanceSetPosition(g_instance[0], &dr, tire);
 		}
 		else{ //xmp_drefs
@@ -686,16 +687,16 @@ void initPlanes(){
 		aircraft[i].id=i+1;
 	}
 	liveThread=true;
-	XPLMRegisterFlightLoopCallback(	AircraftLoopCallback,/* Callback */-1.0,	/* Interval */NULL);/* refcon not used. */
+	//XPLMRegisterFlightLoopCallback(	AircraftLoopCallback,/* Callback */-1.0,	/* Interval */NULL);/* refcon not used. */
 
 }
 void stopPlanes(){
     //XPLMUnregisterFlightLoopCallback(MyFlightLoopCallback0, NULL);
 	printf("stopPlanes\n");
-	if(liveThread){
+	/*if(liveThread){
 		XPLMUnregisterFlightLoopCallback(AircraftLoopCallback, NULL);
 		
-	}
+	}*/
 	liveThread=false;
 	run=false;
 	if(m_thread.joinable())
@@ -751,30 +752,19 @@ float	BeginAI()
 
 //AircraftData userData;
 int call=0;
-float	AircraftLoopCallback(
-                                   float                inElapsedSinceLastCall,    
-                                   float                inElapsedTimeSinceLastFlightLoop,    
-                                   int                  inCounter,    
-                                   void *               inRefcon)
+//float	AircraftLoopCallback(float                inElapsedSinceLastCall, float                inElapsedTimeSinceLastFlightLoop,   int                  inCounter,    void *               inRefcon)
+void aircraftLoop()
 {
 	
-    
+    if(!liveThread)
+		return;
 	// Get User Aircraft data
-
-	/*
+	//printf("flight loop\n");
 	for(int i=0;i<30;i++){
-		aircraft[i].GetAircraftData();
-		
-	}
-	*/
-	for(int i=0;i<30;i++){
-		//g_ac_mutex[i].lock();
 		aircraft[i].PrepareAircraftData();
 		aircraft[i].SetAircraftData();
 		//g_ac_mutex[i].unlock();
 	}
 	soundSystem.update();
-	//double nowlooptime=clock();
-	//printf("flightloop %f\n",(nowlooptime-startlooptime));
-	return -1;
+	//return -1;
 }
