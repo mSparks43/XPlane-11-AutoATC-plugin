@@ -584,7 +584,7 @@ void Aircraft::SetAircraftData(void)
 			XPLMInstanceSetPosition(g_instance[0], &dr, tire);
 		}
 		else{ //xmp_drefs
-			float tire[19] = {0,0,gear,gear*0.5,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,NULL};
+			float tire[19] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,NULL};
 			XPLMInstanceSetPosition(g_instance[0], &dr, tire);
 		}
         

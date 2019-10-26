@@ -1,5 +1,6 @@
 #include "Simulation.h"
 #include "scppnt/trisolve.h"
+#include <math.h>
 //Filter simulation to remove lat long alt -> meter conversion noise, x,y filter
 Simulation::Simulation(double rate){
     double aelem[16] = {
