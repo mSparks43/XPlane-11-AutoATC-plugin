@@ -843,7 +843,7 @@ void JVM::getThreadCommandData(){
     if(length>0){
        command_mutex.lock();
        String *s=new String(nativeString);
-       //printf("got command %s",s->s);
+       //printf("got command %s\n",s->s);
        commandsList.push_back(s);
        command_mutex.unlock();
     }
@@ -851,13 +851,45 @@ void JVM::getThreadCommandData(){
 }
 void JVM::getCommandData(){
     command_mutex.lock();
+    //printf("commandsList size %d\n",commandsList.size());
     if(commandsList.size()>0){
         
         for(int i=0;i<commandsList.size();i++){
-            XPLMCommandRef cmd= XPLMFindCommand(commandsList[i]->s);
-           // printf("run command %s",commandsList[i]->s);
-            if(cmd)
-                XPLMCommandOnce(cmd);
+            std::string commandData (commandsList[i]->s); 
+             //printf("in commandsList %d\n",commandsList.size());
+            std::size_t found = commandData.find("=");
+            //printf("found %d\n",found);
+            if (found==std::string::npos){
+                 //printf("fire command %s\n",commandsList[i]->s);
+                XPLMCommandRef cmd= XPLMFindCommand(commandsList[i]->s);
+           
+                if(cmd)
+                    XPLMCommandOnce(cmd);
+            }
+            else{
+                //printf("dataref %s\n",commandsList[i]->s);
+                std::string dataref = commandData.substr (0,found);
+               // printf("dataref %s %s\n",commandsList[i]->s,dataref.c_str());
+                XPLMDataRef dRef = XPLMFindDataRef(dataref.c_str());
+                
+                if(dRef!=NULL){
+                   // printf("found dataref %s\n",dataref.c_str());
+                    std::string value = commandData.substr (found+1);
+                    std::size_t decimalF = value.find(".");
+                    char* end;
+                    if (decimalF==std::string::npos){
+                        long xpvalue=strtol(value.c_str(),&end,10);
+                        XPLMSetDatai(dRef, (int)xpvalue);
+                        //printf("set dataref %s to %d\n",dataref.c_str(),xpvalue);
+
+                    }
+                    else{
+                        double xpvalue=strtod(value.c_str(),&end);
+                        XPLMSetDataf(dRef, (float)xpvalue);
+                        //printf("set dataref %s to %f\n",dataref.c_str(),xpvalue);
+                    }
+                }
+            }
             delete commandsList[i];
         }
         commandsList.clear();
