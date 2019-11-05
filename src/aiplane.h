@@ -24,6 +24,7 @@ public:
     AircraftData(void);
 
 };
+
 /*class AircraftFrame
 {
 	public:
@@ -56,7 +57,8 @@ private:
 	XPLMDataRef	dr_plane_gear_deploy;
 	XPLMDataRef	dr_plane_throttle;*/
 	XPLMObjectRef* g_object=NULL;
-	XPLMInstanceRef g_instance[1]={NULL};
+	XPLMInstanceRef g_instance[6]={NULL};
+	int modelCount=1;
 	const char * cls_drefs[17]={ "traf/mw_def",
 	"traf/nw_def",
 	"traf/lgear",
@@ -72,6 +74,7 @@ private:
 	"traf/touch_down",
 	"traf/vint_circle",
 	"traf/vint_circle2", NULL };
+	const char * acf_drefs[5]={ "autoatc/engine/POINT_tacrad0","autoatc/engine/POINT_tacrad1","autoatc/engine/POINT_prop_ang_deg0","autoatc/engine/POINT_prop_ang_deg1",NULL};
 	const char * wt3_drefs[19]={ "traf/mw_def",
 	"traf/nw_def",
 	"cjs/world_traffic/main_gear_retraction_ratio",
@@ -115,6 +118,7 @@ private:
 
 	float startMoveTime;
 	double rpm;
+	double currentrpm;
 	double yOffset;
 	double headingRollover;
 	bool rolledOver;
@@ -145,7 +149,7 @@ public:
 	void SetAircraftData(void);
 	v getSndSrc();
 	v getVelocity();
-	void setModelObject(XPLMObjectRef inObject);
+	void setModelObject(XPLMObjectRef inObject,int modelPart);
 	//void loadedobject(XPLMObjectRef inObject, void *inRef);
 	//void load_cb(const char * real_path, void * ref);
 };

@@ -8,14 +8,23 @@
 #include <fstream>
 #include <mutex>
 #include <vector>
-#define MAXLEN 255
+#define MAXLEN 2048
+class acModelDef
+{
+public:
+   int acID;
+   int pID;
+
+};
 class AirframeDef{
     private:
     double yOffset;
-    char path[512];
+    char path[2048];
     int soundIndex;
     int drefStyle;
+    
     public:
+    acModelDef acDefs[6];
     AirframeDef();
     void setData(std::string inLine);
     char* getPath(void);
@@ -164,6 +173,7 @@ public:
     void setThreadData();
     PlaneData getPlaneData(int id,JNIEnv *caller_env);
     char* getModel(int id);
+    acModelDef* getModelPart(int id,int PartID);
     double getOffset(int id);
     int getSound(int id);
     int getDrefStyle(int id);

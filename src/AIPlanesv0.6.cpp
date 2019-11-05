@@ -82,14 +82,22 @@ Aircraft aircraft[30];
 AircraftSounds soundSystem(aircraft);
 //planeid *plnid=NULL;
 bool inLoading;
+/*typedef struct {
+	int acID;
+	int pID;
+} acModelDef;*/
+
 static void loadedobject(XPLMObjectRef inObject, void *inRef){
-	int id=*(int *)inRef;
+	acModelDef acDef=*(acModelDef *)inRef;
+	int id=acDef.acID;//*(int *)inRef;
+	int modelPart=acDef.pID;//*(int *)modelPartRef;
 	char debugStr[512];
 	sprintf(debugStr,"loaded object C++id=%d ref=%d\n",id,inObject);
 	XPLMDebugString(debugStr);
 	printf(debugStr);
-	aircraft[id-1].setModelObject(inObject);
+	aircraft[id-1].setModelObject(inObject,modelPart);
 	inLoading=false;
+	
 	
 }
 int pid=25;
@@ -105,18 +113,20 @@ char found_path[1024];
 	else
 		printf("skipped loading object %s\n",real_path);
 }
-void Aircraft::setModelObject(XPLMObjectRef inObject){
+void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
 	//XPLMCreateInstance(inObject, drefs);
 	if(inObject)
 	        {
-				if(g_instance[0])
-					XPLMDestroyInstance(g_instance[0]);
+				if(g_instance[partID])
+					XPLMDestroyInstance(g_instance[partID]);
 				if(ref_style==0)
-					g_instance[0] = XPLMCreateInstance(inObject, cls_drefs);
+					g_instance[partID] = XPLMCreateInstance(inObject, cls_drefs);
 				else if(ref_style==1)
-					g_instance[0] = XPLMCreateInstance(inObject, wt3_drefs);
+					g_instance[partID] = XPLMCreateInstance(inObject, wt3_drefs);
+				else if(ref_style==3)
+					g_instance[partID] = XPLMCreateInstance(inObject, acf_drefs);
 				else if(ref_style==2)
-					g_instance[0] = XPLMCreateInstance(inObject, xmp_drefs);
+					g_instance[partID] = XPLMCreateInstance(inObject, xmp_drefs);
             }
 }
 //void Aircraft::GetAircraftData(AircraftData userdata)
@@ -222,8 +232,11 @@ void Aircraft::PrepareAircraftData()
 		        if(g_instance[0])
 		        {
 					printf("dropping object for id= %d\n",(id-1));
-					XPLMDestroyInstance(g_instance[0]);
-					g_instance[0]=NULL;
+					for(int i=0;i<modelCount;i++){
+						XPLMDestroyInstance(g_instance[i]);
+						g_instance[i]=NULL;
+					}
+					modelCount=1;
 					airFrameIndex=-1;
 					toLoadAirframe=false;
 					inLoading=false;
@@ -240,16 +253,58 @@ void Aircraft::PrepareAircraftData()
 		if(g_instance[0])
 	    {
 			printf("dropping inloading object for load id= %d\n",id);
-			XPLMDestroyInstance(g_instance[0]);
+			for(int i=0;i<modelCount;i++){
+						XPLMDestroyInstance(g_instance[i]);
+						g_instance[i]=NULL;
+			}
 					
 		}
 		XPLMDebugString("toLoadAirframe\n");
 		sprintf(debugStr,"searching for id=%d afI=%d to %s sound=%d\n",id,airFrameIndex,af,soundIndex);
 		XPLMDebugString(debugStr);
-		int *pid=&id;
-		inLoading=true;
-		XPLMLoadObjectAsync(af, loadedobject, pid);
 		
+		//int *pid=&id;
+		inLoading=true;
+		//acDef->acID=id;
+		//acDef->pID=0;
+		std::string afData (af); 
+		std::size_t found = afData.find("?");
+		if (found==std::string::npos){
+			acModelDef *acDef=jvmO->getModelPart(airFrameIndex,0);
+			acDef->acID=id;
+			acDef->pID=0;
+			modelCount=1;
+			XPLMLoadObjectAsync(af, loadedobject,acDef);
+		}
+		else{
+			std::string pathS = afData.substr (0,found);
+
+    		std::size_t found2 = afData.find("?",found+1);
+			acModelDef *acDef=jvmO->getModelPart(airFrameIndex,0);
+			modelCount=1;
+			acDef->acID=id;
+			acDef->pID=0;
+			printf("to sub model load %s part %d\n",pathS.c_str(),0);
+			XPLMLoadObjectAsync(pathS.c_str(), loadedobject,acDef);
+			while(found!=std::string::npos){
+
+				pathS = afData.substr (found+1,found2-found-1);
+				acDef=jvmO->getModelPart(airFrameIndex,modelCount);
+				acDef->acID=id;
+				acDef->pID=modelCount;
+				printf("to sub model load %s part %d\n",pathS.c_str(),acDef->pID);
+				modelCount++;
+
+				XPLMLoadObjectAsync(pathS.c_str(), loadedobject,acDef);
+				found=found2;
+				if(found!=std::string::npos){
+					found2 = afData.find("?",found+1);
+					
+				}
+			}
+    		//std::string pathS2 = afData.substr (found+1,found2);
+			//printf("to load %s and %s\n",pathS.c_str(),pathS2.c_str());
+		}
 	}
 
    
@@ -444,62 +499,22 @@ void Aircraft::SetAircraftData(void)
 	ll->xPos=data.x;
 	ll->yPos=data.z;
 	ahs->xPos=data.y;
-	/*if(data.psi>=360.0&&!rolledOver){
-		ahs->last_x[1][0]=data.psi;
-		rolledOver=true;
-	}
-	else if(data.psi<=0.0&&!rolledOver){
-		ahs->last_x[1][0]=data.psi;
-		rolledOver=true;
-	}*/
-	/*if(data.psi<0)
-	{
-		printf("rolling %f %f %f %f\n",data.psi,ahs->last_x[1][0],ahs->last_x[2][0],ahs->last_x[3][0]);
-		data.psi=360+data.psi;
-		printf("rolling to %f %f %f %f\n",data.psi,ahs->last_x[1][0],ahs->last_x[2][0],ahs->last_x[3][0]);
-	}
-	if(data.psi>360)
-	{
-		printf("rolling %f %f %f %f\n",data.psi,ahs->last_x[1][0],ahs->last_x[2][0],ahs->last_x[3][0]);
-		data.psi=data.psi-360;
-		printf("rolling to %f %f %f %f\n",data.psi,ahs->last_x[1][0],ahs->last_x[2][0],ahs->last_x[3][0]);
-	}*/
+
 	float speed=velocity/velocity;
-	/*if(speed>0&&(ll->last_x[2][0]>0.01||ll->last_x[2][0]<-0.01)&&(ll->last_x[3][0]>0.01||ll->last_x[3][0]<-0.01)){
-		data.psi=(atan2(ll->last_x[2][0],-ll->last_x[3][0])* (180.0/3.141592653589793238463));
-	}*/
+
 	if(speed>0.1){
 		data.psi=(atan2(velocity.x,-velocity.z)* (180.0/3.141592653589793238463));
 	}
-	//printf("flying %f %f %f %f %f\n",data.psi,ll->last_x[0][0],ll->last_x[1][0],ll->last_x[2][0],ll->last_x[3][0]);
+
 
 	if(data.psi-ahs->last_x[1][0]>180.0||data.psi-ahs->last_x[1][0]<-180.0)
 	{
-		//printf("need to smooth %f %f %f %f %f\n",data.psi,ahs->last_x[1][0],ahs->last_x[2][0],ahs->last_x[3][0],(data.psi-ahs->last_x[1][0]));
-		//if(ahs->last_x[1][0]>180)
-		
-		//else
 
-		//ahs->last_x[1][0]=data.psi;
-		//ahs->yPos=data.psi;
-		//for(int i=0;i<40;i++)
 		ahs->last_x[1][0]=data.psi;//180.0+ahs->last_x[1][0];
-		//ahs->last_x[3][0]=ahs->last_x[1][0];
-		//printf("became %f %f %f %f\n",data.psi,ahs->last_x[1][0],ahs->last_x[2][0],ahs->last_x[3][0]);
-		
-		//	ahs->frame();
+
 		
 	}
-	/*else if((data.psi-ahs->getY()>180||data.psi+ahs->getY()>180)&&!rolledOver){
-		ahs->last_x[1][0]=data.psi;
-		rolledOver=true;
-	}*/
-	/*else if(data.psi>0.0&&data.psi<360.0){
-		if(rolledOver){
-			rolledOver=false;
-			ahs->last_x[1][0]=data.psi;
-		}
-	}*/
+
 	ahs->yPos=data.psi;
 	rp->xPos=data.the;
 	rp->yPos=data.phi;
@@ -567,25 +582,34 @@ void Aircraft::SetAircraftData(void)
 		inHover=false;
 		rpm=0;
 	}
-
-	thrust*=rpm;
+	if(currentrpm<rpm)
+		currentrpm++;
+	else if(currentrpm>rpm)
+		currentrpm--;
+	thrust*=currentrpm;
 
 	
-
-    if(g_instance[0])
+	for(int i=0;i<modelCount;i++)
+    if(g_instance[i])
     {
-
+		
 		if(ref_style==0){	//cls_drefs	
 			float tire[17] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,NULL};
-			XPLMInstanceSetPosition(g_instance[0], &dr, tire);
+			
+			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
 		else if(ref_style==1){//wt3_drefs
 			float tire[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,NULL};
-			XPLMInstanceSetPosition(g_instance[0], &dr, tire);
+			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
+		}
+		else if(ref_style==2){
+			float spin=((int)(thrust)%360);;
+			float tire[5] = {(float)8.0,(float)8.0,spin,spin,NULL};
+			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
 		else{ //xmp_drefs
 			float tire[19] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,NULL};
-			XPLMInstanceSetPosition(g_instance[0], &dr, tire);
+			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
         
     }
@@ -740,7 +764,11 @@ float	BeginAI()
             XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/land");
             XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/nav");
             XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/taxi");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/sb");   
+            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/sb");
+			XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/engine/POINT_prop_ang_deg0");  
+			XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/engine/POINT_prop_ang_deg1");  
+			XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/engine/POINT_tacrad0");  
+			XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/engine/POINT_tacrad1");     
         }
 		
     }

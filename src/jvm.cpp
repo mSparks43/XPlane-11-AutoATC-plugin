@@ -28,7 +28,7 @@
  #include <stdlib.h>
  #endif
 
- const char* plugin_version = "About:0.8.6.5b7";
+ const char* plugin_version = "About:0.8.71.tb2";
 char gBob_debstr2[128];
 char xp_path[512];
 char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/java/airframes_860.txt";
@@ -335,7 +335,7 @@ void JVM::activateJVM(void){
             return;
         }
         printf("AutoATC active !\n");
-        sprintf(gBob_debstr2,"AutoATC active !\n");
+        sprintf(gBob_debstr2,"AutoATC Dev1 active !\n");
          XPLMDebugString(gBob_debstr2); 
          hasjvm=true;
     }
@@ -550,7 +550,7 @@ void JVM::init_parameters (char * jvmfilename)
 void JVM::parse_config (char * filename)
 {
    // struct file_parameters * lparms=&parms;
-  char *s, buff[256];
+  char *s, buff[MAXLEN];
   FILE *fp = fopen (filename, "r");
   if (fp == NULL)
   {
@@ -722,13 +722,16 @@ void JVM::broadcast(void){
         return;
     env->CallStaticVoidMethod(commandsClass, broadcastMethod);                      // call method
 }
+char retlogpageData[2048]={0};
 char* JVM::getLogData(const char* reference){
     string_mutex.lock();
     sprintf(logpageString,"%s",reference);
     getLogTime=clock()/(CLOCKS_PER_SEC*1.0f);
     //printf("getLogData %s\n",logpageString);
+    
+    sprintf(retlogpageData,"%s",logpageData);
     string_mutex.unlock();
-    return logpageData;
+    return retlogpageData;
 }
 void JVM::retriveLogData(){
     if(!hasjvm){
@@ -737,18 +740,18 @@ void JVM::retriveLogData(){
         string_mutex.unlock();
         return;
     }   
-    string_mutex.lock();
+    //string_mutex.lock();
     if(strlen(logpageString)<2){
-        string_mutex.unlock();
+        //string_mutex.unlock();
         return;
     }
     double nowT=clock()/(CLOCKS_PER_SEC*1.0f);
     if(nowT>(getLogTime+5)){
-        string_mutex.unlock();
+        //string_mutex.unlock();
         return;
     }
     jstring stringArg1 = plane_env->NewStringUTF(logpageString);
-    string_mutex.unlock();
+    //string_mutex.unlock();
     jstring jstr = (jstring) plane_env->CallStaticObjectMethod(threadcommandsClass, midToThreadString,stringArg1);
     env->DeleteLocalRef(stringArg1);
     const char* nativeString = plane_env->GetStringUTFChars(jstr, JNI_FALSE);
@@ -905,6 +908,15 @@ char* JVM::getModel(int id){
     if(id>=airframeDefs.size()||id<0)
         return standbyAirframe.getPath();
     return airframeDefs[id].getPath();
+}
+acModelDef* JVM::getModelPart(int id,int PartID){
+    //if(id>=airframeDefs.size()){
+        //updateAirframes();
+
+    //}
+    if(id>=airframeDefs.size()||id<0)
+        return &standbyAirframe.acDefs[PartID];
+    return &airframeDefs[id].acDefs[PartID];
 }
 double JVM::getOffset(int id){
     /*if(id>=airframeDefs.size()){
@@ -1207,7 +1219,8 @@ float SendATCData(float                inElapsedSinceLastCall,
     JVM* jvmO=getJVM();
     if(!jvmO->hasjvm)
         return -1;
-
+    if(jvmO->hasjvm)
+        return -1;
 
     if(jvmO->hasjvm){
         

@@ -87,6 +87,18 @@ NULL, NULL, NULL);
 XPLMRegisterDataAccessor("cjs/world_traffic/engine_rotation_angle1", xplmType_Float, 1, NULL,
 NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL);
+XPLMRegisterDataAccessor("autoatc/engine/POINT_prop_ang_deg0", xplmType_Float, 1, NULL,
+NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+NULL, NULL, NULL);
+XPLMRegisterDataAccessor("autoatc/engine/POINT_prop_ang_deg1", xplmType_Float, 1, NULL,
+NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+NULL, NULL, NULL);
+XPLMRegisterDataAccessor("autoatc/engine/POINT_tacrad0", xplmType_Float, 1, NULL,
+NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+NULL, NULL, NULL);
+XPLMRegisterDataAccessor("autoatc/engine/POINT_tacrad1", xplmType_Float, 1, NULL,
+NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+NULL, NULL, NULL);
 XPLMRegisterDataAccessor("cjs/world_traffic/touch_down", xplmType_Float, 1, NULL,
 NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL);
