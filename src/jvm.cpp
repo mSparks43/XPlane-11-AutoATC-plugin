@@ -267,14 +267,25 @@ bool JVM::connectJVM() {
         jint ver = env->GetVersion();
         sprintf(gBob_debstr2,"AutoATC:Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
         XPLMDebugString(gBob_debstr2);
-        jvm= jvms[0];               
+        jvm= jvms[0]; 
+                      
         return true;
     }
     else{
         //no existing JVM, make a new one
+        delete[] jvms;
         JavaVMInitArgs vm_args;                        // Initialization arguments
        vm_args.version = JNI_VERSION_1_6;             // minimum Java version
-       vm_args.nOptions = 0;                          // number of options
+       JavaVMOption* options = new JavaVMOption[5];
+        options[0].optionString = "-XX:+UseG1GC";
+        options[1].optionString = "-XX:MaxGCPauseMillis=2";
+        options[2].optionString = "-XX:+UseStringCache";
+        options[3].optionString = "-XX:ParallelGCThreads=3";
+        options[4].optionString = "-XX:ConcGCThreads=2";
+        vm_args.nOptions = 5;
+        vm_args.options = options; 
+       //vm_args.nOptions = 0; 
+                               // number of options
        vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
            //=============== load and initialize Java VM and JNI interface =============
        JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);  // YES !!
@@ -655,6 +666,8 @@ void JVM::joinThread(void){
             return;
         }
     printf("thread jvm join\n");
+    sprintf(gBob_debstr2,"thread jvm join\n");
+    XPLMDebugString(gBob_debstr2); 
 }
 void JVM::updateAirframes(void){
     if(!file_exists(CONFIG_FILE_DEFAULT_AIRFRAMES)){
@@ -686,7 +699,9 @@ void JVM::stop(void)
         return;
     //if(enabledATCPro)
     {
-            printf("JVM STOP\n");
+            //printf("JVM STOP\n");
+            sprintf(gBob_debstr2,"JVM STOP\n");
+            XPLMDebugString(gBob_debstr2); 
             stopPlanes();
             enabledATCPro=false;
     }
@@ -695,6 +710,8 @@ void JVM::stop(void)
     systemstop();
     jvm->DetachCurrentThread();
      printf("AutoATC Stop!\n");
+     sprintf(gBob_debstr2,"AutoATC Stop!\n");
+            XPLMDebugString(gBob_debstr2); 
      hasjvm=false;
      //XPLMDebugString(gBob_debstr2);
 }
@@ -971,16 +988,29 @@ void JVM::createMenu(){
     XPLMAppendMenuItem(g_menu_id, "Settings", (void *)"Menu Item 5", 3);
     XPLMAppendMenuItem(g_menu_id, "About", (void *)"Menu Item 4", 4);
     
-    if(hasjvm){
+    
+}
+void JVM::registerFlightLoop(){
+    if(hasjvm&&!flightLoopActive){
                setICAO();
                XPLMRegisterFlightLoopCallback(	SendATCData,	/* Callback */10,					/* Interval */NULL);					/* refcon not used. */
+               sprintf(gBob_debstr2,"Register flight loop\n");
+                XPLMDebugString(gBob_debstr2); 
+                flightLoopActive=true;
                //initPlanes();
-           }
+    }
+}
+void JVM::unregisterFlightLoop(){
+    if(hasjvm&&flightLoopActive){
+        XPLMUnregisterFlightLoopCallback(SendATCData, NULL);
+        sprintf(gBob_debstr2,"Destroy flight loop\n");
+        XPLMDebugString(gBob_debstr2); 
+        flightLoopActive=false;
+    }
 }
 void JVM::destroyMenu(){
     XPLMDestroyMenu(g_menu_id);
-    if(hasjvm)
-        XPLMUnregisterFlightLoopCallback(SendATCData, NULL);
+    
 }
 void JVM::setICAO(){
    //JVM* jvmO=getJVM();
@@ -1066,6 +1096,8 @@ void menu_handler(void * in_menu_ref, void * in_item_ref)
         if(jvmO->hasjvm){
             if(enabledATCPro){
             printf("JVM MENU STOP\n");
+            sprintf(gBob_debstr2,"JVM MENU STOP\n");
+            XPLMDebugString(gBob_debstr2); 
                 jvmO->systemstop();
             }
            jvmO->start();
@@ -1219,8 +1251,8 @@ float SendATCData(float                inElapsedSinceLastCall,
     JVM* jvmO=getJVM();
     if(!jvmO->hasjvm)
         return -1;
-    if(jvmO->hasjvm)
-        return -1;
+    //if(jvmO->hasjvm)
+    //    return -1;
 
     if(jvmO->hasjvm){
         

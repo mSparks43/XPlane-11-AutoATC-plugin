@@ -602,7 +602,7 @@ void Aircraft::SetAircraftData(void)
 			float tire[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
-		else if(ref_style==2){
+		else if(ref_style==3){
 			float spin=((int)(thrust)%360);;
 			float tire[5] = {(float)8.0,(float)8.0,spin,spin,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
@@ -627,13 +627,16 @@ void sendData(){
 		jvmO->live=localData.live;
 	}
 }
-void do_model(){
+static void do_model(){
 	try{
 		bool attached=false;
 	JVM* jvmO=getJVM();
+	char gBob_debstr2[128];
+    sprintf(gBob_debstr2,"plane thread began\n");
+    XPLMDebugString(gBob_debstr2);
 	while(!liveThread&&run){
 		std::this_thread::sleep_for(std::chrono::seconds(1));
-		
+		//std::this_thread::sleep_for(std::chrono::seconds(15));
 		if(jvmO->hasjvm&&!attached){
 			jvmO->joinThread();
 			attached=true;
@@ -651,7 +654,9 @@ void do_model(){
 			attached=true;
 	}
 	printf("plane thread woke up\n");
-	
+
+    sprintf(gBob_debstr2,"plane thread woke up\n");
+    XPLMDebugString(gBob_debstr2);
 	int rolls=0;
 	//printf("thread ready\n");
 	while(liveThread&&run){
@@ -674,6 +679,7 @@ void do_model(){
 			//g_ac_mutex[i].unlock();
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		//std::this_thread::sleep_for(std::chrono::seconds(15));
 	}
 	
 	//if(attached)
@@ -684,9 +690,12 @@ void do_model(){
 	}catch (const std::exception& ex){
 
 	}
+	char gBob_debstr2[128];
+    sprintf(gBob_debstr2,"plane thread stopped\n");
+    XPLMDebugString(gBob_debstr2);
 	printf("plane thread stopped\n");
 }
-std::thread m_thread(do_model);
+std::thread m_thread(&do_model);
 
 void initPlanes(){
 

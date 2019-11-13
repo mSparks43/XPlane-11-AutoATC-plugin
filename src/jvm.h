@@ -131,6 +131,7 @@ public:
     bool hasjvm;
     bool setIcaov;
     bool loadedLibrary=false;
+    bool flightLoopActive=false;
     int logPage;
     float lastNavAudio;
     int lastFoundNav;
@@ -179,6 +180,8 @@ public:
     int getDrefStyle(int id);
     void createMenu();
     void destroyMenu();
+    void registerFlightLoop();
+    void unregisterFlightLoop();
     void popupNoJVM();
     void setICAO();
     void updateAirframes();

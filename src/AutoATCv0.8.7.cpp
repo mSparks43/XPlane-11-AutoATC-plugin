@@ -205,6 +205,7 @@ PLUGIN_API void XPluginDisable(void)
     JVM *jvmO = getJVM();
     if (jvmO->hasjvm)
     {
+        jvmO->unregisterFlightLoop();
         jvmO->systemstop();
        // jvmO->deactivateJVM();
     }
@@ -230,6 +231,7 @@ PLUGIN_API int XPluginEnable(void)
     }
     jvmO->activateJVM();
     jvmO->start();
+    jvmO->registerFlightLoop();
     return 1;
 }
 
