@@ -2,7 +2,7 @@
 C/C++ Source code for Xplane AutoATC plugin
 
 Requires the rest of the plugin available from
-https://forum.thresholdx.net/clubs/21-autoatc
+https://forums.x-plane.org/index.php?/files/file/45663-main-installation-files-for-autoatc-for-xplane-11/
 
 2 android companion applications are available.
 ### Free:
