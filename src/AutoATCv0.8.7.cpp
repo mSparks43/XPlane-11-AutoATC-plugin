@@ -18,7 +18,7 @@
 #include <jni.h>
 #include "xplane.h"
 #include <time.h>
-#include "vec_opps.h"
+
 #include "jvm.h"
 #include "Simulation.h"
 #include "aiplane.h"

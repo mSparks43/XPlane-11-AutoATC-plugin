@@ -16,7 +16,7 @@
  #include <stdio.h>
   #include <math.h>
   #include "Settings.h"
-  #include "vec_opps.h"
+  //#include "vec_opps.h"
   #include "Simulation.h"
   #include "aiplane.h"
   
@@ -28,8 +28,8 @@
  #include <stdlib.h>
  #endif
 
- const char* plugin_version = "About:0.8.71.tb2";
-char gBob_debstr2[128];
+ const char* plugin_version = "About:0.8.72";
+char gBob_debstr2[2048];
 char xp_path[512];
 char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/java/airframes_860.txt";
  bool file_exists (const std::string& name);
@@ -44,6 +44,7 @@ void				dummy_key_handler(XPLMWindowID in_window_id, char key, XPLMKeyFlags flag
 bool enabledATCPro;
 std::mutex command_mutex;
 std::mutex string_mutex;
+std::mutex int_mutex;
 void menu_handler(void *, void *);
 
  XPLMDataRef  transponder_codeRef = NULL;
@@ -95,6 +96,7 @@ void AirframeDef::setData(std::string inLine){
     yOffset=strtod(offsetS.c_str(),&end);
     soundIndex=strtol(soundS.c_str(),&end,10);
     drefStyle=strtol(drefStyleS.c_str(),&end,10);
+
     /* std::size_t foundwt3 = inLine.find("WorldTraffic");
 
      if(foundwt3==std::string::npos)
@@ -279,10 +281,10 @@ bool JVM::connectJVM() {
        JavaVMOption* options = new JavaVMOption[5];
         options[0].optionString = "-XX:+UseG1GC";
         options[1].optionString = "-XX:MaxGCPauseMillis=2";
-        options[2].optionString = "-XX:+UseStringCache";
-        options[3].optionString = "-XX:ParallelGCThreads=3";
-        options[4].optionString = "-XX:ConcGCThreads=2";
-        vm_args.nOptions = 5;
+        //options[2].optionString = "-XX:+UseStringCache";
+        options[2].optionString = "-XX:ParallelGCThreads=4";
+        options[3].optionString = "-XX:ConcGCThreads=4";
+        vm_args.nOptions = 4;
         vm_args.options = options; 
        //vm_args.nOptions = 0; 
                                // number of options
@@ -323,12 +325,7 @@ void JVM::activateJVM(void){
     else {                                  // if class found, continue
         sprintf(gBob_debstr2,"AutoATC Commands found\n");
         XPLMDebugString(gBob_debstr2);
-        broadcastMethod = env->GetStaticMethodID(commandsClass, "broadcast", "()V");  // find method
         
-        if(broadcastMethod == NULL){
-            XPLMDebugString("ERROR: method void broadcast() not found !\n");
-            return;
-        }
         getPlaneDataMethod = env->GetStaticMethodID(commandsClass, "getPlaneData", "(I)[D");  // find method
         if(getPlaneDataMethod == NULL){
             XPLMDebugString("ERROR: method void getPlaneData() not found !\n");
@@ -340,11 +337,7 @@ void JVM::activateJVM(void){
             return;
         }
         
-        getStndbyMethod=env->GetStaticMethodID(commandsClass, "getStndbyFreq", "(II)I");  // find method
-        if(getStndbyMethod == NULL){
-            XPLMDebugString("ERROR: method int getStndbyFreq() not found !\n");
-            return;
-        }
+        
         printf("AutoATC active !\n");
         sprintf(gBob_debstr2,"AutoATC Dev1 active !\n");
          XPLMDebugString(gBob_debstr2); 
@@ -624,7 +617,8 @@ void JVM::start(void)
         return;
     XPLMGetSystemPath(xp_path);
     sprintf(gBob_debstr2,"AutoATC Start!\n");
-    
+    fireTransmit=false;
+    fireNewFreq=true;
     XPLMDebugString(gBob_debstr2);
      
      
@@ -655,6 +649,11 @@ void JVM::joinThread(void){
             XPLMDebugString("ERROR: method void setData(float[]) not found !\n");
             return;
          }
+    getStndbyMethod=plane_env->GetStaticMethodID(threadcommandsClass, "getStndbyFreq", "(II)I");  // find method
+     if(getStndbyMethod == NULL){
+         XPLMDebugString("ERROR: method int getStndbyFreq() not found !\n");
+          return;
+       }
     commandString=plane_env->GetStaticMethodID(threadcommandsClass, "getCommandData", "()Ljava/lang/String;");  // find method
         if(commandString == NULL){
             XPLMDebugString("ERROR: method void getCommandData() not found !\n");
@@ -663,6 +662,12 @@ void JVM::joinThread(void){
     midToThreadString=env->GetStaticMethodID(threadcommandsClass, "getData", "(Ljava/lang/String;)Ljava/lang/String;");  // find method
         if(midToThreadString == NULL){
             XPLMDebugString("ERROR: method void getData() not found !\n");
+            return;
+        }
+        threadBroadcastMethod = env->GetStaticMethodID(threadcommandsClass, "broadcast", "()V");  // find method
+        
+        if(threadBroadcastMethod == NULL){
+            XPLMDebugString("ERROR: method void broadcast() not found !\n");
             return;
         }
     printf("thread jvm join\n");
@@ -737,7 +742,10 @@ void JVM::systemstop(void)
 void JVM::broadcast(void){
     if(!hasjvm)
         return;
-    env->CallStaticVoidMethod(commandsClass, broadcastMethod);                      // call method
+    command_mutex.lock();  
+    fireTransmit=true;
+    command_mutex.unlock();
+    
 }
 char retlogpageData[2048]={0};
 char* JVM::getLogData(const char* reference){
@@ -791,8 +799,27 @@ jstring JVM::getData(const char* reference){
 int JVM::getStndbyFreq(int roll){
     if(!hasjvm)
         return -1;
-    jint fOnehundred = (jint) env->CallStaticIntMethod(commandsClass, getStndbyMethod,roll,logPage);
-    return fOnehundred;
+    printf("get standby %d\n",roll);  
+
+    //jint fOnehundred = (jint) env->CallStaticIntMethod(commandsClass, getStndbyMethod,roll,logPage);
+    int retVal=0;
+    int_mutex.lock();
+    retVal=standbyFreqInt;
+    standbyRoll=roll;
+    fireNewFreq=true;
+    int_mutex.unlock();
+
+    return retVal;
+}
+void JVM::updateStndbyFreq(){
+    if(!fireNewFreq)
+        return;
+    int_mutex.lock();
+    jint fOnehundred = (jint) plane_env->CallStaticIntMethod(threadcommandsClass, getStndbyMethod,standbyRoll,logPage);
+    standbyFreqInt=fOnehundred;
+    printf("set standbyRoll %d\n",fOnehundred);  
+    fireNewFreq=false;
+    int_mutex.unlock();
 }
 void JVM::setThreadData(){
     if(!hasjvm)
@@ -803,6 +830,12 @@ void JVM::setThreadData(){
     command_mutex.unlock();
     plane_env->CallStaticVoidMethod(threadcommandsClass, setThreadDataMethod,planeDataV); 
     plane_env->DeleteLocalRef(planeDataV);
+}
+void JVM::doTransmit(){
+    command_mutex.lock();
+    plane_env->CallStaticVoidMethod(threadcommandsClass, threadBroadcastMethod);                      // call method
+    fireTransmit=false;
+    command_mutex.unlock();
 }
 void JVM::setData(jfloat jplaneData[]){
     command_mutex.lock();
@@ -943,6 +976,10 @@ double JVM::getOffset(int id){
     if(id>=airframeDefs.size()||id<0)
         return standbyAirframe.getOffset();
     return airframeDefs[id].getOffset();
+}
+v JVM::getOffset(int id,int PartID){
+    
+    return airframeDefs[id].acDefs[PartID].partoffsets;
 }
 int JVM::getSound(int id){
     /*if(id>=airframeDefs.size()){

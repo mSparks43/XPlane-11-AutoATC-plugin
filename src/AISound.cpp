@@ -1,7 +1,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
-#include "vec_opps.h"
+//#include "vec_opps.h"
 #include "XPLMPlanes.h"
 #include "XPLMDataAccess.h"
 #include "XPLMProcessing.h"
@@ -55,8 +55,8 @@ char * WaveFile::chunk_end(char * chunk_start, int swapped)
 	return chunk_start + (swapped ? SWAP_32(h->size) : h->size);
 }
 int sound_id=0;
-ALuint buffers[4];
-ALuint snd_srcs[6];
+ALuint buffers[5];
+ALuint snd_srcs[8];
 ALuint WaveFile::load_wave(const char * file_name)
 {
 	// First: we open the file and copy it into a single large memory buffer for processing.
@@ -188,7 +188,7 @@ AircraftSound::AircraftSound()
 	float looping=1.0f;
 	char path[512];
 	if(sound_id==0){
-		alGenSources(5,snd_srcs);
+		alGenSources(6,snd_srcs);
 		looping=0.0f;
 		snd_src=snd_srcs[sound_id];
 		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/java/audio/screech.wav");
@@ -234,6 +234,7 @@ AircraftSound::AircraftSound()
     //zero[0]=2.0f;
     zero[2]=5.0f;
     alSource3f(snd_src,AL_POSITION, zero[0],zero[1],zero[2]);
+	printf("AutoATC:load sound %d",sound_id);
 	CHECK_ERR();
 }
 void AircraftSound::play(){

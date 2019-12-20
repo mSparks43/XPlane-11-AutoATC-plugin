@@ -4,6 +4,8 @@
  #include "XPLMMenus.h"
   #include "XPLMDisplay.h"
    #include "XPLMDataAccess.h"
+   #include <math.h>
+   #include "vec_opps.h"
    #include <sstream>
 #include <fstream>
 #include <mutex>
@@ -14,7 +16,7 @@ class acModelDef
 public:
    int acID;
    int pID;
-
+   v partoffsets; 
 };
 class AirframeDef{
     private:
@@ -24,7 +26,7 @@ class AirframeDef{
     int drefStyle;
     
     public:
-    acModelDef acDefs[6];
+    acModelDef acDefs[12];
     AirframeDef();
     void setData(std::string inLine);
     char* getPath(void);
@@ -135,6 +137,8 @@ public:
     int logPage;
     float lastNavAudio;
     int lastFoundNav;
+    int standbyFreqInt;
+    int standbyRoll;
     JavaVM *jvm;                      // Pointer to the JVM (Java Virtual Machine)
     JNIEnv *env;                      // Pointer to native interface
     JNIEnv *plane_env;                      // Pointer to native interface
@@ -142,7 +146,7 @@ public:
     jclass threadcommandsClass;
     jmethodID getPlaneDataMethod;
     jmethodID getPlaneDataThreadMethod;
-    jmethodID broadcastMethod;
+    jmethodID threadBroadcastMethod;
     jmethodID setThreadDataMethod;
     jmethodID midToString;
     jmethodID midToThreadString;
@@ -150,6 +154,8 @@ public:
     jmethodID getStndbyMethod;
     AirframeDef standbyAirframe;
     bool live;
+    bool fireTransmit;
+    bool fireNewFreq;
     char notepad[1024];
     JVM();
     ~JVM();
@@ -167,6 +173,7 @@ public:
     void systemstop(void);
     void broadcast(void);
     int getStndbyFreq(int roll);
+    void updateStndbyFreq(void);
     jstring getData(const char*);
     char *getLogData(const char*);//inline function to get cached log window data
     void retriveLogData();//queue up log window data
@@ -176,6 +183,7 @@ public:
     char* getModel(int id);
     acModelDef* getModelPart(int id,int PartID);
     double getOffset(int id);
+    v getOffset(int id,int PartID);
     int getSound(int id);
     int getDrefStyle(int id);
     void createMenu();
@@ -194,6 +202,7 @@ public:
     void setDevice(char*);
     void setisSlave(long);
     void getMorse();
+    void doTransmit();
     void joinThread();
     float getSysTime();
     //void testExistingJVM();

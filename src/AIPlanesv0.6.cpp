@@ -3,7 +3,7 @@
 #include <math.h>
 //#include <cmath.h>
 #include <stdio.h>
-#include "vec_opps.h"
+//#include "vec_opps.h"
 #include "XPLMPlanes.h"
 #include "XPLMDataAccess.h"
 #include "XPLMProcessing.h"
@@ -123,8 +123,11 @@ void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
 					g_instance[partID] = XPLMCreateInstance(inObject, cls_drefs);
 				else if(ref_style==1)
 					g_instance[partID] = XPLMCreateInstance(inObject, wt3_drefs);
-				else if(ref_style==3)
+				else if(ref_style==3){
 					g_instance[partID] = XPLMCreateInstance(inObject, acf_drefs);
+					
+
+				}
 				else if(ref_style==2)
 					g_instance[partID] = XPLMCreateInstance(inObject, xmp_drefs);
             }
@@ -249,7 +252,7 @@ void Aircraft::PrepareAircraftData()
 	if(!inLoading&&toLoadAirframe){
 		toLoadAirframe=false;
 		char* af=jvmO->getModel(airFrameIndex);
-		char debugStr[512];
+		char debugStr[2048];
 		if(g_instance[0])
 	    {
 			printf("dropping inloading object for load id= %d\n",id);
@@ -274,7 +277,29 @@ void Aircraft::PrepareAircraftData()
 			acDef->acID=id;
 			acDef->pID=0;
 			modelCount=1;
-			XPLMLoadObjectAsync(af, loadedobject,acDef);
+			std::size_t foundV=afData.find("|");
+			if (foundV==std::string::npos){
+				acDef->partoffsets.x=acDef->partoffsets.y=acDef->partoffsets.z=0.0;
+				XPLMLoadObjectAsync(af, loadedobject,acDef);
+			}
+			else{
+				std::string pathS = afData.substr (0,foundV);
+				XPLMLoadObjectAsync(pathS.c_str(), loadedobject,acDef);
+				std::size_t foundV2 = afData.find("|",foundV+1);
+				pathS = afData.substr (foundV+1,foundV2-foundV-1);
+				char* end;
+				acDef->partoffsets.x=strtod(pathS.c_str(),&end);
+				foundV=foundV2;
+				foundV2 = afData.find("|",foundV+1);
+				pathS = afData.substr (foundV+1,foundV2-foundV-1);
+				//char* end;
+				acDef->partoffsets.y=strtod(pathS.c_str(),&end);
+				foundV=foundV2;
+				foundV2 = afData.find("|",foundV+1);
+				pathS = afData.substr (foundV+1,foundV2-foundV-1);
+				acDef->partoffsets.z=strtod(pathS.c_str(),&end);
+				printf("got offsets %f %f %f\n",acDef->partoffsets.x,acDef->partoffsets.y,acDef->partoffsets.z);
+			}	
 		}
 		else{
 			std::string pathS = afData.substr (0,found);
@@ -284,18 +309,78 @@ void Aircraft::PrepareAircraftData()
 			modelCount=1;
 			acDef->acID=id;
 			acDef->pID=0;
-			printf("to sub model load %s part %d\n",pathS.c_str(),0);
-			XPLMLoadObjectAsync(pathS.c_str(), loadedobject,acDef);
+			std::size_t foundV=pathS.find("|");
+			std::string pathSV = pathS.substr (0,foundV);
+			
+			if (foundV==std::string::npos){
+				acDef->partoffsets.x=acDef->partoffsets.y=acDef->partoffsets.z=0.0;
+				printf("to sub model load %s part %d\n",pathSV.c_str(),0);
+				XPLMLoadObjectAsync(pathSV.c_str(), loadedobject,acDef);
+				printf("got nill offsets %f %f %f\n",acDef->partoffsets.x,acDef->partoffsets.y,acDef->partoffsets.z);
+			}
+			else{
+				
+				printf("to sub model load %s part %d\n",pathSV.c_str(),0);
+				
+				XPLMLoadObjectAsync(pathSV.c_str(), loadedobject,acDef);
+				std::size_t foundV2 = afData.find("|",foundV+1);
+				pathS = afData.substr (foundV+1,foundV2-foundV-1);
+				char* end;
+				acDef->partoffsets.x=strtod(pathS.c_str(),&end);
+				foundV=foundV2;
+				foundV2 = afData.find("|",foundV+1);
+				pathS = afData.substr (foundV+1,foundV2-foundV-1);
+				//char* end;
+				acDef->partoffsets.y=strtod(pathS.c_str(),&end);
+				foundV=foundV2;
+				foundV2 = afData.find("|",foundV+1);
+				pathS = afData.substr (foundV+1,foundV2-foundV-1);
+				acDef->partoffsets.z=strtod(pathS.c_str(),&end);
+				printf("got offsets %f %f %f\n",acDef->partoffsets.x,acDef->partoffsets.y,acDef->partoffsets.z);
+			}	
+			
+			//XPLMLoadObjectAsync(pathS.c_str(), loadedobject,acDef);
 			while(found!=std::string::npos){
 
 				pathS = afData.substr (found+1,found2-found-1);
 				acDef=jvmO->getModelPart(airFrameIndex,modelCount);
 				acDef->acID=id;
 				acDef->pID=modelCount;
-				printf("to sub model load %s part %d\n",pathS.c_str(),acDef->pID);
+				std::size_t foundV=pathS.find("|");
+				std::string pathSV = pathS.substr (0,foundV);
+				
+				if (foundV==std::string::npos){
+					acDef->partoffsets.x=acDef->partoffsets.y=acDef->partoffsets.z=0.0;
+					printf("to sub model load %s part %d\n",pathSV.c_str(),modelCount);
+					XPLMLoadObjectAsync(pathSV.c_str(), loadedobject,acDef);
+					printf("got nill offsets %f %f %f\n",acDef->partoffsets.x,acDef->partoffsets.y,acDef->partoffsets.z);
+				}
+				else{
+					
+					printf("to sub model load %s part %d\n",pathSV.c_str(),modelCount);
+					
+					XPLMLoadObjectAsync(pathSV.c_str(), loadedobject,acDef);
+					pathSV=pathS;
+					std::size_t foundV2 = pathSV.find("|",foundV+1);
+					pathS = pathSV.substr (foundV+1,foundV2-foundV-1);
+					char* end;
+					acDef->partoffsets.x=strtod(pathS.c_str(),&end);
+					foundV=foundV2;
+					foundV2 = pathSV.find("|",foundV+1);
+					pathS = pathSV.substr (foundV+1,foundV2-foundV-1);
+					//char* end;
+					acDef->partoffsets.y=strtod(pathS.c_str(),&end);
+					foundV=foundV2;
+					foundV2 = pathSV.find("|",foundV+1);
+					pathS = pathSV.substr (foundV+1,foundV2-foundV-1);
+					acDef->partoffsets.z=strtod(pathS.c_str(),&end);
+					printf("got offsets %f %f %f\n",acDef->partoffsets.x,acDef->partoffsets.y,acDef->partoffsets.z);
+				}
+				//printf("to sub model load %s part %d\n",pathS.c_str(),acDef->pID);
 				modelCount++;
 
-				XPLMLoadObjectAsync(pathS.c_str(), loadedobject,acDef);
+				//XPLMLoadObjectAsync(pathS.c_str(), loadedobject,acDef);
+
 				found=found2;
 				if(found!=std::string::npos){
 					found2 = afData.find("?",found+1);
@@ -604,7 +689,21 @@ void Aircraft::SetAircraftData(void)
 		}
 		else if(ref_style==3){
 			float spin=((int)(thrust)%360);;
-			float tire[5] = {(float)8.0,(float)8.0,spin,spin,NULL};
+			float nowT=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
+			
+			if(nowT>(nextFlakTime)){
+				startFlakTime=nowT+1+((float)(rand()%4)) / 3.0;
+				nextFlakTime=nowT+10+(rand() % 10);
+				flak=((float)(rand()%9)) / 10.0;
+			}
+			if(nowT>(startFlakTime)){
+				flak=1.0;
+			}
+			acModelDef *acDef=jvmO->getModelPart(airFrameIndex,i);
+			dr.x = ll->getX()+acDef->partoffsets.x;//data.x;
+			dr.y = ahs->getX()+yOffset+acDef->partoffsets.y;//data.y+yOffset;
+			dr.z = ll->getY()+acDef->partoffsets.z;
+			float tire[6] = {(float)8.0,(float)8.0,spin,spin,flak,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
 		else{ //xmp_drefs
@@ -667,8 +766,14 @@ static void do_model(){
 			jvmO->getThreadCommandData();
 			jvmO->retriveLogData();
 			rolls=0;
-		}
 			
+		}
+		if(jvmO->fireTransmit){
+				jvmO->doTransmit();
+		}
+		if(jvmO->fireNewFreq){
+			jvmO->updateStndbyFreq();
+		}	
 		for(int i=0;i<30;i++){
 			//g_ac_mutex[i].lock();
 			

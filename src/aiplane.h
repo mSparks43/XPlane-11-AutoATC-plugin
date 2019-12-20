@@ -57,7 +57,8 @@ private:
 	XPLMDataRef	dr_plane_gear_deploy;
 	XPLMDataRef	dr_plane_throttle;*/
 	XPLMObjectRef* g_object=NULL;
-	XPLMInstanceRef g_instance[6]={NULL};
+	XPLMInstanceRef g_instance[12]={NULL};
+
 	int modelCount=1;
 	const char * cls_drefs[17]={ "traf/mw_def",
 	"traf/nw_def",
@@ -74,7 +75,7 @@ private:
 	"traf/touch_down",
 	"traf/vint_circle",
 	"traf/vint_circle2", NULL };
-	const char * acf_drefs[5]={ "autoatc/engine/POINT_tacrad0","autoatc/engine/POINT_tacrad1","autoatc/engine/POINT_prop_ang_deg0","autoatc/engine/POINT_prop_ang_deg1",NULL};
+	const char * acf_drefs[6]={ "autoatc/engine/POINT_tacrad0","autoatc/engine/POINT_tacrad1","autoatc/engine/POINT_prop_ang_deg0","autoatc/engine/POINT_prop_ang_deg1","autoatc/flak",NULL};
 	const char * wt3_drefs[19]={ "traf/mw_def",
 	"traf/nw_def",
 	"cjs/world_traffic/main_gear_retraction_ratio",
@@ -117,6 +118,9 @@ private:
 	float touchDownTime;
 
 	float startMoveTime;
+	float nextFlakTime;
+	float startFlakTime;
+	float flak=1.0;
 	double rpm;
 	double currentrpm;
 	double yOffset;
