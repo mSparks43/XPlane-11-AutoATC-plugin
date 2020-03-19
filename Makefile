@@ -78,6 +78,7 @@ $(BUILDDIR)/$(TARGET)/64/mac.xpl: $(ALL_OBJECTS64)
 	@echo Linking $@
 	mkdir -p $(dir $@)
 	gcc -m64 -shared -Wl, -o $@ $(ALL_OBJECTS64) $(LIBS)
+	rm -rf $(BUILDDIR)/obj64
 
 # Compiler rules
 
@@ -191,6 +192,7 @@ $(BUILDDIR)/$(TARGET)/64/lin.xpl: $(ALL_OBJECTS64)
 	@echo Linking $@
 	mkdir -p $(dir $@)
 	gcc -m64 -static-libgcc -shared -O2 -Wl,--version-script=exports.txt -o $@ $(ALL_OBJECTS64) $(LIBS)
+	rm -rf $(BUILDDIR)/obj64
 
 # Compiler rules
 
@@ -319,6 +321,7 @@ $(BUILDDIR)/$(TARGET)/64/win.xpl: $(ALL_OBJECTS64)
 	@echo Linking $@
 	mkdir -p $(dir $@)
 	x86_64-w64-mingw32-g++ -m64 -O2 -D$(OS) $(INC) -o $@ $(ALL_OBJECTS64) $(LIBS)
+	rm -rf $(BUILDDIR)/obj64
 
 # Compiler rules
 
