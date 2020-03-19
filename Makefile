@@ -1,10 +1,14 @@
-#PLUGIN ?= AUTOATC
-#PLUGIN ?= JAVA
-OS ?= WINDOWS64
-#OS ?= LINUX
-#OS ?= MACOS
-TARGET          := AutoATC
-#TARGET          := Java
+# WINDOWS64, MACOS or LINUX
+OS ?= LINUX
+# AutoATC or Java
+TARGET := AutoATC
+
+
+
+################################
+# MACOS
+################################
+
 ifeq ($(OS), MACOS)
 BUILDDIR        :=      ./build
 SRC_BASE        :=      .
@@ -27,13 +31,12 @@ LIBS = -FSDK/Libraries/Mac/ -framework XPLM -framework XPWidgets -L/Library/Java
 INCLUDES = \
         -I$(SRC_BASE)/SDK/CHeaders/XPLM \
         -I$(SRC_BASE)/SDK/CHeaders/Widgets \
-        -I/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/include \
-        -I/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/include/darwin
+        -I$(SRC_BASE)/jdk/mac/Contents/Home/include \
+        -I$(SRC_BASE)/jdk/mac/Contents/Home/include/darwin
         
 
 
 DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=1 -DIBM=0 -DLIN=0 -DXPLM200 -DXPLM_210  -DXPLM300=1 -DXPLM301=1 -std=c++11 -shared -static -static-libgcc -static-libstdc++ 
-############################################################################
 
 
 VPATH = $(SRC_BASE)
@@ -109,6 +112,13 @@ clean:
 # so that is in the dependency file too.
 -include $(ALL_DEPS)
 -include $(ALL_DEPS64)
+
+
+
+################################
+# LINUX
+################################
+
 else ifeq ($(OS), LINUX)
 BUILDDIR	:=	./build
 SRC_BASE	:=	.
@@ -134,14 +144,12 @@ endif
 INCLUDES = \
 	-I$(SRC_BASE)/SDK/CHeaders/XPLM \
 	-I$(SRC_BASE)/SDK/CHeaders/Widgets \
-	-I/media/storage/Downloads/jdk1.8.0_144/include \
-	-I/home/mSparks/Downloads/jdk1.8.0_40/include/linux \
+	-I$(SRC_BASE)/jdk/lin/include \
+	-I$(SRC_BASE)/jdk/lin/include/linux \
 	-I/usr/include/AL \
 	
 
 DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=0 -DIBM=0 -DLIN=1 -DXPLM300=1 -DXPLM301=1 -std=c++11
-
-############################################################################
 
 
 VPATH = $(SRC_BASE)
@@ -217,6 +225,13 @@ clean:
 # so that is in the dependency file too.
 -include $(ALL_DEPS)
 -include $(ALL_DEPS64)
+
+
+
+################################
+# WINDOWS
+################################
+
 else ifeq ($(OS), WINDOWS64)
 #  sudo apt-get install  gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64
 #  x86_64-w64-mingw32-gcc
@@ -242,7 +257,7 @@ SOURCES =\
 	src/jvm.cpp \
 	src/SettingsWidget.cpp \
 	src/AIPlanesv0.6.cpp \
-		src/Simulation.cpp \
+	src/Simulation.cpp \
 	src/scppnt/scppnt_error.cpp \
 	src/datarefs.cpp
 
@@ -257,8 +272,6 @@ INCLUDES = \
 	
 DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=0 -DIBM=1 -DLIN=0 -DIBM -DXPLM200 -DXPLM_210 -DXPLM300 -DXPLM301 -DXPLM300=1 -DXPLM301=1 
 #-shared -static -static-libgcc -static-libstdc++
-
-############################################################################ -static-libgcc -static-libstdc++
 
 
 VPATH = $(SRC_BASE)
@@ -283,8 +296,8 @@ ALL_OBJECTS64	:= $(sort $(COBJECTS64) $(CXXOBJECTS64))
 # CFLAGS := $(DEFINES) $(INCLUDES) -ljvm -fPIC -fvisibility=hidden 
 INC += -ISDK/CHeaders/XPLM \
 	-ISDK/CHeaders/Widgets \
-	-Iinclude \
-	-Iwin32 \
+	-Ijdk/win/include \
+	-Ijdk/win/include/win32 \
 	-shared  -lwinpthread \
 	-static -static-libgcc -static-libstdc++
 CFLAGS += $(DEFINES) -Wall -O2 -D$(OS) $(INC) -fvisibility=hidden 
