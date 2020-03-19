@@ -4,9 +4,3 @@ build/*
 airportMaps/*
 # documentation folder
 documentation/*
-# Content of the SDK folder
-SDK/CHeaders/*
-# Content of the JDK folder
-JDK/win/*
-JDK/lin/*
-JDK/mac/*
