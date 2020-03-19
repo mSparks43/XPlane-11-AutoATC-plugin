@@ -1,4 +1,4 @@
-# WINDOWS64, MACOS or LINUX
+# WINDOWS, MACOS or LINUX
 OS ?= LINUX
 # AutoATC or Java
 TARGET := AutoATC
@@ -9,7 +9,7 @@ TARGET := AutoATC
 # MACOS
 ################################
 
-ifeq ($(OS), MACOS)
+ifeq ($(OS),MACOS)
 BUILDDIR        :=      ./build
 SRC_BASE        :=      .
 
@@ -119,7 +119,7 @@ clean:
 # LINUX
 ################################
 
-else ifeq ($(OS), LINUX)
+else ifeq ($(OS),LINUX)
 BUILDDIR	:=	./build
 SRC_BASE	:=	.
 #TARGET		:= AutoATC
@@ -232,7 +232,7 @@ clean:
 # WINDOWS
 ################################
 
-else ifeq ($(OS), WINDOWS64)
+else ifeq ($(OS),WINDOWS)
 #  sudo apt-get install  gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64
 #  x86_64-w64-mingw32-gcc
 

@@ -28,26 +28,25 @@ https://play.google.com/store/apps/details?id=org.zem.atctranspro
 ** Target path for Windows: "jdk/win/include"
 ** Target path for Linux: "jdk/lin/include"
 ** Target path for MacOS: "jdk/mac/Contents/Home/include"
-* The "OS ?= .." line in the makefile must be changed according to your target OS ("WINDOWS64" or "LINUX" or "MACOS")
 
 ## Windows
 In the makefile's parent directory:
 - mingw64-make clean
-- mingw64-make
+- mingw64-make OS=WINDOWS
 
 Produces "win.xpl" in "build/AutoATC/64/".
 
 ## Linux
 In the makefile's parent directory:
 - make clean
-- make
+- make OS=LINUX
 
 Produces "lin.xpl" in "build/AutoATC/64/".
 
 ## MacOS
 In the makefile's parent directory:
 - make clean
-- make
+- make OS=MACOS
 
 Produces "mac.xpl" in "build/AutoATC/64/".
 
