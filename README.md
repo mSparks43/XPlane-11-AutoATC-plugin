@@ -1,14 +1,18 @@
 # XPlane-11-AutoATC-plugin
 C/C++ Source code for the AutoATC plugin for X-Plane 11.
 
+
+
 # About
-
 AutoATC provides an ATC "chatbot" for X-Plane 11. It features server-controlled AI airplanes and uses speech recognition and text to speech to interact with the user.
-The complete plugin (required for a complete installation) is hosted on [x-plane.org](https://forums.x-plane.org/index.php?/files/file/45663-main-installation-files-for-autoatc-for-xplane-11/).
-To use ATC services, speech recognition and provide better text to speech output, two companion apps for Android are available, in a basic [freeware version](https://play.google.com/store/apps/details?id=org.zem.atctrans) and a [payware version](https://play.google.com/store/apps/details?id=org.zem.atctranspro) with more features.
+
+The complete plugin is required for a complete installation and is hosted on [x-plane.org](https://forums.x-plane.org/index.php?/files/file/45663-main-installation-files-for-autoatc-for-xplane-11/) (requires an account do download).
+
+In order to use ATC services and have a better text to speech output, two companion apps for Android are available, in a basic [freeware version](https://play.google.com/store/apps/details?id=org.zem.atctrans) and a [payware version](https://play.google.com/store/apps/details?id=org.zem.atctranspro) with more features.
 
 
-# Building the plugin
+
+# Building
 ## Dependencies
 * openAL
 * [Java Development Kit](https://www.oracle.com/java/technologies/javase-jdk14-downloads.html)
@@ -32,7 +36,7 @@ In "XPlane-11-AutoATC-plugin":
 
 > mingw64-make OS=WINDOWS
 
-Output: "win.xpl" in "build/AutoATC/64/"
+Output is "win.xpl" in "build/AutoATC/64/"
 
 ### Linux
 In "XPlane-11-AutoATC-plugin":
@@ -48,10 +52,12 @@ In "XPlane-11-AutoATC-plugin":
 
 > make OS=MACOS
 
-Output: "mac.xpl" in "build/AutoATC/64/"
+Output is "mac.xpl" in "build/AutoATC/64/"
 
-# Installation
-* Download the remaining files for the plugin from [x-plane.org](https://forums.x-plane.org/index.php?/files/file/45663-main-installation-files-for-autoatc-for-xplane-11/) (account required)
+
+
+# Installing
+* Download the remaining files for the plugin from [x-plane.org](https://forums.x-plane.org/index.php?/files/file/45663-main-installation-files-for-autoatc-for-xplane-11/) (requires an account to download)
 * Copy "AutoATC" and "java" to "X-Plane/Resources/plugins"
 * Install a suitable Java Runtime Environment release for your operating system and configure the path to jvm/libjvm in "java/defaultjvm.txt" or "java/jvmsettings.txt"
 * Overwrite the .xpl file in "AutoATC/64/" with the one from the "build/AutoATC/64/" folder
