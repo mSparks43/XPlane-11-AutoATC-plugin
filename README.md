@@ -1,9 +1,9 @@
 # XPlane-11-AutoATC-plugin
-C/C++ Source code for the AutoATC plugin for X-Plane
+C/C++ Source code for the AutoATC plugin for X-Plane 11.
 
 # About
 
-AutoATC provides an ATC "chatbot" for X-Plane. It features server-controlled AI airplanes and uses speech recognition and text to speech to interact with the user.
+AutoATC provides an ATC "chatbot" for X-Plane 11. It features server-controlled AI airplanes and uses speech recognition and text to speech to interact with the user.
 
 The complete add-on is hosted on [x-plane.org](https://forums.x-plane.org/index.php?/files/file/45663-main-installation-files-for-autoatc-for-xplane-11/)
 
@@ -13,38 +13,41 @@ To use ATC services, speech recognition and provide better text to speech output
 # Building the plugin
 ## Dependencies
 * openAL
-* JDK ( https://www.oracle.com/java/technologies/javase-jdk14-downloads.html )
-* X-Plane SDK ( https://developer.x-plane.com/sdk/plugin-sdk-downloads/ )
-* Make (Linux/MacOS) or mingw64 (Windows)
+* [Java Development Kit](https://www.oracle.com/java/technologies/javase-jdk14-downloads.html)
+* [X-Plane SDK](https://developer.x-plane.com/sdk/plugin-sdk-downloads/)
+* Make (building for Linux or MacOS) and/or mingw64 (building for Windows)
 
-## Preparation
-* "XPLM", "Wrappers" and "Widgets" folders from the X-Plane SDK in the "SDK\CHeaders" folder
-* The JDK for the target operating system must be located in "jdk/win" or "jdk/lin" or "jdk/mac"
-    * Target path for Windows: "jdk/win/include"
-    * Target path for Linux: "jdk/lin/include"
-    * Target path for MacOS: "jdk/mac/Contents/Home/include"
+## Prerequisites
+* The "XPLM", "Wrappers" and "Widgets" folders from the X-Plane SDK must be located in the "SDK\CHeaders" folder, resulting in the following paths:
+    * "XPLM": "SDK\CHeaders\XPLM"
+    * "Wrappers": "SDK\CHeaders\Wrappers"
+    * "Widgets": "SDK\CHeaders\Widgets"
+* The JDK for the target operating system must be located in "jdk/win" or "jdk/lin" or "jdk/mac", resulting in the following paths:
+    * JDK for Windows: "jdk/win/include"
+    * JDK for Linux: "jdk/lin/include"
+    * JDK for MacOS: "jdk/mac/Contents/Home/include"
 
 ## Compiling
 ### Windows
-In the makefile's parent directory:
-    mingw64-make clean
-    mingw64-make OS=WINDOWS
+In "XPlane-11-AutoATC-plugin":
+> mingw64-make clean
+> mingw64-make OS=WINDOWS
 
-Produces "win.xpl" in "build/AutoATC/64/".
+Output: "win.xpl" in "build/AutoATC/64/".
 
 ### Linux
-In the makefile's parent directory:
-    make clean
-    make OS=LINUX
+In "XPlane-11-AutoATC-plugin":
+> make clean
+> make OS=LINUX
 
-Produces "lin.xpl" in "build/AutoATC/64/".
+Output: "lin.xpl" in "build/AutoATC/64/".
 
 ### MacOS
-In the makefile's parent directory:
-    make clean
-    make OS=MACOS
+In "XPlane-11-AutoATC-plugin":
+> make clean
+> make OS=MACOS
 
-Produces "mac.xpl" in "build/AutoATC/64/".
+Output: "mac.xpl" in "build/AutoATC/64/".
 
 # Installation
 * Download the remaining files for the plugin from [x-plane.org](https://forums.x-plane.org/index.php?/files/file/45663-main-installation-files-for-autoatc-for-xplane-11/) (account required)
