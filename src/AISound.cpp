@@ -276,35 +276,46 @@ void AircraftSound::setVelocity(ALfloat pos[]){
     //alSourcef(snd_src,AL_PITCH,pitch);
     alSource3f(snd_src,AL_VELOCITY, pos[0],pos[1],pos[2]);
 }
-// Simple mixer to control AI aircraft volume
-void AircraftSound::setVolume(){
+
+float findvolume(){
 	// Initialize helpers
 	static char message[256];
-	if(XPLMGetDatai(sound_on) != oldval_mute){
-		sprintf(message,"AutoATC AI Sounds: On/Off (%d -> %d)\n",oldval_mute,XPLMGetDatai(sound_on));
-		XPLMDebugString(message);
-		oldval_mute = XPLMGetDatai(sound_on);
-	}
-	if(XPLMGetDataf(volume_master) != oldval_vol[0]){
-		sprintf(message,"AutoATC AI Sounds: New master level (%f -> %f)\n",oldval_vol[0],XPLMGetDataf(volume_master));
-		XPLMDebugString(message);
-		oldval_vol[0] = XPLMGetDataf(volume_master);
-	}
-	if(XPLMGetDataf(volume_env) != oldval_vol[1]){
-		sprintf(message,"AutoATC AI Sounds: New environment level (%f -> %f)\n",oldval_vol[1],XPLMGetDataf(volume_env));
-		XPLMDebugString(message);
-		oldval_vol[1] = XPLMGetDataf(volume_env);
-	}
+	// Write slider values to array
+	sound_sliders[0] = XPLMGetDataf(volume_master);
+	sound_sliders[1] = XPLMGetDataf(volume_eng);
+	sound_sliders[2] = XPLMGetDataf(volume_ext);
+	sound_sliders[3] = XPLMGetDataf(volume_prop);
+	sound_sliders[4] = XPLMGetDataf(volume_env);
 	// If X-Plane sound is not muted, set ai engine sound gain according to the lower of the two sliders
 	if(XPLMGetDatai(sound_on) != 0){
-		if(XPLMGetDataf(volume_env) < XPLMGetDataf(volume_master)){ 
-			alSourcef(snd_src,AL_GAIN,XPLMGetDataf(volume_env));
-		} else { 
-			alSourcef(snd_src,AL_GAIN,XPLMGetDataf(volume_master)); 
+		sound_vol = sound_sliders[0];
+		for(int i=0; i<5; i++) {
+			//sprintf(message,"AutoATC AI sound volume (%d): %f\n",i,sound_sliders[i]);
+			//XPLMDebugString(message);
+			if(sound_sliders[i] < sound_vol) {
+				sound_vol = sound_sliders[i];	
+			} 
 		}
+		//sprintf(message,"AutoATC AI lowest volume: %f\n",sound_vol);
+		//XPLMDebugString(message);
 	} else {
-		alSourcef(snd_src,AL_GAIN,XPLMGetDatai(sound_on));
+		//sprintf(message,"AutoATC AI sound muted\n");
+		//XPLMDebugString(message);
+		sound_vol = 0.0;
 	}
+	// 
+	if(sound_vol != sound_vol_old){
+		sprintf(message,"AutoATC AI sound volume changed (%f -> %f)\n",sound_vol_old,sound_vol);
+		XPLMDebugString(message);
+		sound_vol_old = sound_vol;
+	}
+	return sound_vol, sound_vol_old;
+}
+
+// Simple mixer to control AI aircraft volume
+void AircraftSound::setVolume(){
+	findvolume();
+	alSourcef(snd_src,AL_GAIN,sound_vol);
 }
 void AircraftSound::stop(){
     if(snd_src)		alDeleteSources(1,&snd_src);
@@ -597,22 +608,14 @@ void AircraftSounds::start()
 	
 	sound_on = XPLMFindDataRef("sim/operation/sound/sound_on");
 	volume_master = XPLMFindDataRef("sim/operation/sound/master_volume_ratio");
+	volume_eng = XPLMFindDataRef("sim/operation/sound/engine_volume_ratio");
+	volume_ext = XPLMFindDataRef("sim/operation/sound/exterior_volume_ratio");
+	volume_prop = XPLMFindDataRef("sim/operation/sound/prop_volume_ratio");
 	volume_env = XPLMFindDataRef("sim/operation/sound/enviro_volume_ratio");
-	/* if(sound_on && volume_master && volume_env) {
+	/* if(sound_on && volume_master && volume_eng && volume_ext && volume_prop && volume_env) {
 		XPLMDebugString("AutoATC sound system: Dataref found!\n");
-	}*/
-	// Populate initial values
-	static char message[256];
-	oldval_mute = XPLMGetDatai(sound_on);
-	//sprintf(message,"Sounds on: %d \n",oldval_mute);
-	//XPLMDebugString(message);
-	oldval_vol[0] = XPLMGetDataf(volume_master);
-	//sprintf(message,"Initial master volume level is %f \n",oldval_vol[0]);
-	//XPLMDebugString(message);
-	oldval_vol[1] = XPLMGetDataf(volume_env);
-	//sprintf(message,"Initial environment volume level is %f \n",oldval_vol[1]);
-	//XPLMDebugString(message);
-	
+	}*/	
+	findvolume();
 	//buffers[0].load_wave("/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/AutoATC/sound4.wav");
 	/*CHECK_ERR();
 	alGenBuffers(3, buffers);

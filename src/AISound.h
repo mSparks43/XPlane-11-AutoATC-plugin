@@ -13,9 +13,13 @@
 #endif
 static XPLMDataRef  sound_on = NULL;
 static XPLMDataRef  volume_master = NULL;
+static XPLMDataRef  volume_eng = NULL;
+static XPLMDataRef  volume_ext = NULL;
+static XPLMDataRef  volume_prop = NULL;
 static XPLMDataRef  volume_env = NULL;
-static bool oldval_mute = 0;
-static float oldval_vol[2] = {0,0};
+static float sound_sliders[5] = {};
+static float sound_vol = 0.0;
+static float sound_vol_old = 0.0;
 class AircraftSound
 {
     private:
