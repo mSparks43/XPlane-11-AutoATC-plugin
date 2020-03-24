@@ -12,6 +12,7 @@
 #include <AL/alc.h>
 #endif
 static XPLMDataRef  sound_on = NULL;
+static XPLMDataRef  sound_paused = NULL;
 static XPLMDataRef  volume_master = NULL;
 static XPLMDataRef  volume_eng = NULL;
 static XPLMDataRef  volume_ext = NULL;

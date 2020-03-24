@@ -193,7 +193,7 @@ bool JVM::connectJVM() {
 
     //getcreatedjvms = (jint(*)(JavaVM**, jsize, jsize *)) dlsym(jvmlib, "JNI_GetCreatedJavaVMs");
 #if defined(__linux__)
-     sprintf(gBob_debstr2,"AutoATC:Loading jvm dll '%s' \n", lin);
+     sprintf(gBob_debstr2,"AutoATC: Loading jvm dll '%s' \n", lin);
      XPLMDebugString(gBob_debstr2);
      libnativehelper = dlopen(lin, RTLD_NOW);//"libjvm.so"
         if (libnativehelper==NULL) {
@@ -207,10 +207,10 @@ bool JVM::connectJVM() {
             JNI_CreateJavaVM = (JNI_CreateJavaVM_t) dlsym(libnativehelper, "JNI_CreateJavaVM");
             JNI_GetCreatedJavaVMs = (JNI_GetCreatedJavaVMs_t) dlsym(libnativehelper, "JNI_GetCreatedJavaVMs");
         }
-    sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm .so\n");
+    sprintf(gBob_debstr2,"AutoATC: Successfully loaded the jvm .so\n");
     XPLMDebugString(gBob_debstr2);
  #elif defined(_WIN64)
-  sprintf(gBob_debstr2,"AutoATC:Loading jvm dll '%s' \n", win);
+  sprintf(gBob_debstr2,"AutoATC: Loading jvm dll '%s' \n", win);
      XPLMDebugString(gBob_debstr2);
      SetErrorMode(0); 
     libnativehelper = LoadLibraryA(win); //"jvm.dll"
@@ -221,11 +221,11 @@ bool JVM::connectJVM() {
             return false;
      }
     else{
-        sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm dll\n");
+        sprintf(gBob_debstr2,"AutoATC: Successfully loaded the jvm dll\n");
         JNI_CreateJavaVM = (JNI_CreateJavaVM_t) GetProcAddress(libnativehelper, "JNI_CreateJavaVM");
         JNI_GetCreatedJavaVMs = (JNI_GetCreatedJavaVMs_t) GetProcAddress(libnativehelper, "JNI_GetCreatedJavaVMs");
     }
-    sprintf(gBob_debstr2,"AutoATC:found CreateJavaVM\n");
+    sprintf(gBob_debstr2,"AutoATC: Found CreateJavaVM\n");
     XPLMDebugString(gBob_debstr2);
 #elif defined(__APPLE__)
     libnativehelper = dlopen(mac, RTLD_NOW);//"/usr/local/jre/lib/server/libjvm.dylib"
@@ -241,7 +241,7 @@ bool JVM::connectJVM() {
           JNI_GetCreatedJavaVMs = (JNI_GetCreatedJavaVMs_t) dlsym(libnativehelper, "JNI_GetCreatedJavaVMs");
     }
     
-    sprintf(gBob_debstr2,"AutoATC:Successfully loaded the jvm .so\n");
+    sprintf(gBob_debstr2,"AutoATC: Successfully loaded the jvm .so\n");
     XPLMDebugString(gBob_debstr2);
 #endif
     jsize nVMs;
@@ -250,24 +250,24 @@ bool JVM::connectJVM() {
     JNI_GetCreatedJavaVMs(jvms, nVMs, &nVMs);
 
     if (nVMs > 0) {
-        sprintf(gBob_debstr2,"AutoATC:JVM already created!\n");
+        sprintf(gBob_debstr2,"AutoATC: JVM already created!\n");
         XPLMDebugString(gBob_debstr2);      
        //env = jvms[0];
         
         jint jret = jvms[0]->GetEnv((void**) &env, JNI_VERSION_1_6);
         delete [] (jvms);
         if (jret == JNI_EDETACHED) {
-            sprintf(gBob_debstr2,"AutoATC:JVM detached!\n");
+            sprintf(gBob_debstr2,"AutoATC: JVM detached!\n");
             XPLMDebugString(gBob_debstr2);          
             return false;
         }
         if (jret != JNI_OK) {
-            sprintf(gBob_debstr2,"AutoATC:JVM GetEnv failed:%d\n",jret);
+            sprintf(gBob_debstr2,"AutoATC: JVM GetEnv failed:%d\n",jret);
             XPLMDebugString(gBob_debstr2);          
             return false;            
         }
         jint ver = env->GetVersion();
-        sprintf(gBob_debstr2,"AutoATC:Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
+        sprintf(gBob_debstr2,"AutoATC: Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
         XPLMDebugString(gBob_debstr2);
         jvm= jvms[0]; 
                       
@@ -294,7 +294,7 @@ bool JVM::connectJVM() {
       
       
        jint ver = env->GetVersion();
-       sprintf(gBob_debstr2,"AutoATC:Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
+       sprintf(gBob_debstr2,"AutoATC: Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
        XPLMDebugString(gBob_debstr2);
        return true;
     }
@@ -319,42 +319,42 @@ void JVM::activateJVM(void){
        
        commandsClass = env->FindClass("jni/Commands");  // try to find the class
     if(commandsClass == NULL) {
-        sprintf(gBob_debstr2,"AutoATC ERROR: Commands not found !\n");
+        sprintf(gBob_debstr2,"AutoATC: ERROR - Commands not found!\n");
         XPLMDebugString(gBob_debstr2);
     }
     else {                                  // if class found, continue
-        sprintf(gBob_debstr2,"AutoATC Commands found\n");
+        sprintf(gBob_debstr2,"AutoATC: Commands found\n");
         XPLMDebugString(gBob_debstr2);
         
         getPlaneDataMethod = env->GetStaticMethodID(commandsClass, "getPlaneData", "(I)[D");  // find method
         if(getPlaneDataMethod == NULL){
-            XPLMDebugString("ERROR: method void getPlaneData() not found !\n");
+            XPLMDebugString("AutoATC: ERROR - Method void getPlaneData() not found!\n");
             return;
         }
         midToString=env->GetStaticMethodID(commandsClass, "getData", "(Ljava/lang/String;)Ljava/lang/String;");  // find method
         if(midToString == NULL){
-            XPLMDebugString("ERROR: method void getData() not found !\n");
+            XPLMDebugString("AutoATC: ERROR - Method void getData() not found!\n");
             return;
         }
         
         
-        printf("AutoATC active !\n");
-        sprintf(gBob_debstr2,"AutoATC Dev1 active !\n");
+        printf("AutoATC active!\n");
+        sprintf(gBob_debstr2,"AutoATC: Dev1 active!\n");
          XPLMDebugString(gBob_debstr2); 
          hasjvm=true;
     }
     loadedLibrary=true;
     }
     else{
-        printf("AutoATC active !\n");
-        sprintf(gBob_debstr2,"AutoATC active !\n");
+        printf("AutoATC active!\n");
+        sprintf(gBob_debstr2,"AutoATC: Active!\n");
          XPLMDebugString(gBob_debstr2);  
          //hasjvm=true;
     }
     }
 catch(...){
 		printf("Exception during JVM test\n");
-        sprintf(gBob_debstr2,"Exception during JVM test\n");
+        sprintf(gBob_debstr2,"AutoATC: Exception during JVM test\n");
          XPLMDebugString(gBob_debstr2);  
 		return;
 	}  
@@ -594,7 +594,7 @@ void JVM::parse_config (char * filename)
     else if (strcmp(name, "isSlave")==0)
       strncpy (slave, value, MAXLEN);
     else{
-        /*sprintf(gBob_debstr2,"WARNING: %s/%s: Unknown name/value pair!\n",
+        /*sprintf(gBob_debstr2,"AutoATC: WARNING - %s/%s: Unknown name/value pair!\n",
         name, value);
        XPLMDebugString(gBob_debstr2);*/
         AirframeDef def=AirframeDef();
@@ -616,7 +616,7 @@ void JVM::start(void)
     if(!hasjvm)
         return;
     XPLMGetSystemPath(xp_path);
-    sprintf(gBob_debstr2,"AutoATC Start!\n");
+    sprintf(gBob_debstr2,"AutoATC: Start!\n");
     fireTransmit=false;
     fireNewFreq=true;
     XPLMDebugString(gBob_debstr2);
@@ -635,62 +635,62 @@ void JVM::joinThread(void){
 	jvm->AttachCurrentThread((void**)&plane_env, &args);
     threadcommandsClass = plane_env->FindClass("jni/Commands");  // try to find the class
     if(threadcommandsClass == NULL) {
-        sprintf(gBob_debstr2,"AutoATC ERROR: Commands not found !\n");
+        sprintf(gBob_debstr2,"AutoATC: ERROR - Commands not found!\n");
         XPLMDebugString(gBob_debstr2);
     }
     getPlaneDataThreadMethod = plane_env->GetStaticMethodID(threadcommandsClass, "getPlaneData", "(I)[D");  // find method
     if(getPlaneDataThreadMethod == NULL){
-            XPLMDebugString("ERROR: method void getPlaneData() not found !\n");
+            XPLMDebugString("AutoATC: ERROR - Method void getPlaneData() not found!\n");
             return;
     }
     setThreadDataMethod = plane_env->GetStaticMethodID(threadcommandsClass, "setData", "([F)V");  // find method
        
          if(setThreadDataMethod == NULL){
-            XPLMDebugString("ERROR: method void setData(float[]) not found !\n");
+            XPLMDebugString("AutoATC: ERROR - Method void setData(float[]) not found!\n");
             return;
          }
     getStndbyMethod=plane_env->GetStaticMethodID(threadcommandsClass, "getStndbyFreq", "(II)I");  // find method
      if(getStndbyMethod == NULL){
-         XPLMDebugString("ERROR: method int getStndbyFreq() not found !\n");
+         XPLMDebugString("AutoATC: ERROR - Method int getStndbyFreq() not found!\n");
           return;
        }
     commandString=plane_env->GetStaticMethodID(threadcommandsClass, "getCommandData", "()Ljava/lang/String;");  // find method
         if(commandString == NULL){
-            XPLMDebugString("ERROR: method void getCommandData() not found !\n");
+            XPLMDebugString("AutoATC: ERROR - Method void getCommandData() not found!\n");
             return;
         }
     midToThreadString=env->GetStaticMethodID(threadcommandsClass, "getData", "(Ljava/lang/String;)Ljava/lang/String;");  // find method
         if(midToThreadString == NULL){
-            XPLMDebugString("ERROR: method void getData() not found !\n");
+            XPLMDebugString("AutoATC: ERROR - Method void getData() not found!\n");
             return;
         }
         threadBroadcastMethod = env->GetStaticMethodID(threadcommandsClass, "broadcast", "()V");  // find method
         
         if(threadBroadcastMethod == NULL){
-            XPLMDebugString("ERROR: method void broadcast() not found !\n");
+            XPLMDebugString("AutoATC: ERROR - Method void broadcast() not found!\n");
             return;
         }
     printf("thread jvm join\n");
-    sprintf(gBob_debstr2,"thread jvm join\n");
+    sprintf(gBob_debstr2,"AutoATC: Thread jvm join\n");
     XPLMDebugString(gBob_debstr2); 
 }
 void JVM::updateAirframes(void){
     if(!file_exists(CONFIG_FILE_DEFAULT_AIRFRAMES)){
-         printf("ERROR:AUTOATC Can't find airframes definitions");
-        XPLMDebugString("ERROR:AUTOATC Can't find airframes definitions");
+         printf("AutoATC: ERROR - Can't find airframes definitions");
+        XPLMDebugString("AutoATC: ERROR - Can't find airframes definitions");
      }
     else{
         airframeDefs.clear();
         parse_config(CONFIG_FILE_DEFAULT_AIRFRAMES);
         for (unsigned i=0; i<airframeDefs.size(); i++){
-            sprintf(gBob_debstr2,"AutoATC Airframe %d is %s. at %f \n",i, airframeDefs[i].getPath(),airframeDefs[i].getOffset());
+            //sprintf(gBob_debstr2,"AutoATC: Airframe %d is %s. at %f \n",i, airframeDefs[i].getPath(),airframeDefs[i].getOffset());
            // printf(gBob_debstr2);
-            XPLMDebugString(gBob_debstr2);
+            //XPLMDebugString(gBob_debstr2);
         }
         if(airframeDefs.size()==0){
             //we dont have any definitions
-            printf("no airframes found, using Resources/default scenery/airport scenery/Aircraft/General_Aviation/KingAirC90B.obj as default\n");
-            XPLMDebugString("no airframes found, using Resources/default scenery/airport scenery/Aircraft/General_Aviation/KingAirC90B.objj as default");
+            printf("AutoATC: No airframes found, using Resources/default scenery/airport scenery/Aircraft/General_Aviation/KingAirC90B.obj as default\n");
+            XPLMDebugString("AutoATC: No airframes found, using Resources/default scenery/airport scenery/Aircraft/General_Aviation/KingAirC90B.objj as default");
             AirframeDef def=AirframeDef();
             //def.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0");
             def.setData("Resources/default scenery/airport scenery/Aircraft/General_Aviation/KingAirC90B.obj,0.0,1,0");
@@ -705,7 +705,7 @@ void JVM::stop(void)
     //if(enabledATCPro)
     {
             //printf("JVM STOP\n");
-            sprintf(gBob_debstr2,"JVM STOP\n");
+            sprintf(gBob_debstr2,"AutoATC: JVM Stop!\n");
             XPLMDebugString(gBob_debstr2); 
             stopPlanes();
             enabledATCPro=false;
@@ -715,7 +715,7 @@ void JVM::stop(void)
     systemstop();
     jvm->DetachCurrentThread();
      printf("AutoATC Stop!\n");
-     sprintf(gBob_debstr2,"AutoATC Stop!\n");
+     sprintf(gBob_debstr2,"AutoATC: Stop!\n");
             XPLMDebugString(gBob_debstr2); 
      hasjvm=false;
      //XPLMDebugString(gBob_debstr2);
@@ -730,7 +730,7 @@ void JVM::systemstop(void)
     jmethodID stopMethod=env->GetStaticMethodID(commandsClass, "stop", "()V");  // find method
      if(stopMethod == NULL)
       {
-     sprintf(gBob_debstr2,"Couldnt find stop method \n");
+     sprintf(gBob_debstr2,"AutoATC: Could not find stop method \n");
            // printf(gBob_debstr2);
             XPLMDebugString(gBob_debstr2);
      }
@@ -1031,7 +1031,7 @@ void JVM::registerFlightLoop(){
     if(hasjvm&&!flightLoopActive){
                setICAO();
                XPLMRegisterFlightLoopCallback(	SendATCData,	/* Callback */10,					/* Interval */NULL);					/* refcon not used. */
-               sprintf(gBob_debstr2,"Register flight loop\n");
+               sprintf(gBob_debstr2,"AutoATC: Register flight loop\n");
                 XPLMDebugString(gBob_debstr2); 
                 flightLoopActive=true;
                //initPlanes();
@@ -1040,7 +1040,7 @@ void JVM::registerFlightLoop(){
 void JVM::unregisterFlightLoop(){
     if(hasjvm&&flightLoopActive){
         XPLMUnregisterFlightLoopCallback(SendATCData, NULL);
-        sprintf(gBob_debstr2,"Destroy flight loop\n");
+        sprintf(gBob_debstr2,"AutoATC: Destroy flight loop\n");
         XPLMDebugString(gBob_debstr2); 
         flightLoopActive=false;
     }
@@ -1133,7 +1133,7 @@ void menu_handler(void * in_menu_ref, void * in_item_ref)
         if(jvmO->hasjvm){
             if(enabledATCPro){
             printf("JVM MENU STOP\n");
-            sprintf(gBob_debstr2,"JVM MENU STOP\n");
+            sprintf(gBob_debstr2,"AutoATC: JVM menu stop!\n");
             XPLMDebugString(gBob_debstr2); 
                 jvmO->systemstop();
             }
