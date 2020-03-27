@@ -77,9 +77,9 @@ Communications are presented in this form:
 
 **Readback:**
 >* Push back and startup approved, altimeter [QNH], [callsign].
-* Push back and startup approved, QNH [QNH], [callsign].
-* Push back and startup approved, altimeter [QNH], [weatherinfo], [callsign].
-* Push back and startup approved, QNH [QNH], [weatherinfo],[callsign].
+>* Push back and startup approved, QNH [QNH], [callsign].
+>* Push back and startup approved, altimeter [QNH], [weatherinfo], [callsign].
+>* Push back and startup approved, QNH [QNH], [weatherinfo],[callsign].
 
 &nbsp;
 
@@ -91,15 +91,15 @@ Communications are presented in this form:
 
 **Readback:**
 >* Startup approved, altimeter [QNH], [callsign].
-* Startup approved, QNH [QNH], [callsign].
-* Startup approved, altimeter [QNH], [weatherinfo], [callsign].
-* Startup approved, QNH [QNH], [weatherinfo], [callsign].
-* Startup approved, altimeter [QNH], [weatherinfo], squawk [squawk], [callsign].
-* Startup approved, QNH [QNH], [weatherinfo], squawk [squawk], [callsign].
-* Startup approved, altimeter [QNH], squawk [squawk], [callsign].
-* Startup approved, QNH [QNH], squawk [squawk], [callsign].
-* Startup approved, altimeter [QNH], squawk [squawk], [callsign].
-* Startup approved, QNH [QNH], squawk [squawk], [callsign].
+>* Startup approved, QNH [QNH], [callsign].
+>* Startup approved, altimeter [QNH], [weatherinfo], [callsign].
+>* Startup approved, QNH [QNH], [weatherinfo], [callsign].
+>* Startup approved, altimeter [QNH], [weatherinfo], squawk [squawk], [callsign].
+>* Startup approved, QNH [QNH], [weatherinfo], squawk [squawk], [callsign].
+>* Startup approved, altimeter [QNH], squawk [squawk], [callsign].
+>* Startup approved, QNH [QNH], squawk [squawk], [callsign].
+>* Startup approved, altimeter [QNH], squawk [squawk], [callsign].
+>* Startup approved, QNH [QNH], squawk [squawk], [callsign].
 
 &nbsp;
 
@@ -120,13 +120,13 @@ Communications are presented in this form:
 
 **Request:** 
 >* [Agency] [callsign], requesting taxi.
-* [Agency] [callsign], request taxi.
-* [Agency] [callsign], ready to taxi.
+>* [Agency] [callsign], request taxi.
+>* [Agency] [callsign], ready to taxi.
 
 **Readback:**
 >* Holding position, [callsign].
-* Taxi approved, via [taxiways], [callsign].
-* Taxi approved, via [taxiways], runway [runway], [callsign].
+>* Taxi approved, via [taxiways], [callsign].
+>* Taxi approved, via [taxiways], runway [runway], [callsign].
 
 &nbsp;
 
@@ -136,7 +136,7 @@ Communications are presented in this form:
 
 **Request:**
 >* [Agency] [callsign], request departure.
-* [Agency] [callsign], requesting departure.
+>* [Agency] [callsign], requesting departure.
 	
 **Readback:**
 >Cleared [clearance], line up runway [runway], [callsign].
@@ -149,7 +149,7 @@ Communications are presented in this form:
 	
 **Readback:**
 >* Holding position, [callsign], 
-* Cleared [clearance], line up runway [runway], [callsign].
+>* Cleared [clearance], line up runway [runway], [callsign].
 	
 &nbsp;
 
@@ -163,7 +163,7 @@ Communications are presented in this form:
 	
 **Readback:**
 >* Holding position, [callsign].
-* Cleared for takeoff, runway [runway], wilco [callsign].
+>* Cleared for takeoff, runway [runway], wilco [callsign].
 	
 &nbsp;
 
@@ -175,9 +175,9 @@ Communications are presented in this form:
 	
 **Readback:**
 >* Wilco, [callsign].
-* Fly [heading], proceed direct to [fix] after [fix], [callsign].
-* Altimeter [QNH], [callsign].
-* Q N H [QNH], [callsign].
+>* Fly [heading], proceed direct to [fix] after [fix], [callsign].
+>* Altimeter [QNH], [callsign].
+>* Q N H [QNH], [callsign].
 
 &nbsp;
 
@@ -192,8 +192,8 @@ Communications are presented in this form:
 
 **Request:**
 >* [Agency], [callsign], next [fix].
-* [Agency], [callsign], next [fix], point at [time].
-* [Agency], [callsign], next [fix] at [time].
+>* [Agency], [callsign], next [fix], point at [time].
+>* [Agency], [callsign], next [fix] at [time].
 	
 **Readback:**
 >Wilco, [callsign].
@@ -223,30 +223,30 @@ Communications are presented in this form:
 	
 **Readback:**
 >* Holding at [fix], [callsign].
-* Altitude [altitude], hold at [fix], expecting runway [runway], [callsign].
-* Cleared for approach, runway [runway], fly [heading], [callsign].
-* Cleared for approach, runway [runway], wilco [callsign].
+>* Altitude [altitude], hold at [fix], expecting runway [runway], [callsign].
+>* Cleared for approach, runway [runway], fly [heading], [callsign].
+>* Cleared for approach, runway [runway], wilco [callsign].
 
 &nbsp;
 
 #### 2.7.2 Reporting established (approach/pattern)
 **Request:**
 >* [Agency], [callsign], established, runway in sight.
-* [Agency], [callsign], downwind.
-* [Agency], [callsign], aerodrome in sight.
+>* [Agency], [callsign], downwind.
+>* [Agency], [callsign], aerodrome in sight.
 	
 **Readback:**
 >* Cleared to approach, runway [runway], report final, [callsign].
-* Fly heading [heading], wilco, [callsign].
-* Wilco, [callsign].
+>* Fly heading [heading], wilco, [callsign].
+>* Wilco, [callsign].
 
 &nbsp;
 	
 #### 2.7.3 Reporting final
 **Request:**
 >* [Agency], [callsign], outer marker.
-* [Agency], [callsign], final.
+>* [Agency], [callsign], final.
 	
 **Readback:**
 >* Go around, [callsign].
-* Cleared to land, runway [runway], [callsign].
+>* Cleared to land, runway [runway], [callsign].
