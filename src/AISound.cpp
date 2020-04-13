@@ -64,7 +64,7 @@ ALuint WaveFile::load_wave(const char * file_name)
 	FILE * fi = fopen(file_name,"rb");
 	if(fi == NULL)
 	{
-		XPLMDebugString("WAVE file load failed - could not open.\n");	
+		XPLMDebugString("AutoATC: WAVE file load failed - could not open.\n");	
 		return 0;
 	}
 	fseek(fi,0,SEEK_END);
@@ -73,13 +73,13 @@ ALuint WaveFile::load_wave(const char * file_name)
 	char * mem = (char*) malloc(file_size);
 	if(mem == NULL)
 	{
-		XPLMDebugString("WAVE file load failed - could not allocate memory.\n");
+		XPLMDebugString("AutoATC: WAVE file load failed - could not allocate memory.\n");
 		fclose(fi);
 		return 0;
 	}
 	if (fread(mem, 1, file_size, fi) != file_size)
 	{
-		XPLMDebugString("WAVE file load failed - could not read file.\n");	
+		XPLMDebugString("AutoATC: WAVE file load failed - could not read file.\n");	
 		free(mem);
 		fclose(fi);
 		return 0;
@@ -172,7 +172,7 @@ ALuint WaveFile::load_wave(const char * file_name)
 					data, data_bytes, fmt->sample_rate);
 	free(mem);
     //snd_buffer=
-	XPLMDebugString("AutoATC:Wav loaded.\n");
+	XPLMDebugString("AutoATC: WAVE file loaded.\n");
 	return buffers[sound_id];
 }
 //WaveFile buffers[2];
@@ -276,6 +276,47 @@ void AircraftSound::setVelocity(ALfloat pos[]){
     //alSourcef(snd_src,AL_PITCH,pitch);
     alSource3f(snd_src,AL_VELOCITY, pos[0],pos[1],pos[2]);
 }
+
+float findvolume(){
+	// Initialize helpers
+	static char message[256];
+	// Write slider values to array
+	sound_sliders[0] = XPLMGetDataf(volume_master);
+	sound_sliders[1] = XPLMGetDataf(volume_eng);
+	sound_sliders[2] = XPLMGetDataf(volume_ext);
+	sound_sliders[3] = XPLMGetDataf(volume_prop);
+	sound_sliders[4] = XPLMGetDataf(volume_env);
+	// If X-Plane sound is not muted, set ai engine sound gain according to the lower of the two sliders
+	if(XPLMGetDatai(sound_on) != 0 and XPLMGetDatai(sound_paused) != 1){
+		sound_vol = sound_sliders[0];
+		for(int i=0; i<5; i++) {
+			//sprintf(message,"AutoATC: AI sound volume (%d): %f\n",i,sound_sliders[i]);
+			//XPLMDebugString(message);
+			if(sound_sliders[i] < sound_vol) {
+				sound_vol = sound_sliders[i];	
+			} 
+		}
+		//sprintf(message,"AutoATC: AI lowest volume: %f\n",sound_vol);
+		//XPLMDebugString(message);
+	} else {
+		//sprintf(message,"AutoATC: AI sound muted\n");
+		//XPLMDebugString(message);
+		sound_vol = 0.0;
+	}
+	// 
+	if(sound_vol != sound_vol_old){
+		sprintf(message,"AutoATC: AI sound volume changed (%f -> %f)\n",sound_vol_old,sound_vol);
+		XPLMDebugString(message);
+		sound_vol_old = sound_vol;
+	}
+	return sound_vol, sound_vol_old;
+}
+
+// Simple mixer to control AI aircraft volume
+void AircraftSound::setVolume(){
+	findvolume();
+	alSourcef(snd_src,AL_GAIN,sound_vol);
+}
 void AircraftSound::stop(){
     if(snd_src)		alDeleteSources(1,&snd_src);
     if(snd_buffer) alDeleteBuffers(1,&snd_buffer);
@@ -314,7 +355,7 @@ AircraftSounds::AircraftSounds(Aircraft *aircraft)
 void AircraftSounds::showActive(){
     if(!live)
         start();
-    XPLMDebugString("AutoATC:OpenAL device active.\n");
+    XPLMDebugString("AutoATC: OpenAL device active.\n");
     
     //snd.play();
 
@@ -407,8 +448,8 @@ void AircraftSounds::update(){
     if(jetsnd[n].dist<3000.0f&&aircrafts[jetsnd[n].aircraftid].airFrameIndex>=0){
         //float	*apos = aircrafts[closest].getSndSrc();
       if(jetsnd[n].lastAFID!=jetsnd[n].aircraftid){
-		   sprintf(debugStr,"got plane snd1 af=%d index=%d %f %f %f %f %f %f %d %d\n",jetsnd[n].aircraftid,aircrafts[jetsnd[n].aircraftid].airFrameIndex,jetsnd[n].pos.x,jetsnd[n].pos.y,jetsnd[n].pos.z, jetsnd[n].velocity.x, jetsnd[n].velocity.y, jetsnd[n].velocity.z,jetsnd[n].snd_src,jetsnd[n].snd_buffer);
-		  	XPLMDebugString(debugStr);
+		   //sprintf(debugStr,"AutoATC: Got plane snd1 af=%d index=%d %f %f %f %f %f %f %d %d\n",jetsnd[n].aircraftid,aircrafts[jetsnd[n].aircraftid].airFrameIndex,jetsnd[n].pos.x,jetsnd[n].pos.y,jetsnd[n].pos.z, jetsnd[n].velocity.x, jetsnd[n].velocity.y, jetsnd[n].velocity.z,jetsnd[n].snd_src,jetsnd[n].snd_buffer);
+		  	//XPLMDebugString(debugStr);
 		   jetsnd[n].lastAFID=jetsnd[n].aircraftid;
 	   }
         ALfloat	pos[3] = { jetsnd[n].pos.x/50.0f,jetsnd[n].pos.y/50.0f,jetsnd[n].pos.z/50.0f } ;
@@ -430,6 +471,7 @@ void AircraftSounds::update(){
                 jetsnd[n].setPitch(0.8f);
          jetsnd[n].setPosition(pos);
         jetsnd[n].setVelocity(vel);
+        jetsnd[n].setVolume();
        // printf("set listener %f %f %f\n",apos[0],apos[1],apos[2]);
     }
     else if(!jetsnd[n].paused){
@@ -441,8 +483,8 @@ void AircraftSounds::update(){
         //float	*apos = aircrafts[closest].getSndSrc();
        // printf("got plane %f %f %f %f %f %f\n",closest.x,closest.y,closest.z,velocity.x,velocity.y,velocity.z);
        if(propsnd.lastAFID!=propsnd.aircraftid){
-		   sprintf(debugStr,"got plane snd2 af=%d index=%d %f %f %f %f %f %f %d %d\n",propsnd.aircraftid,aircrafts[propsnd.aircraftid].airFrameIndex,propsnd.pos.x,propsnd.pos.y,propsnd.pos.z, propsnd.velocity.x, propsnd.velocity.y, propsnd.velocity.z,propsnd.snd_src,propsnd.snd_buffer);
-		   XPLMDebugString(debugStr);
+		   //sprintf(debugStr,"AutoATC: Got plane snd2 af=%d index=%d %f %f %f %f %f %f %d %d\n",propsnd.aircraftid,aircrafts[propsnd.aircraftid].airFrameIndex,propsnd.pos.x,propsnd.pos.y,propsnd.pos.z, propsnd.velocity.x, propsnd.velocity.y, propsnd.velocity.z,propsnd.snd_src,propsnd.snd_buffer);
+		   //XPLMDebugString(debugStr);
 		   propsnd.lastAFID=propsnd.aircraftid;
 	   }
         ALfloat	pos[3] = { propsnd.pos.x/50.0f,propsnd.pos.y/50.0f,propsnd.pos.z/50.0f } ;
@@ -463,6 +505,7 @@ void AircraftSounds::update(){
                 propsnd.setPitch(0.7f);
          propsnd.setPosition(pos);
         propsnd.setVelocity(vel);
+        propsnd.setVolume();
        // printf("set listener %f %f %f\n",apos[0],apos[1],apos[2]);
     }
     else if(!propsnd.paused){
@@ -473,8 +516,8 @@ void AircraftSounds::update(){
         //float	*apos = aircrafts[closest].getSndSrc();
        // printf("got plane %f %f %f %f %f %f\n",closest.x,closest.y,closest.z,velocity.x,velocity.y,velocity.z);
        if(helisnd.lastAFID!=helisnd.aircraftid){
-		   sprintf(debugStr,"got plane snd3 af=%d index=%d %f %f %f %f %f %f %d %d\n",helisnd.aircraftid,aircrafts[helisnd.aircraftid].airFrameIndex,helisnd.pos.x,helisnd.pos.y,helisnd.pos.z, helisnd.velocity.x, helisnd.velocity.y, helisnd.velocity.z,helisnd.snd_src,helisnd.snd_buffer);
-		   XPLMDebugString(debugStr);
+		   //sprintf(debugStr,"AutoATC: Got plane snd3 af=%d index=%d %f %f %f %f %f %f %d %d\n",helisnd.aircraftid,aircrafts[helisnd.aircraftid].airFrameIndex,helisnd.pos.x,helisnd.pos.y,helisnd.pos.z, helisnd.velocity.x, helisnd.velocity.y, helisnd.velocity.z,helisnd.snd_src,helisnd.snd_buffer);
+		   //XPLMDebugString(debugStr);
 		   helisnd.lastAFID=helisnd.aircraftid;
 	   }
         ALfloat	pos[3] = { helisnd.pos.x/50.0f,helisnd.pos.y/50.0f,helisnd.pos.z/50.0f } ;
@@ -495,6 +538,7 @@ void AircraftSounds::update(){
                 propsnd.setPitch(0.8f);
         helisnd.setPosition(pos);
         helisnd.setVelocity(vel);
+        helisnd.setVolume();
        // printf("set listener %f %f %f\n",apos[0],apos[1],apos[2]);
     }
     else if(!helisnd.paused){
@@ -523,7 +567,7 @@ void AircraftSounds::start()
 		my_dev = alcOpenDevice(NULL);
 		if(my_dev == NULL)
 		{
-			XPLMDebugString("AutoATC:Could not open the default OpenAL device.\n");
+			XPLMDebugString("AutoATC: Could not open the default OpenAL device.\n");
 			return;		
 		}	
 		my_ctx = alcCreateContext(my_dev, NULL);
@@ -533,7 +577,7 @@ void AircraftSounds::start()
 				alcMakeContextCurrent(old_ctx);
 			alcCloseDevice(my_dev);
 			my_dev = NULL;
-			XPLMDebugString("Could not create a context.\n");
+			XPLMDebugString("AutoATC: Could not create a context.\n");
 			return;				
 		}
 		
@@ -560,8 +604,20 @@ void AircraftSounds::start()
 		printf("AutoATC:0x%08x: I found someone else's openAL context 0x%08x.\n",XPLMGetMyID(), old_ctx);
 	}
 	live=true;
-	XPLMDebugString("AutoATC:Using OpenAL device.\n");
-    //buffers[0].load_wave("/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/AutoATC/sound4.wav");
+	XPLMDebugString("AutoATC: Using OpenAL device.\n");
+	
+	sound_on = XPLMFindDataRef("sim/operation/sound/sound_on");
+	sound_paused = XPLMFindDataRef("sim/time/paused");
+	volume_master = XPLMFindDataRef("sim/operation/sound/master_volume_ratio");
+	volume_eng = XPLMFindDataRef("sim/operation/sound/engine_volume_ratio");
+	volume_ext = XPLMFindDataRef("sim/operation/sound/exterior_volume_ratio");
+	volume_prop = XPLMFindDataRef("sim/operation/sound/prop_volume_ratio");
+	volume_env = XPLMFindDataRef("sim/operation/sound/enviro_volume_ratio");
+	/* if(sound_on && sound_pause && volume_master && volume_eng && volume_ext && volume_prop && volume_env) {
+		XPLMDebugString("AutoATC: Sound system datarefs found!\n");
+	}*/	
+	findvolume();
+	//buffers[0].load_wave("/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/AutoATC/sound4.wav");
 	/*CHECK_ERR();
 	alGenBuffers(3, buffers);
 	CHECK_ERR();*/

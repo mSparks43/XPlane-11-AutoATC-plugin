@@ -92,9 +92,9 @@ static void loadedobject(XPLMObjectRef inObject, void *inRef){
 	int id=acDef.acID;//*(int *)inRef;
 	int modelPart=acDef.pID;//*(int *)modelPartRef;
 	char debugStr[512];
-	sprintf(debugStr,"loaded object C++id=%d ref=%d\n",id,inObject);
-	XPLMDebugString(debugStr);
-	printf(debugStr);
+	//sprintf(debugStr,"AutoATC: Loaded object C++id=%d ref=%d\n",id,inObject);
+	//XPLMDebugString(debugStr);
+	//printf(debugStr);
 	aircraft[id-1].setModelObject(inObject,modelPart);
 	inLoading=false;
 	
@@ -144,7 +144,7 @@ void Aircraft::GetAircraftData(){
 		//	return;
 		//printf("wtf %d is live? has airframe %d\n",id,newData.airframe);
 	}catch(...){
-		XPLMDebugString("Exception getting plane data");
+		XPLMDebugString("AutoATC: Exception getting plane data");
 		return;
 	}
 }
@@ -214,7 +214,7 @@ void Aircraft::GetAircraftThreadData(){
 			data_mutex.unlock();
 		//}
 	}catch(...){
-		XPLMDebugString("Exception getting plane data");
+		XPLMDebugString("AutoATC: Exception getting plane data");
 		return;
 	}
 }
@@ -255,16 +255,16 @@ void Aircraft::PrepareAircraftData()
 		char debugStr[2048];
 		if(g_instance[0])
 	    {
-			printf("dropping inloading object for load id= %d\n",id);
+			//printf("dropping inloading object for load id= %d\n",id);
 			for(int i=0;i<modelCount;i++){
 						XPLMDestroyInstance(g_instance[i]);
 						g_instance[i]=NULL;
 			}
 					
 		}
-		XPLMDebugString("toLoadAirframe\n");
-		sprintf(debugStr,"searching for id=%d afI=%d to %s sound=%d\n",id,airFrameIndex,af,soundIndex);
-		XPLMDebugString(debugStr);
+		//XPLMDebugString("toLoadAirframe\n");
+		//sprintf(debugStr,"AutoATC: Searching for id=%d afI=%d to %s sound=%d\n",id,airFrameIndex,af,soundIndex);
+		//XPLMDebugString(debugStr);
 		
 		//int *pid=&id;
 		inLoading=true;
@@ -554,9 +554,9 @@ void Aircraft::PrepareAircraftData()
 			yOffset=jvmO->getOffset(thisData.airframe);
 
 			ref_style=jvmO->getDrefStyle(thisData.airframe);
-			sprintf(gBob_debstr3,"AutoATC switch Airframe from %d to %d. at %f style=%d\n",airFrameIndex,thisData.airframe,yOffset,ref_style);
-        	XPLMDebugString(gBob_debstr3);
-			printf(gBob_debstr3);
+			//sprintf(gBob_debstr3,"AutoATC: Switch Airframe from %d to %d. at %f style=%d\n",airFrameIndex,thisData.airframe,yOffset,ref_style);
+        	//XPLMDebugString(gBob_debstr3);
+			//printf(gBob_debstr3);
 			airFrameIndex=thisData.airframe;
 			toLoadAirframe=true;
 			
@@ -731,7 +731,7 @@ static void do_model(){
 		bool attached=false;
 	JVM* jvmO=getJVM();
 	char gBob_debstr2[128];
-    sprintf(gBob_debstr2,"plane thread began\n");
+    sprintf(gBob_debstr2,"AutoATC: Plane thread began\n");
     XPLMDebugString(gBob_debstr2);
 	while(!liveThread&&run){
 		std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -752,9 +752,8 @@ static void do_model(){
 			jvmO->joinThread();
 			attached=true;
 	}
-	printf("plane thread woke up\n");
-
-    sprintf(gBob_debstr2,"plane thread woke up\n");
+	//printf("plane thread woke up\n");
+    sprintf(gBob_debstr2,"AutoATC: Plane thread woke up\n");
     XPLMDebugString(gBob_debstr2);
 	int rolls=0;
 	//printf("thread ready\n");
@@ -796,9 +795,9 @@ static void do_model(){
 
 	}
 	char gBob_debstr2[128];
-    sprintf(gBob_debstr2,"plane thread stopped\n");
+    sprintf(gBob_debstr2,"AutoATC: Plane thread stopped\n");
     XPLMDebugString(gBob_debstr2);
-	printf("plane thread stopped\n");
+	//printf("plane thread stopped\n");
 }
 std::thread m_thread(&do_model);
 
@@ -865,7 +864,7 @@ float	BeginAI()
 		for(int i=0;i<30;i++){
 			aircraft[i].GetAircraftData();
 		}
-		XPLMDebugString("AutoATC: started AI planes.\n");
+		XPLMDebugString("AutoATC: Started AI planes.\n");
        
         {
             XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"cjs/world_traffic/engine_rotation_angle1");

@@ -11,6 +11,16 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #endif
+static XPLMDataRef  sound_on = NULL;
+static XPLMDataRef  sound_paused = NULL;
+static XPLMDataRef  volume_master = NULL;
+static XPLMDataRef  volume_eng = NULL;
+static XPLMDataRef  volume_ext = NULL;
+static XPLMDataRef  volume_prop = NULL;
+static XPLMDataRef  volume_env = NULL;
+static float sound_sliders[5] = {};
+static float sound_vol = 0.0;
+static float sound_vol_old = 0.0;
 class AircraftSound
 {
     private:
@@ -40,6 +50,7 @@ class AircraftSound
     void setPitch(float pitch);
     void setPosition(ALfloat pos[]);
     void setVelocity(ALfloat pos[]);
+    void setVolume();
 };
 class AircraftSounds
 {
