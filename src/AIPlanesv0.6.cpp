@@ -12,7 +12,7 @@
 #include "XPLMDisplay.h"
 #include "XPLMScenery.h"
 #include "XPLMInstance.h"
-#include "XPLMPlugin.h"
+//#include "XPLMPlugin.h"
  #include "XPLMMenus.h"
 #include "jvm.h"
 #include "Simulation.h"
@@ -25,7 +25,7 @@
 #include <chrono>
 #define MSG_ADD_DATAREF 0x01000000           //  Add dataref to DRE message
 #define PI 3.14159265
-static XPLMDataRef		gPlaneX = NULL;
+/*static XPLMDataRef		gPlaneX = NULL;
 static XPLMDataRef		gPlaneY = NULL;
 static XPLMDataRef		gPlaneZ = NULL;
 static XPLMDataRef		gPlaneTheta = NULL;
@@ -33,8 +33,8 @@ static XPLMDataRef		gPlanePhi = NULL;
 static XPLMDataRef		gPlanePsi = NULL;
 static XPLMDataRef		gdaylight = NULL;
 static XPLMDataRef		gOverRidePlanePosition = NULL;
-static XPLMDataRef		gAGL = NULL;
-                                  
+static XPLMDataRef		gAGL = NULL;*/
+                                
 float	BeginAI();
 /*static float	MyFlightLoopCallback0(
                                    float                inElapsedSinceLastCall,    
@@ -92,9 +92,11 @@ static void loadedobject(XPLMObjectRef inObject, void *inRef){
 	int id=acDef.acID;//*(int *)inRef;
 	int modelPart=acDef.pID;//*(int *)modelPartRef;
 	char debugStr[512];
-	//sprintf(debugStr,"AutoATC: Loaded object C++id=%d ref=%d\n",id,inObject);
-	//XPLMDebugString(debugStr);
-	//printf(debugStr);
+#if defined(DEBUG_STRINGS)
+	sprintf(debugStr,"loaded object C++id=%d ref=%d\n",id,inObject);
+	XPLMDebugString(debugStr);
+	printf(debugStr);
+#endif
 	aircraft[id-1].setModelObject(inObject,modelPart);
 	inLoading=false;
 	
@@ -147,6 +149,40 @@ void Aircraft::GetAircraftData(){
 		XPLMDebugString("AutoATC: Exception getting plane data");
 		return;
 	}
+}
+void Aircraft::SimulateAircraftThreadData(){
+	data_mutex.lock();
+	if(!thisData.live){				
+		data_mutex.unlock();
+		return;
+	}
+	ll->xPos=data.x;
+	ll->yPos=data.z;
+	ahs->xPos=data.y;
+
+	float speed=velocity/velocity;
+
+	if(speed>0.05){
+		data.psi=(atan2(velocity.x,-velocity.z)* (180.0/3.141592653589793238463));
+	}
+
+
+	if(data.psi-ahs->last_x[1][0]>180.0||data.psi-ahs->last_x[1][0]<-180.0)
+	{
+
+		ahs->last_x[1][0]=data.psi;//180.0+ahs->last_x[1][0];
+
+		
+	}
+
+	ahs->yPos=data.psi;
+	rp->xPos=data.the;
+	rp->yPos=data.phi;
+	//if(id==2)
+	ll->frame();
+	ahs->frame();
+	rp->frame();
+	data_mutex.unlock();
 }
 void Aircraft::GetAircraftThreadData(){
 	JVM* jvmO;
@@ -227,10 +263,6 @@ void Aircraft::PrepareAircraftData()
 	data_mutex.lock();
 	JVM* jvmO=getJVM();
 
-    
-
-	
-	
 	if(!thisData.live){
 		        if(g_instance[0])
 		        {
@@ -255,16 +287,20 @@ void Aircraft::PrepareAircraftData()
 		char debugStr[2048];
 		if(g_instance[0])
 	    {
-			//printf("dropping inloading object for load id= %d\n",id);
+#if defined(DEBUG_STRINGS)
+			printf("dropping inloading object for load id= %d\n",id);
+#endif
 			for(int i=0;i<modelCount;i++){
 						XPLMDestroyInstance(g_instance[i]);
 						g_instance[i]=NULL;
 			}
 					
 		}
-		//XPLMDebugString("toLoadAirframe\n");
-		//sprintf(debugStr,"AutoATC: Searching for id=%d afI=%d to %s sound=%d\n",id,airFrameIndex,af,soundIndex);
-		//XPLMDebugString(debugStr);
+#if defined(DEBUG_STRINGS)
+		XPLMDebugString("toLoadAirframe\n");
+		sprintf(debugStr,"searching for id=%d afI=%d to %s sound=%d\n",id,airFrameIndex,af,soundIndex);
+		XPLMDebugString(debugStr);
+#endif
 		
 		//int *pid=&id;
 		inLoading=true;
@@ -419,6 +455,9 @@ void Aircraft::PrepareAircraftData()
 	data.z = z;
 	data.the=thisData.the;
     data.phi=thisData.phi;
+		
+	float setPHI=data.phi;//so we can unlock sooner
+	int inAirframe=thisData.airframe;//so we can unlock sooner
 	if(thisData.gearDown==3.0){
 		data.inTransit=true;
 		data.engineoff=false;
@@ -426,13 +465,14 @@ void Aircraft::PrepareAircraftData()
 	}
 	else if(thisData.gearDown==2.0){
 		data.engineoff=true;
+		data.psi=thisData.psi;
 		data.inTransit=false;
 	}
 	else{
 		data.engineoff=false;//false;
 		data.inTransit=false;
 	}
-    
+    data_mutex.unlock();
 	XPLMProbeInfo_t outInfo;
 	outInfo.structSize = sizeof(outInfo);
 	//XPLMProbeResult ground= 
@@ -525,7 +565,7 @@ void Aircraft::PrepareAircraftData()
 		}
 		else if(requestedAGL<=198.0){
 			//data.the=0.0;
-    		data.phi=thisData.phi/3;
+    		data.phi=setPHI/3;
 			if(soundIndex!=2)//no screech for helos
 				inTouchDown=true;
 			requestedAGL=((requestedAGL-18.0)*1.1);
@@ -533,7 +573,7 @@ void Aircraft::PrepareAircraftData()
 				requestedAGL+=2;
 				if(data.the>-1.0){
 					data.the=-1.0;
-					data.phi=thisData.phi/3;
+					data.phi=setPHI/3;
 				}
 			}
 			data.y=outInfo.locationY+requestedAGL;
@@ -548,21 +588,23 @@ void Aircraft::PrepareAircraftData()
 			data.y=data.y+lift;
 		}
 		//check model
-		if((airFrameIndex==-1&&airFrameIndex!=thisData.airframe)||(thisData.airframe>0&&airFrameIndex!=thisData.airframe)){
+		if((airFrameIndex==-1&&airFrameIndex!=inAirframe)||(inAirframe>0&&airFrameIndex!=inAirframe)){
 
-			soundIndex=jvmO->getSound(thisData.airframe);
-			yOffset=jvmO->getOffset(thisData.airframe);
+			soundIndex=jvmO->getSound(inAirframe);
+			yOffset=jvmO->getOffset(inAirframe);
 
-			ref_style=jvmO->getDrefStyle(thisData.airframe);
-			//sprintf(gBob_debstr3,"AutoATC: Switch Airframe from %d to %d. at %f style=%d\n",airFrameIndex,thisData.airframe,yOffset,ref_style);
-        	//XPLMDebugString(gBob_debstr3);
-			//printf(gBob_debstr3);
-			airFrameIndex=thisData.airframe;
+			ref_style=jvmO->getDrefStyle(inAirframe);
+#if defined(DEBUG_STRINGS)
+			sprintf(gBob_debstr3,"AutoATC switch Airframe from %d to %d. at %f style=%d\n",airFrameIndex,inAirframe,yOffset,ref_style);
+        	XPLMDebugString(gBob_debstr3);
+			printf(gBob_debstr3);
+#endif
+			airFrameIndex=inAirframe;
 			toLoadAirframe=true;
 			
 		}
 	}
-	data_mutex.unlock();
+	
 }
 
 float useNavLights=0.0;
@@ -581,6 +623,9 @@ void Aircraft::SetAircraftData(void)
 		return;
 		JVM* jvmO=getJVM();
     XPLMDrawInfo_t		dr;
+	
+	/*
+	moved to another thread
 	ll->xPos=data.x;
 	ll->yPos=data.z;
 	ahs->xPos=data.y;
@@ -606,7 +651,7 @@ void Aircraft::SetAircraftData(void)
 	//if(id==2)
 	ll->frame();
 	ahs->frame();
-	rp->frame();
+	rp->frame();*/
 	//printf("plane %d %f %f\n",id,data.psi,ahs->getY());
 	dr.structSize = sizeof(dr);
 	dr.x = ll->getX();//data.x;
@@ -677,14 +722,26 @@ void Aircraft::SetAircraftData(void)
 	for(int i=0;i<modelCount;i++)
     if(g_instance[i])
     {
-		
+		float thisdamage=0.0;
+		if(damage!=NULL){
+			float donedamage;
+			
+			XPLMGetDatavf(damage,&donedamage,id,1);
+			if(donedamage>20)
+				thisdamage=1.0;
+			XPLMSetDatavi(acID,&id,id,1);
+			XPLMSetDatavi(acAF,&airFrameIndex,id,1);
+			XPLMSetDatavf(acX,&dr.x,id,1);
+			XPLMSetDatavf(acY,&dr.y,id,1);
+			XPLMSetDatavf(acZ,&dr.z,id,1);	
+		}
 		if(ref_style==0){	//cls_drefs	
-			float tire[17] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,NULL};
+			float tire[18] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,NULL};
 			
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
 		else if(ref_style==1){//wt3_drefs
-			float tire[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,NULL};
+			float tire[20] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
 		else if(ref_style==3){
@@ -699,15 +756,20 @@ void Aircraft::SetAircraftData(void)
 			if(nowT>(startFlakTime)){
 				flak=1.0;
 			}
+			float engineon=!data.engineoff?1.0:0.0;
+			
+			
+			//printf("damage %d=%f",id,donedamage);	
 			acModelDef *acDef=jvmO->getModelPart(airFrameIndex,i);
 			dr.x = ll->getX()+acDef->partoffsets.x;//data.x;
 			dr.y = ahs->getX()+yOffset+acDef->partoffsets.y;//data.y+yOffset;
 			dr.z = ll->getY()+acDef->partoffsets.z;
-			float tire[6] = {(float)8.0,(float)8.0,spin,spin,flak,NULL};
+			
+			float tire[10] = {(float)8.0,(float)8.0,spin,spin,flak,engineon,gear,thisdamage,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
 		else{ //xmp_drefs
-			float tire[19] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,NULL};
+			float tire[20] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
         
@@ -726,13 +788,25 @@ void sendData(){
 		jvmO->live=localData.live;
 	}
 }
+static void do_simulation(){
+	while(!liveThread&&run){
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+	printf("simulation thread woke up\n");
+	while(liveThread&&run){
+		for(int i=0;i<30;i++){
+			aircraft[i].SimulateAircraftThreadData();
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));//100fps or less
+	}
+#if defined(DEBUG_STRINGS)
+	printf("simulation thread stopped\n");
+#endif
+}
 static void do_model(){
 	try{
 		bool attached=false;
 	JVM* jvmO=getJVM();
-	char gBob_debstr2[128];
-    sprintf(gBob_debstr2,"AutoATC: Plane thread began\n");
-    XPLMDebugString(gBob_debstr2);
 	while(!liveThread&&run){
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		//std::this_thread::sleep_for(std::chrono::seconds(15));
@@ -752,9 +826,13 @@ static void do_model(){
 			jvmO->joinThread();
 			attached=true;
 	}
-	//printf("plane thread woke up\n");
-    sprintf(gBob_debstr2,"AutoATC: Plane thread woke up\n");
+#if defined(DEBUG_STRINGS)
+	printf("plane thread woke up\n");
+	char gBob_debstr2[128];
+    sprintf(gBob_debstr2,"plane thread woke up\n");
+
     XPLMDebugString(gBob_debstr2);
+#endif
 	int rolls=0;
 	//printf("thread ready\n");
 	while(liveThread&&run){
@@ -782,7 +860,7 @@ static void do_model(){
 			//printf("%d is index %d waiting for %d live =%d\n",i,aircraft[i].airFrameIndex,aircraft[i].thisData.airframe,aircraft[i].thisData.live);
 			//g_ac_mutex[i].unlock();
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		//std::this_thread::sleep_for(std::chrono::seconds(15));
 	}
 	
@@ -794,18 +872,18 @@ static void do_model(){
 	}catch (const std::exception& ex){
 
 	}
-	char gBob_debstr2[128];
-    sprintf(gBob_debstr2,"AutoATC: Plane thread stopped\n");
-    XPLMDebugString(gBob_debstr2);
-	//printf("plane thread stopped\n");
+#if defined(DEBUG_STRINGS)	
+	printf("AutoATC: plane thread stopped\n");
+#endif
 }
 std::thread m_thread(&do_model);
 
+std::thread m_simthread(&do_simulation);
 void initPlanes(){
 
 	soundSystem.showActive();
 
-    gPlaneX = XPLMFindDataRef("sim/flightmodel/position/local_x");
+    /*gPlaneX = XPLMFindDataRef("sim/flightmodel/position/local_x");
 	gPlaneY = XPLMFindDataRef("sim/flightmodel/position/local_y");
 	gPlaneZ = XPLMFindDataRef("sim/flightmodel/position/local_z");
 	gPlaneTheta = XPLMFindDataRef("sim/flightmodel/position/theta");
@@ -813,7 +891,13 @@ void initPlanes(){
 	gPlanePsi = XPLMFindDataRef("sim/flightmodel/position/psi");
 	gOverRidePlanePosition = XPLMFindDataRef("sim/operation/override/override_planepath");
 	gAGL = XPLMFindDataRef("sim/flightmodel/position/y_agl");
-	gdaylight = XPLMFindDataRef("sim/graphics/scenery/airport_lights_on");
+	gdaylight = XPLMFindDataRef("sim/graphics/scenery/airport_lights_on");*/
+	damage = XPLMFindDataRef("autoatc/aircraft/target_damage");
+	acID = XPLMFindDataRef("autoatc/aircraft/id");
+	acAF = XPLMFindDataRef("autoatc/aircraft/af");
+	acX = XPLMFindDataRef("autoatc/aircraft/x");
+	acY = XPLMFindDataRef("autoatc/aircraft/y");
+	acZ = XPLMFindDataRef("autoatc/aircraft/z");
 	sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
 	//XPLMRegisterFlightLoopCallback(	MyFlightLoopCallback0,/* Callback */-1.0,/* Interval */NULL);/* refcon not used. */
 	BeginAI();
@@ -830,6 +914,7 @@ void initPlanes(){
 void stopPlanes(){
     //XPLMUnregisterFlightLoopCallback(MyFlightLoopCallback0, NULL);
 	printf("stopPlanes\n");
+	soundSystem.stop();
 	/*if(liveThread){
 		XPLMUnregisterFlightLoopCallback(AircraftLoopCallback, NULL);
 		
@@ -838,8 +923,14 @@ void stopPlanes(){
 	run=false;
 	if(m_thread.joinable())
 		m_thread.join();
-    
-    //XPLMReleasePlanes();//not used anymore
+	
+	char gBob_debstr2[128];
+    sprintf(gBob_debstr2,"AutoATC: plane thread stopped\n");
+    XPLMDebugString(gBob_debstr2);
+    if(m_simthread.joinable())
+		m_simthread.join();
+	sprintf(gBob_debstr2,"AutoATC: simulation thread stopped\n");
+    XPLMDebugString(gBob_debstr2);
 }
 bool loaded=false;
 /*float	MyFlightLoopCallback0(
@@ -864,25 +955,9 @@ float	BeginAI()
 		for(int i=0;i<30;i++){
 			aircraft[i].GetAircraftData();
 		}
-		XPLMDebugString("AutoATC: Started AI planes.\n");
-       
-        {
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"cjs/world_traffic/engine_rotation_angle1");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"cjs/world_traffic/engine_rotation_angle2");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/.s");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/lgear");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/nw_rot");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/bcn");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/strobe");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/land");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/nav");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/taxi");
-            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"traf/sb");
-			XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/engine/POINT_prop_ang_deg0");  
-			XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/engine/POINT_prop_ang_deg1");  
-			XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/engine/POINT_tacrad0");  
-			XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/engine/POINT_tacrad1");     
-        }
+		XPLMDebugString("AutoATC: started AI planes.\n");
+		
+        
 		
     }
 
@@ -894,6 +969,7 @@ float	BeginAI()
 //AircraftData userData;
 int call=0;
 //float	AircraftLoopCallback(float                inElapsedSinceLastCall, float                inElapsedTimeSinceLastFlightLoop,   int                  inCounter,    void *               inRefcon)
+//runs on main XP flight loop, spend as little time in here as possible
 void aircraftLoop()
 {
 	
@@ -906,6 +982,35 @@ void aircraftLoop()
 		aircraft[i].SetAircraftData();
 		//g_ac_mutex[i].unlock();
 	}
-	soundSystem.update();
+	char message[256];
+	if(sound_on==NULL){
+		sound_on = XPLMFindDataRef("sim/operation/sound/sound_on");
+		sound_paused = XPLMFindDataRef("sim/time/paused");
+		volume_master = XPLMFindDataRef("sim/operation/sound/master_volume_ratio");
+		volume_eng = XPLMFindDataRef("sim/operation/sound/engine_volume_ratio");
+		volume_ext = XPLMFindDataRef("sim/operation/sound/exterior_volume_ratio");
+		volume_prop = XPLMFindDataRef("sim/operation/sound/prop_volume_ratio");
+		volume_env = XPLMFindDataRef("sim/operation/sound/enviro_volume_ratio");
+	}
+	float master = XPLMGetDataf(volume_master);
+
+	float exterior= XPLMGetDataf(volume_ext);
+	// If X-Plane sound is not muted, set ai engine sound gain according to the two sliders
+	float sound_vol=1.0;
+	int enable=XPLMGetDatai(sound_on);
+	int paused=XPLMGetDatai(sound_paused) ;
+	if( enable!= 0 and paused!= 1){
+		sound_vol = master*exterior;
+		/*(message,"AutoATC: AI volume: %f\n",sound_vol);
+		XPLMDebugString(message);
+		printf(message);*/
+	} else {
+		/*sprintf(message,"AutoATC: AI sound muted master=%f %d %d %p\n",master,enable,paused,sound_on);
+		XPLMDebugString(message);
+		printf(message);*/
+		sound_vol = 0.0;
+	}
+
+	soundSystem.update(sound_vol);
 	//return -1;
 }

@@ -184,6 +184,7 @@ PLUGIN_API int XPluginStart(
     sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
     
     HSI_source = XPLMFindDataRef("sim/cockpit2/radios/actuators/HSI_source_select_pilot");
+    
     registerDatarefs();
     jvmO->start();
 
@@ -192,25 +193,32 @@ PLUGIN_API int XPluginStart(
 
 PLUGIN_API void XPluginStop(void)
 {
+    XPLMDebugString("AUTOATC: XPluginStop\n"); 
     JVM *jvmO = getJVM();
     if (jvmO->hasjvm)
     {
+        XPLMDebugString("AUTOATC: jvm systemstop\n");
         jvmO->systemstop();
+        XPLMDebugString("AUTOATC: deactivateJVM\n");
         jvmO->deactivateJVM();
     }
 }
 
 PLUGIN_API void XPluginDisable(void)
 {
+    XPLMDebugString("AUTOATC: XPluginDisable\n"); 
     JVM *jvmO = getJVM();
     if (jvmO->hasjvm)
     {
+        XPLMDebugString("AUTOATC: unregisterFlightLoop\n");
         jvmO->unregisterFlightLoop();
+        XPLMDebugString("AUTOATC: systemstop\n");
         jvmO->systemstop();
        // jvmO->deactivateJVM();
     }
 }
 
+#define MSG_ADD_DATAREF 0x01000000           //  Add dataref to DRE message
 PLUGIN_API int XPluginEnable(void)
 {
     JVM *jvmO = getJVM();
@@ -240,6 +248,14 @@ PLUGIN_API void XPluginReceiveMessage(
     long inMessage,
     void *inParam)
 {
+    if (inMessage == XPLM_MSG_PLANE_LOADED){
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/id");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/af");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/x");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/y");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/z");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/target_damage");  //tell dref editor about it
+    }
 }
 
 int TriggerBroadcastHandler(XPLMCommandRef inCommand,
