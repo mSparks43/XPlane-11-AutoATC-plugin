@@ -1,6 +1,8 @@
 # build folder
-build/*
+build/obj64/*
 # airportMaps folder
 airportMaps/*
-# documentation folder
-documentation/0.8.7\ b1\ installation\ and\ user\ guide.odt
+include/*
+Makefile
+
+

@@ -48,19 +48,11 @@ public:
 class Aircraft
 {
 private:
-	/*XPLMDataRef	dr_plane_x;
-	XPLMDataRef	dr_plane_y;
-	XPLMDataRef	dr_plane_z;
-	XPLMDataRef	dr_plane_the;
-	XPLMDataRef	dr_plane_phi;
-	XPLMDataRef	dr_plane_psi;
-	XPLMDataRef	dr_plane_gear_deploy;
-	XPLMDataRef	dr_plane_throttle;*/
 	XPLMObjectRef* g_object=NULL;
 	XPLMInstanceRef g_instance[12]={NULL};
 
 	int modelCount=1;
-	const char * cls_drefs[17]={ "traf/mw_def",
+	const char * cls_drefs[18]={ "traf/mw_def",
 	"traf/nw_def",
 	"traf/lgear",
 	"traf/flaps",
@@ -74,9 +66,15 @@ private:
 	"traf/vint",
 	"traf/touch_down",
 	"traf/vint_circle",
-	"traf/vint_circle2", NULL };
-	const char * acf_drefs[6]={ "autoatc/engine/POINT_tacrad0","autoatc/engine/POINT_tacrad1","autoatc/engine/POINT_prop_ang_deg0","autoatc/engine/POINT_prop_ang_deg1","autoatc/flak",NULL};
-	const char * wt3_drefs[19]={ "traf/mw_def",
+	"traf/vint_circle2","autoatc/destroyed", NULL };
+	const char * acf_drefs[9]={ "autoatc/engine/POINT_tacrad0",
+	"autoatc/engine/POINT_tacrad1",
+	"autoatc/engine/POINT_prop_ang_deg0",
+	"autoatc/engine/POINT_prop_ang_deg1",
+	"autoatc/flak",
+	"autoatc/engineon",
+	"autoatc/altitude","autoatc/destroyed",NULL};
+	const char * wt3_drefs[20]={ "traf/mw_def",
 	"traf/nw_def",
 	"cjs/world_traffic/main_gear_retraction_ratio",
 	"cjs/world_traffic/nose_gear_retraction_ratio",
@@ -91,8 +89,8 @@ private:
 	"cjs/world_traffic/engine_rpm1",
 	"cjs/world_traffic/engine_rpm2",
 	"cjs/world_traffic/engine_rotation_angle1",
-	"cjs/world_traffic/engine_rotation_angle2", NULL };
-	const char * xmp_drefs[19]={ "traf/mw_def",
+	"cjs/world_traffic/engine_rotation_angle2","autoatc/destroyed", NULL };
+	const char * xmp_drefs[20]={ "traf/mw_def",
 	"traf/nw_def",
 	"libxplanemp/controls/gear_ratio",
 	"libxplanemp/controls/flap_ratio",
@@ -109,7 +107,7 @@ private:
 	"cjs/world_traffic/engine_rpm2",
 	"cjs/world_traffic/engine_rotation_angle1",
 	"cjs/world_traffic/engine_rotation_angle2",
-	"libxplanemp/controls/speed_brake_ratio", NULL };
+	"libxplanemp/controls/speed_brake_ratio","autoatc/destroyed", NULL };
 	int ref_style=0;
 	bool wt3;
 	XPLMProbeRef ground_probe;
@@ -149,6 +147,7 @@ public:
 	//void GetAircraftData(AircraftData userdata);
 	void GetAircraftData();
 	void GetAircraftThreadData();
+	void SimulateAircraftThreadData();
 	void PrepareAircraftData();
 	void SetAircraftData(void);
 	v getSndSrc();

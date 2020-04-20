@@ -11,16 +11,9 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #endif
-static XPLMDataRef  sound_on = NULL;
-static XPLMDataRef  sound_paused = NULL;
-static XPLMDataRef  volume_master = NULL;
-static XPLMDataRef  volume_eng = NULL;
-static XPLMDataRef  volume_ext = NULL;
-static XPLMDataRef  volume_prop = NULL;
-static XPLMDataRef  volume_env = NULL;
-static float sound_sliders[5] = {};
-static float sound_vol = 0.0;
-static float sound_vol_old = 0.0;
+
+
+
 class AircraftSound
 {
     private:
@@ -50,13 +43,16 @@ class AircraftSound
     void setPitch(float pitch);
     void setPosition(ALfloat pos[]);
     void setVelocity(ALfloat pos[]);
-    void setVolume();
+
+    void setVolume(float volume);
 };
 class AircraftSounds
 {
     private:
     ALCdevice *		my_dev		= NULL;			// We make our own device and context to play sound through.
     ALCcontext *		my_ctx		= NULL;
+    bool createdContext=false;
+    float sound_vol = 1.0;
     bool live;
     AircraftSound landsnd;
     AircraftSound propsnd;
@@ -71,7 +67,7 @@ class AircraftSounds
     void start();
     void stop();
     void showActive();
-    void update();
+    void update(float latest_sound_vol);
      void land(int aircraftid);
 };
 #define SWAP_32(value)                 \

@@ -28,7 +28,7 @@
  #include <stdlib.h>
  #endif
 
- const char* plugin_version = "About:0.8.72";
+ const char* plugin_version = "About:0.9.3";
 char gBob_debstr2[2048];
 char xp_path[512];
 char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/java/airframes_860.txt";
@@ -193,7 +193,7 @@ bool JVM::connectJVM() {
 
     //getcreatedjvms = (jint(*)(JavaVM**, jsize, jsize *)) dlsym(jvmlib, "JNI_GetCreatedJavaVMs");
 #if defined(__linux__)
-     sprintf(gBob_debstr2,"AutoATC: Loading jvm dll '%s' \n", lin);
+     sprintf(gBob_debstr2,"AutoATC:Loading jvm so '%s' \n", lin);
      XPLMDebugString(gBob_debstr2);
      libnativehelper = dlopen(lin, RTLD_NOW);//"libjvm.so"
         if (libnativehelper==NULL) {
@@ -377,7 +377,8 @@ char *JVM::trim (char * s)
     s1++;
 
   /* Copy finished string */
-  strcpy (s, s1);
+  //strcpy (s, s1);
+  while (*s != '\0') { *s1 = *s; s1++; s++; } *s1 = '\0';
   return s;
 }
 void JVM::getMorse (){
@@ -530,6 +531,13 @@ void JVM::init_parameters ()
     pitchRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/pitch_vacuum_deg_pilot");
     rollRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/roll_vacuum_deg_pilot");
     sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
+    sound_on = XPLMFindDataRef("sim/operation/sound/sound_on");
+	sound_paused = XPLMFindDataRef("sim/time/paused");
+	volume_master = XPLMFindDataRef("sim/operation/sound/master_volume_ratio");
+	volume_eng = XPLMFindDataRef("sim/operation/sound/engine_volume_ratio");
+	volume_ext = XPLMFindDataRef("sim/operation/sound/exterior_volume_ratio");
+	volume_prop = XPLMFindDataRef("sim/operation/sound/prop_volume_ratio");
+	volume_env = XPLMFindDataRef("sim/operation/sound/enviro_volume_ratio");
     standbyAirframe=AirframeDef();
     standbyAirframe.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0");
     std::ifstream t("Resources/plugins/AutoATC/notepad.txt");
@@ -683,9 +691,11 @@ void JVM::updateAirframes(void){
         airframeDefs.clear();
         parse_config(CONFIG_FILE_DEFAULT_AIRFRAMES);
         for (unsigned i=0; i<airframeDefs.size(); i++){
-            //sprintf(gBob_debstr2,"AutoATC: Airframe %d is %s. at %f \n",i, airframeDefs[i].getPath(),airframeDefs[i].getOffset());
+#if defined(DEBUG_STRINGS)
+            sprintf(gBob_debstr2,"AutoATC Airframe %d is %s. at %f \n",i, airframeDefs[i].getPath(),airframeDefs[i].getOffset());
            // printf(gBob_debstr2);
-            //XPLMDebugString(gBob_debstr2);
+            XPLMDebugString(gBob_debstr2);
+#endif
         }
         if(airframeDefs.size()==0){
             //we dont have any definitions
@@ -722,6 +732,7 @@ void JVM::stop(void)
 }
 void JVM::systemstop(void)
 {
+    
     if(!hasjvm)
         return;
     
@@ -817,7 +828,9 @@ void JVM::updateStndbyFreq(){
     int_mutex.lock();
     jint fOnehundred = (jint) plane_env->CallStaticIntMethod(threadcommandsClass, getStndbyMethod,standbyRoll,logPage);
     standbyFreqInt=fOnehundred;
+ #if defined(DEBUG_STRINGS)   
     printf("set standbyRoll %d\n",fOnehundred);  
+ #endif   
     fireNewFreq=false;
     int_mutex.unlock();
 }

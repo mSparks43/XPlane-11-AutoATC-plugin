@@ -11,6 +11,7 @@
 #include <mutex>
 #include <vector>
 #define MAXLEN 2048
+#define DEBUG_STRINGS
 class acModelDef
 {
 public:
@@ -67,6 +68,12 @@ static XPLMDataRef  nav1_stdby_freq_hz = NULL;
 static XPLMDataRef  nav2_stdby_freq_hz = NULL;
 static XPLMDataRef  adf1_stdby_freq_hz = NULL;
 static XPLMDataRef  sysTimeRef = NULL;
+static XPLMDataRef	damage = NULL;
+static XPLMDataRef	acID = NULL;
+static XPLMDataRef	acAF = NULL;
+static XPLMDataRef	acX = NULL;
+static XPLMDataRef	acY = NULL;
+static XPLMDataRef	acZ = NULL;
 static XPLMDataRef  adf2_stdby_freq_hz = NULL;
 static XPLMDataRef  com1_freq_hzRef = NULL;
 static XPLMDataRef  nav1_freq_hzRef = NULL;
@@ -82,6 +89,14 @@ static XPLMDataRef  nav1_nav_id = NULL;
 static XPLMDataRef  nav2_nav_id = NULL;
 static XPLMDataRef  adf1_nav_id = NULL;
 static XPLMDataRef  adf2_nav_id = NULL;
+
+static XPLMDataRef  sound_on = NULL;
+static XPLMDataRef  sound_paused = NULL;
+static XPLMDataRef  volume_master = NULL;
+static XPLMDataRef  volume_eng = NULL;
+static XPLMDataRef  volume_ext = NULL;
+static XPLMDataRef  volume_prop = NULL;
+static XPLMDataRef  volume_env = NULL;
 class String 
 { 
 private: 

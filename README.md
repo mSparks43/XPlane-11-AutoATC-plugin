@@ -31,12 +31,7 @@ In order to use ATC services and have a better text to speech output, two compan
 
 ## Compiling
 ### Windows
-In "XPlane-11-AutoATC-plugin":
-> mingw64-make clean
-
-> mingw64-make OS=WINDOWS
-
-Output is "win.xpl" in "build/AutoATC/64/"
+Windows users should use the Visual Studio Community project 
 
 ### Linux
 In "XPlane-11-AutoATC-plugin":
