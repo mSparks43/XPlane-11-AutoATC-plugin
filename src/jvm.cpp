@@ -125,6 +125,7 @@ JVM::JVM(void)
     nav1_nav_id = XPLMFindDataRef("sim/cockpit2/radios/indicators/nav1_nav_id");//	byte[150]	n	string	current selected navID - nav radio 1
     nav2_nav_id = XPLMFindDataRef("sim/cockpit2/radios/indicators/nav2_nav_id");//	byte[150]	n	string	current selected navID - nav radio 2
     adf1_nav_id = XPLMFindDataRef("sim/cockpit2/radios/indicators/adf1_nav_id");//	byte[150]	n	string	current selected navID - ADF 1
+    
     adf2_nav_id = XPLMFindDataRef("sim/cockpit2/radios/indicators/adf2_nav_id");//	byte[150]	n	string	current selected navID - ADF 2
     audio_selection_nav1 = XPLMFindDataRef("sim/cockpit2/radios/actuators/audio_selection_nav1");
     audio_selection_nav2 = XPLMFindDataRef("sim/cockpit2/radios/actuators/audio_selection_nav2");
@@ -437,76 +438,9 @@ void JVM::getMorse (){
         getData(com);
         lastNavAudio=nowT;
     }
-    /*
-    if(audio>0&&navdata[0]>0){
-        strcpy(navaid, (char*) &navdata);
-        char com[512];
-        sprintf(com,"doCommand:playMorse:%s",navaid);
-        getData(com);
-        printf("navData 1 %s\n",com);
-        found=true;
-        lastFoundNav=1;
-    }
-    if(!found){
-        size=XPLMGetDatab(nav2_nav_id,navdata,0,150);
-        audio=XPLMGetDatai(audio_selection_nav2);
-        if(audio>0&&navdata[0]>0){
-            strcpy(navaid, (char*) &navdata);
-            char com[512];
-            sprintf(com,"doCommand:playMorse:%s",navaid);
-            getData(com);
-            printf("navData 2 %s\n",com);
-            lastFoundNav=2;
-            found==true;
-        }
-    }
-    if(!found){
-        size=XPLMGetDatab(adf1_nav_id,navdata,0,150);
-        audio=XPLMGetDatai(audio_selection_adf1);
-        if(audio>0&&navdata[0]>0){
-            strcpy(navaid, (char*) &navdata);
-            char com[512];
-            sprintf(com,"doCommand:playMorse:%s",navaid);
-            getData(com);
-            printf("adfData 1 %s\n",com);
-            lastFoundNav=3;
-            found==true;
-        }
-    }
-    if(!found){
-        size=XPLMGetDatab(adf2_nav_id,navdata,0,150);
-        audio=XPLMGetDatai(audio_selection_adf2);
-        if(audio>0&&navdata[0]>0){
-            strcpy(navaid, (char*) &navdata);
-            char com[512];
-            sprintf(com,"doCommand:playMorse:%s",navaid);
-            getData(com);
-            printf("adfData 2 %s\n",com);
-            lastFoundNav=4;
-            found==true;
-        }
-    }*/
+    
     
 }
-/*void JVM::testExistingJVM (){
-    jsize nVMs;
-    JNIEnv *local_env;
-    JNI_GetCreatedJavaVMs(NULL, 0, &nVMs); // 1. just get the required array length
-    JavaVM** jvms = new JavaVM*[nVMs];
-    JNI_GetCreatedJavaVMs(jvms, nVMs, &nVMs);
-    if(nVMs==1){
-        jvms[0]->AttachCurrentThread((void**)&local_env, NULL);
-         if(local_env == NULL)
-            printf("failed to attached \n");
-            else{
-                jclass apiClass = local_env->FindClass("api/XPJVMAPI");  // try to find the class
-                if(apiClass != NULL)
-                    printf("searched and found XPJVMAPI \n");
-                else
-                    printf("searched and NOT found XPJVMAPI \n");
-            }
-    }
-}*/
 void JVM::init_parameters ()
 {
 
@@ -797,7 +731,20 @@ void JVM::retriveLogData(){
     string_mutex.unlock();
     plane_env->ReleaseStringUTFChars(jstr, nativeString);
 }
-jstring JVM::getData(const char* reference){
+void JVM::getData(const char* reference){
+    //jmethodID 
+    if(!hasjvm)
+        return;// ( jstring)"No JVM|";
+    /*jstring stringArg1 = env->NewStringUTF(reference);
+    jstring jstr = (jstring) env->CallStaticObjectMethod(commandsClass, midToString,stringArg1);
+    env->DeleteLocalRef(stringArg1);*/
+    std::string toDo(reference);
+    command_mutex.lock(); 
+    getDataList.push_back(toDo);
+    command_mutex.unlock();
+
+}
+jstring JVM::getStringData(const char* reference){
     //jmethodID 
     if(!hasjvm)
         return ( jstring)"No JVM|";
@@ -914,6 +861,22 @@ void JVM::getThreadCommandData(){
        command_mutex.unlock();
     }
     plane_env->ReleaseStringUTFChars(jstr, nativeString);
+    if(getDataList.size()>0){
+        std::vector<std::string> incominggetDataList;
+        command_mutex.lock();
+        for(std::string s:getDataList){
+            incominggetDataList.push_back(s);
+        }
+        getDataList.clear();
+        command_mutex.unlock();
+        for(std::string s:incominggetDataList){
+            jstring stringArg1 = plane_env->NewStringUTF(s.c_str());
+            plane_env->CallStaticObjectMethod(threadcommandsClass, midToThreadString,stringArg1);
+            env->DeleteLocalRef(stringArg1);
+        }
+
+
+    }
 }
 void JVM::getCommandData(){
     command_mutex.lock();
@@ -941,18 +904,24 @@ void JVM::getCommandData(){
                 if(dRef!=NULL){
                    // printf("found dataref %s\n",dataref.c_str());
                     std::string value = commandData.substr (found+1);
-                    std::size_t decimalF = value.find(".");
+                    //std::size_t decimalF = value.find(".");
+                    XPLMDataTypeID type = XPLMGetDataRefTypes(dRef);
                     char* end;
-                    if (decimalF==std::string::npos){
+                    if (type&xplmType_Int){
                         long xpvalue=strtol(value.c_str(),&end,10);
                         XPLMSetDatai(dRef, (int)xpvalue);
                         //printf("set dataref %s to %d\n",dataref.c_str(),xpvalue);
 
                     }
-                    else{
+                    else if (type&xplmType_Float){
                         double xpvalue=strtod(value.c_str(),&end);
                         XPLMSetDataf(dRef, (float)xpvalue);
                         //printf("set dataref %s to %f\n",dataref.c_str(),xpvalue);
+                    }
+                    else if (type&xplmType_Data){
+                        const char * begin = value.c_str();
+		                const char * end = begin + value.size();
+                        XPLMSetDatab(dRef, (void *) begin, 0, end - begin);
                     }
                 }
             }
@@ -1068,7 +1037,7 @@ void JVM::setICAO(){
     XPLMDataRef	dr_plane_ICAO = XPLMFindDataRef ("sim/aircraft/view/acf_ICAO");
     XPLMGetDatab(dr_plane_ICAO,icao,0,40);
                 
-    jstring jstr = getData(icao);
+    jstring jstr = getStringData(icao);
 
     const char* nativeString = env->GetStringUTFChars(jstr, JNI_FALSE);
    // char* astring=(char *)nativeString;   
@@ -1078,6 +1047,20 @@ void JVM::LogPageWindowPlus(){
     logPage++;
     if(logPage>4)
         logPage=0;
+}
+void JVM::processAcars(){
+     XPLMDataRef toSendID = XPLMFindDataRef ("autoatc/acars/out");
+     int size=XPLMGetDatab(toSendID,NULL,0,0);
+    char acarsoutdata[size];
+
+    size=XPLMGetDatab(toSendID,acarsoutdata,0,size);
+    char command[size+30];
+
+    sprintf(command,"doCommand:sendAcars:%s",acarsoutdata);
+
+    printf("SEND ACARS = %s\n",acarsoutdata);
+    getData(command);
+    
 }
 void JVM::toggleLogWindow(){
     XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
@@ -1227,7 +1210,7 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
     int ww=r-l;
     JVM* jvmO=getJVM();
     if(jvmO->hasjvm){
-        jstring jstr = jvmO->getData(plugin_version);
+        jstring jstr = jvmO->getStringData(plugin_version);
         const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
     
         char* astring=(char *)nativeString;   

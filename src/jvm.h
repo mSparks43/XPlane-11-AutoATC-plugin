@@ -11,7 +11,7 @@
 #include <mutex>
 #include <vector>
 #define MAXLEN 2048
-#define DEBUG_STRINGS
+//#define DEBUG_STRINGS
 class acModelDef
 {
 public:
@@ -131,7 +131,7 @@ private:
    #elif defined(__APPLE__)
    void *libnativehelper;
    #endif
-   
+   std::vector<std::string> getDataList;
    std::vector<String *> commandsList;
    char logpageString[128]={0};
    char logpageData[2048]={0};
@@ -189,7 +189,8 @@ public:
     void broadcast(void);
     int getStndbyFreq(int roll);
     void updateStndbyFreq(void);
-    jstring getData(const char*);
+    void getData(const char*);
+    jstring getStringData(const char*);
     char *getLogData(const char*);//inline function to get cached log window data
     void retriveLogData();//queue up log window data
     void setData(jfloat data[]);
@@ -210,6 +211,7 @@ public:
     void updateAirframes();
     void toggleLogWindow();
     void LogPageWindowPlus();
+    void processAcars();
     void getCommandData();
     void getThreadCommandData();
     char* getDevice();

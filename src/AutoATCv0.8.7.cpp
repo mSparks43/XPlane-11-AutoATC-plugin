@@ -33,6 +33,7 @@ XPLMCommandRef swapComCommand = NULL;
 XPLMCommandRef prevComCommand = NULL;
 XPLMCommandRef logViewCommand = NULL;
 XPLMCommandRef logPageCommand = NULL;
+XPLMCommandRef acarsCommand = NULL;
 XPLMCommandRef playpauseCommand = NULL;
 XPLMCommandRef playnextCommand = NULL;
 XPLMCommandRef playbackCommand = NULL;
@@ -54,6 +55,9 @@ int logViewHandler(XPLMCommandRef inCommand,
 int logPageHandler(XPLMCommandRef inCommand,
                    XPLMCommandPhase inPhase,
                    void *inRefcon);
+int acarsHandler(XPLMCommandRef inCommand,
+                   XPLMCommandPhase inPhase,
+                   void *inRefcon);                   
 int playpauseCommandHandler(XPLMCommandRef inCommand,
                             XPLMCommandPhase inPhase,
                             void *inRefcon);
@@ -153,6 +157,12 @@ PLUGIN_API int XPluginStart(
                                1,              // Receive input before plugin windows.
                                (void *)0);     // inRefcon. */
 
+    acarsCommand = XPLMCreateCommand("AutoATC/ACARS", "send ACARS message");
+
+    XPLMRegisterCommandHandler(acarsCommand, // in Command name
+                               acarsHandler, // in Handler
+                               1,              // Receive input before plugin windows.
+                               (void *)0);     // inRefcon. */
     playpauseCommand = XPLMCreateCommand("AutoATC/playpause", "Play Music");
 
     XPLMRegisterCommandHandler(playpauseCommand,        // in Command name
@@ -255,6 +265,10 @@ PLUGIN_API void XPluginReceiveMessage(
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/y");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/z");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/target_damage");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/in");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/out");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/received");  //tell dref editor about it
+        
     }
 }
 
@@ -393,6 +407,17 @@ int logPageHandler(XPLMCommandRef inCommand,
     {
         JVM *jvmO = getJVM();
         jvmO->LogPageWindowPlus();
+    }
+    return 0;
+}
+int acarsHandler(XPLMCommandRef inCommand,
+                   XPLMCommandPhase inPhase,
+                   void *inRefcon)
+{
+    if (inPhase == xplm_CommandBegin)
+    {
+        JVM *jvmO = getJVM();
+        jvmO->processAcars();
     }
     return 0;
 }

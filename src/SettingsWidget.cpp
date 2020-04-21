@@ -119,7 +119,7 @@ void SettingsWidget::updateData(){
             return;
         }
         jvmO->setICAO();
-         jstring jstr = jvmO->getData("Network");
+         jstring jstr = jvmO->getStringData("Network");
         const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
     
         char* astring=(char *)nativeString; 
