@@ -282,6 +282,7 @@ void Aircraft::PrepareAircraftData()
 	}
 	
 	if(!inLoading&&toLoadAirframe){
+		visible=false;
 		toLoadAirframe=false;
 		char* af=jvmO->getModel(airFrameIndex);
 		char debugStr[2048];
@@ -443,13 +444,12 @@ void Aircraft::PrepareAircraftData()
 	double vy=nextData.y-lastData.y;
 	double vz=nextData.z-lastData.z;
 	velocity=v((nextData.x-lastData.x)/htWindow,(nextData.y-lastData.y)/htWindow,(nextData.z-lastData.z)/htWindow);
-
+	
 
 	double x=lastData.x+(vx*pComplete);
 	double y=lastData.y+(vy*pComplete);
 	double z=lastData.z+(vz*pComplete);
-
-
+		
 	data.x = x;
 	data.y = y;
 	data.z = z;
@@ -471,6 +471,18 @@ void Aircraft::PrepareAircraftData()
 	else{
 		data.engineoff=false;//false;
 		data.inTransit=false;
+	}
+	if(!visible){
+		v distanceV=v(x-ll->getX(),y-ahs->getX(),z-ll->getY());
+		if(data.engineoff)
+			data.y-=5;//make parked aircraft rise from the grave :p
+		double deviation=distanceV/distanceV;
+		if((!data.engineoff&&deviation<100)||(data.engineoff&&deviation<10)){
+			visible=true;
+	#if defined(DEBUG_STRINGS)		
+			printf("AUTOATC: made %d visible\n",id);
+	#endif
+		}
 	}
     data_mutex.unlock();
 	XPLMProbeInfo_t outInfo;
@@ -624,39 +636,19 @@ void Aircraft::SetAircraftData(void)
 		JVM* jvmO=getJVM();
     XPLMDrawInfo_t		dr;
 	
-	/*
-	moved to another thread
-	ll->xPos=data.x;
-	ll->yPos=data.z;
-	ahs->xPos=data.y;
-
-	float speed=velocity/velocity;
-
-	if(speed>0.1){
-		data.psi=(atan2(velocity.x,-velocity.z)* (180.0/3.141592653589793238463));
-	}
-
-
-	if(data.psi-ahs->last_x[1][0]>180.0||data.psi-ahs->last_x[1][0]<-180.0)
-	{
-
-		ahs->last_x[1][0]=data.psi;//180.0+ahs->last_x[1][0];
-
-		
-	}
-
-	ahs->yPos=data.psi;
-	rp->xPos=data.the;
-	rp->yPos=data.phi;
-	//if(id==2)
-	ll->frame();
-	ahs->frame();
-	rp->frame();*/
-	//printf("plane %d %f %f\n",id,data.psi,ahs->getY());
 	dr.structSize = sizeof(dr);
-	dr.x = ll->getX();//data.x;
-	dr.y = ahs->getX()+yOffset;//data.y+yOffset;
-	dr.z = ll->getY();//data.z;
+	if(visible){
+		dr.x = ll->getX();//data.x;
+		dr.y = ahs->getX()+yOffset;//data.y+yOffset;
+		dr.z = ll->getY();//data.z;
+	}
+	else
+	{
+		dr.x = 0.0;
+		dr.y = 0.0;
+		dr.z = 0.0;
+	}
+	
 	dr.pitch = rp->getX();//data.the;
 	dr.heading = ahs->getY();//data.psi;
 	dr.roll = rp->getY();//data.phi;

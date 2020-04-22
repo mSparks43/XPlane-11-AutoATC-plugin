@@ -124,6 +124,7 @@ private:
 	double yOffset;
 	double headingRollover;
 	bool rolledOver;
+	bool visible;
 	v velocity;
 	bool inHover;//for helo taxi
 	Simulation* ll;

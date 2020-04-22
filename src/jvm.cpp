@@ -37,6 +37,7 @@ char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/java/airframes_860.txt"
 void				draw_about_text(XPLMWindowID in_window_id, void * in_refcon);
 void	            draw_jvm_text(XPLMWindowID in_window_id, void * in_refcon);
 int					dummy_mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon) { return 0; }
+int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon);
 XPLMCursorStatus	dummy_cursor_status_handler(XPLMWindowID in_window_id, int x, int y, void * in_refcon) { return xplm_CursorDefault; }
 int					dummy_wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon) { return 0; }
 void				dummy_key_handler(XPLMWindowID in_window_id, char key, XPLMKeyFlags flags, char virtual_key, void * in_refcon, int losing_focus) { }
@@ -441,6 +442,7 @@ void JVM::getMorse (){
     
     
 }
+
 void JVM::init_parameters ()
 {
 
@@ -731,6 +733,7 @@ void JVM::retriveLogData(){
     string_mutex.unlock();
     plane_env->ReleaseStringUTFChars(jstr, nativeString);
 }
+
 void JVM::getData(const char* reference){
     //jmethodID 
     if(!hasjvm)
@@ -877,6 +880,7 @@ void JVM::getThreadCommandData(){
 
 
     }
+
 }
 void JVM::getCommandData(){
     command_mutex.lock();
@@ -1062,9 +1066,11 @@ void JVM::processAcars(){
     getData(command);
     
 }
+int offsetStringY=0;
 void JVM::toggleLogWindow(){
     XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
     const bool vr_is_enabled = XPLMGetDatai(vr_dref);
+    offsetStringY=0;
     if(log_window==NULL||vr_is_enabled!=loginVR){
          XPLMCreateWindow_t params;
         params.structSize = sizeof(params);
@@ -1072,7 +1078,7 @@ void JVM::toggleLogWindow(){
         params.drawWindowFunc = draw_atc_text;
         // Note on "dummy" handlers:
         // Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
-        params.handleMouseClickFunc = dummy_mouse_handler;
+        params.handleMouseClickFunc = mouse_handler;
         params.handleRightClickFunc = dummy_mouse_handler;
         params.handleMouseWheelFunc = dummy_wheel_handler;
         params.handleKeyFunc = dummy_key_handler;
@@ -1118,6 +1124,7 @@ void JVM::toggleLogWindow(){
 }
 void menu_handler(void * in_menu_ref, void * in_item_ref)
 {
+    offsetStringY=0;
     JVM* jvmO=getJVM();
 	if(!strcmp((const char *)in_item_ref, "Menu Item 1"))
 	{
@@ -1148,7 +1155,7 @@ void menu_handler(void * in_menu_ref, void * in_item_ref)
 	params.drawWindowFunc = draw_about_text;
 	// Note on "dummy" handlers:
 	// Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
-	params.handleMouseClickFunc = dummy_mouse_handler;
+	params.handleMouseClickFunc = mouse_handler;
 	params.handleRightClickFunc = dummy_mouse_handler;
 	params.handleMouseWheelFunc = dummy_wheel_handler;
 	params.handleKeyFunc = dummy_key_handler;
@@ -1223,6 +1230,29 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
 }
+
+int startY=0;
+bool scrolling=false;
+int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon){
+    if(is_down>0){
+        if(!scrolling)
+            startY=y;
+        scrolling=true;
+        int newoffsetStringY=y-startY;
+        if(newoffsetStringY<0){
+            scrolling=false;
+             offsetStringY=0;
+            return 0;
+        }
+        offsetStringY=newoffsetStringY;
+    }
+    else{
+        scrolling=false;
+        offsetStringY=0;
+    }
+    //printf("scroll set =%d %d\n",x,y);
+    return 1;
+}
   void	draw_atc_text(XPLMWindowID in_window_id, void * in_refcon)
 {
 	// Mandatory: We *must* set the OpenGL state before drawing
@@ -1263,9 +1293,9 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
         else 
            astring =(char *)jvmO->notepad; 
         
-
+        printf("scroll=%d\n",offsetStringY);
             
-	    XPLMDrawString(col_white, l + 10, t - 20, astring, &ww, xplmFont_Proportional);
+	    XPLMDrawString(col_white, l + 10, t - 20+offsetStringY, astring, &ww, xplmFont_Proportional);
         //jvmO->env->ReleaseStringUTFChars(jstr, nativeString);
     
     }
