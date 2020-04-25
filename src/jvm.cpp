@@ -1,33 +1,44 @@
- #include <jni.h>
+/*
+*****************************************************************************************
+*        COPYRIGHT � 2020 Mark Parker/mSparks
+
+
+GNU Lesser General Public License v3.0
+Permissions of this copyleft license are conditioned on making available complete source code of
+licensed works and modifications under the same license or the GNU GPLv3. Copyright and license 
+notices must be preserved. Contributors provide an express grant of patent rights. 
+However, a larger work using the licensed work through interfaces provided by the licensed work may 
+be distributed under different terms and without source code for the larger work.
+*****************************************************************************************
+*/
+#include <jni.h>
 #include "jvm.h"
-#include "xplane.h"
- #include "XPLMPlugin.h"
- #include "XPLMDisplay.h"
- #include "XPLMGraphics.h"
- #include "XPLMMenus.h"
- #include "XPLMProcessing.h"
- #include "XPLMDataAccess.h"
- #include "XPLMMenus.h"
- #include "XPLMUtilities.h"
- #include "XPWidgets.h"
- #include "XPStandardWidgets.h"
- #include "XPLMScenery.h"
- #include <string.h>
- #include <stdio.h>
-  #include <math.h>
-  #include "Settings.h"
-  //#include "vec_opps.h"
-  #include "Simulation.h"
-  #include "aiplane.h"
+#include "XPLMPlugin.h"
+#include "XPLMDisplay.h"
+#include "XPLMGraphics.h"
+#include "XPLMMenus.h"
+#include "XPLMProcessing.h"
+#include "XPLMDataAccess.h"
+#include "XPLMMenus.h"
+#include "XPLMUtilities.h"
+#include "XPWidgets.h"
+#include "XPStandardWidgets.h"
+#include "XPLMScenery.h"
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include "Settings.h"
+#include "Simulation.h"
+#include "aiplane.h"
 #include "json/json.hpp"
 using nlohmann::json;
-  #include <stdlib.h>
- #include <vector>
- #include <ctype.h>//isspace
- #if defined(__linux__) || defined(__APPLE__)
- #include <dlfcn.h>
- #include <stdlib.h>
- #endif
+#include <stdlib.h>
+#include <vector>
+#include <ctype.h>//isspace
+#if defined(__linux__) || defined(__APPLE__)
+#include <dlfcn.h>
+#include <stdlib.h>
+#endif
 
  const char* plugin_version = "About:0.9.3";
 char gBob_debstr2[2048];
@@ -38,9 +49,11 @@ char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/java/airframes_860.txt"
 void				draw_about_text(XPLMWindowID in_window_id, void * in_refcon);
 void	            draw_jvm_text(XPLMWindowID in_window_id, void * in_refcon);
 int					dummy_mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon) { return 0; }
+
 int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon);
 XPLMCursorStatus	dummy_cursor_status_handler(XPLMWindowID in_window_id, int x, int y, void * in_refcon) { return xplm_CursorDefault; }
-int					dummy_wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon) { return 0; }
+int					wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon);
+int					dummy_wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon){ return 0; }
 void				dummy_key_handler(XPLMWindowID in_window_id, char key, XPLMKeyFlags flags, char virtual_key, void * in_refcon, int losing_focus) { }
 //bool hot=false;
 bool enabledATCPro;
@@ -1081,7 +1094,7 @@ void JVM::toggleLogWindow(){
         // Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
         params.handleMouseClickFunc = mouse_handler;
         params.handleRightClickFunc = dummy_mouse_handler;
-        params.handleMouseWheelFunc = dummy_wheel_handler;
+        params.handleMouseWheelFunc = wheel_handler;
         params.handleKeyFunc = dummy_key_handler;
         params.handleCursorFunc = dummy_cursor_status_handler;
         params.refcon = NULL;
@@ -1158,7 +1171,7 @@ void menu_handler(void * in_menu_ref, void * in_item_ref)
 	// Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
 	params.handleMouseClickFunc = mouse_handler;
 	params.handleRightClickFunc = dummy_mouse_handler;
-	params.handleMouseWheelFunc = dummy_wheel_handler;
+	params.handleMouseWheelFunc = wheel_handler;
 	params.handleKeyFunc = dummy_key_handler;
 	params.handleCursorFunc = dummy_cursor_status_handler;
 	params.refcon = NULL;
@@ -1234,18 +1247,42 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
 
 int startY=0;
 bool scrolling=false;
+int maxScroll=0;
+std::chrono::time_point<std::chrono::system_clock> start;
+int					wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon){
+    //printf("%d %d %d %d \n",x,y,wheel,clicks);
+    start = std::chrono::system_clock::now();
+    int height;
+	XPLMGetFontDimensions(xplmFont_Proportional, NULL, &height, NULL);
+    height+=6;
+    scrolling=true;
+     offsetStringY-=height*clicks;
+    if(offsetStringY<0){
+        offsetStringY=0;
+    }
+    if(offsetStringY>maxScroll){
+        offsetStringY=maxScroll;
+    }
+    return 1;
+}
 int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon){
     if(is_down>0){
+        start = std::chrono::system_clock::now();
         if(!scrolling)
             startY=y;
+        
         scrolling=true;
         int newoffsetStringY=y-startY;
+        
         if(newoffsetStringY<0){
-            scrolling=false;
+            //scrolling=false;
              offsetStringY=0;
+             startY=y;
             return 0;
         }
-        offsetStringY=newoffsetStringY;
+        if(newoffsetStringY<maxScroll)
+            offsetStringY=newoffsetStringY;
+        
     }
     else{
         scrolling=false;
@@ -1273,6 +1310,7 @@ int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void
 	
 	float col_white[] = {1.0, 1.0, 1.0}; // red, green, blue
     int ww=r-l;
+    int wh=b-t;
     JVM* jvmO=getJVM();
     if(jvmO->hasjvm){
         //jstring jstr;
@@ -1294,16 +1332,46 @@ int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void
         else 
            astring =(char *)jvmO->notepad; 
         
-        printf("scroll=%d %d\n",offsetStringY,scrolling);
+        //printf("scroll=%d %d\n",offsetStringY,scrolling);
         int height;
 	    XPLMGetFontDimensions(xplmFont_Proportional, NULL, &height, NULL);
         /*json j2;
         j2["happy"]=true;
         std::string s=j2.dump();
         printf("json = %s",s.c_str());*/
-        if(!scrolling&&offsetStringY>0)
-            offsetStringY--;
-	    XPLMDrawString(col_white, l + 10, t - 20+offsetStringY, astring, &ww, xplmFont_Proportional);
+        if(scrolling){
+            auto end = std::chrono::system_clock::now();
+            std::chrono::duration<double> diff = end-start;
+            if(diff.count()>1.0){
+                offsetStringY--;
+            }
+            if(offsetStringY<0){
+                offsetStringY=0;
+                start = std::chrono::system_clock::now();
+                scrolling=false;
+
+            }
+        }
+        std::istringstream stream(astring);
+        std::string line;
+        int lineNo=0;
+        height+=6;//3px line spacing
+        while(std::getline(stream, line)) {
+            int lineLength=line.length();
+            float length=XPLMMeasureString(xplmFont_Basic,astring,lineLength);
+            length=length+10;
+            int noLines=(length/ww)+1;
+            char * lineS=(char *)line.c_str();
+            //printf("%d line(s) length %s = %f over %d with %d and %d\n",noLines,lineS,length,ww,lineLength,wh);
+            int ypos=lineNo*height;
+            if(offsetStringY-ypos<height && (20+offsetStringY-ypos-noLines*height)>(wh+height))
+                XPLMDrawString(col_white, l + 10, t - 20+offsetStringY-ypos, lineS, &ww, xplmFont_Basic);
+            lineNo+=noLines;
+        }  
+
+        maxScroll=((lineNo+1)*height)+wh;
+        //printf("maxscroll = %d\n",maxScroll);
+	    //XPLMDrawString(col_white, l + 10, t - 20+offsetStringY, astring, &ww, xplmFont_Basic);
         //jvmO->env->ReleaseStringUTFChars(jstr, nativeString);
     
     }

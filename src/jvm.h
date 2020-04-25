@@ -1,12 +1,25 @@
+/*
+*****************************************************************************************
+*        COPYRIGHT � 2020 Mark Parker/mSparks
+
+
+GNU Lesser General Public License v3.0
+Permissions of this copyleft license are conditioned on making available complete source code of
+licensed works and modifications under the same license or the GNU GPLv3. Copyright and license 
+notices must be preserved. Contributors provide an express grant of patent rights. 
+However, a larger work using the licensed work through interfaces provided by the licensed work may 
+be distributed under different terms and without source code for the larger work.
+*****************************************************************************************
+*/
 #include <jni.h>
 #include <string>
 #include <cstring>
- #include "XPLMMenus.h"
-  #include "XPLMDisplay.h"
-   #include "XPLMDataAccess.h"
-   #include <math.h>
-   #include "vec_opps.h"
-   #include <sstream>
+#include "XPLMMenus.h"
+#include "XPLMDisplay.h"
+#include "XPLMDataAccess.h"
+#include <math.h>
+#include "vec_opps.h"
+#include <sstream>
 #include <fstream>
 #include <mutex>
 #include <vector>
@@ -88,6 +101,7 @@ static XPLMDataRef  HSI_source = NULL;
 static XPLMDataRef  nav1_nav_id = NULL;
 static XPLMDataRef  nav2_nav_id = NULL;
 static XPLMDataRef  adf1_nav_id = NULL;
+
 static XPLMDataRef  adf2_nav_id = NULL;
 
 static XPLMDataRef  sound_on = NULL;

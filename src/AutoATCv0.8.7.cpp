@@ -1,4 +1,16 @@
+/*
+*****************************************************************************************
+*        COPYRIGHT � 2020 Mark Parker/mSparks
 
+
+GNU Lesser General Public License v3.0
+Permissions of this copyleft license are conditioned on making available complete source code of
+licensed works and modifications under the same license or the GNU GPLv3. Copyright and license 
+notices must be preserved. Contributors provide an express grant of patent rights. 
+However, a larger work using the licensed work through interfaces provided by the licensed work may 
+be distributed under different terms and without source code for the larger work.
+*****************************************************************************************
+*/
 #include "XPLMPlugin.h"
 
 #include "XPLMGraphics.h"
@@ -16,13 +28,10 @@
 #include <ctype.h>
 #include <math.h>
 #include <jni.h>
-#include "xplane.h"
 #include <time.h>
-
 #include "jvm.h"
 #include "Simulation.h"
 #include "aiplane.h"
-
 #include "Settings.h"
 
 char gBob_debstr[128];
@@ -163,6 +172,7 @@ PLUGIN_API int XPluginStart(
                                acarsHandler, // in Handler
                                1,              // Receive input before plugin windows.
                                (void *)0);     // inRefcon. */
+
     playpauseCommand = XPLMCreateCommand("AutoATC/playpause", "Play Music");
 
     XPLMRegisterCommandHandler(playpauseCommand,        // in Command name
