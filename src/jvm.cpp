@@ -19,7 +19,8 @@
   //#include "vec_opps.h"
   #include "Simulation.h"
   #include "aiplane.h"
-  
+#include "json/json.hpp"
+using nlohmann::json;
   #include <stdlib.h>
  #include <vector>
  #include <ctype.h>//isspace
@@ -1293,8 +1294,15 @@ int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void
         else 
            astring =(char *)jvmO->notepad; 
         
-        printf("scroll=%d\n",offsetStringY);
-            
+        printf("scroll=%d %d\n",offsetStringY,scrolling);
+        int height;
+	    XPLMGetFontDimensions(xplmFont_Proportional, NULL, &height, NULL);
+        /*json j2;
+        j2["happy"]=true;
+        std::string s=j2.dump();
+        printf("json = %s",s.c_str());*/
+        if(!scrolling&&offsetStringY>0)
+            offsetStringY--;
 	    XPLMDrawString(col_white, l + 10, t - 20+offsetStringY, astring, &ww, xplmFont_Proportional);
         //jvmO->env->ReleaseStringUTFChars(jstr, nativeString);
     

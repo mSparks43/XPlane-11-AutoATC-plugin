@@ -474,10 +474,13 @@ void Aircraft::PrepareAircraftData()
 	}
 	if(!visible){
 		v distanceV=v(x-ll->getX(),y-ahs->getX(),z-ll->getY());
-		if(data.engineoff)
-			data.y-=5;//make parked aircraft rise from the grave :p
 		double deviation=distanceV/distanceV;
-		if((!data.engineoff&&deviation<100)||(data.engineoff&&deviation<10)){
+		if(data.engineoff){
+			nextData.y-=50.0;
+			lastData.y-=50.0;
+			data.y-=50.0;//make parked aircraft rise from the grave :p
+		}
+		if((!data.engineoff&&deviation<100)||(data.engineoff&&deviation<5)){
 			visible=true;
 	#if defined(DEBUG_STRINGS)		
 			printf("AUTOATC: made %d visible\n",id);
