@@ -361,9 +361,13 @@ void AircraftSounds::update(float latest_sound_vol){
     if(sound_vol != latest_sound_vol){
 #if defined(DEBUG_STRINGS)
 		char message[128];
-		sprintf(message,"AutoATC: AI sound volume changed (%f -> %f)\n",sound_vol,latest_sound_vol);
+		sprintf(message,"AutoATC: XP Sound: Slider Master/Exterior = %f/%f, View external = %d, Canopy position = %f\n",slider_master,slider_exterior,viewisexternal,canopyopen);
 		XPLMDebugString(message);
 		printf(message);
+		sprintf(message,"AutoATC: AI Sound Volume Change: %f -> %f\n",sound_vol,latest_sound_vol);
+		XPLMDebugString(message);
+		printf(message);
+		
 #endif		
 		sound_vol=latest_sound_vol;
 	}

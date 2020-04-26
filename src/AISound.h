@@ -53,6 +53,10 @@ class AircraftSounds
     ALCcontext *		my_ctx		= NULL;
     bool createdContext=false;
     float sound_vol = 1.0;
+    float slider_master = 1.0;
+    float slider_exterior = 1.0;
+    int viewisexternal = 0;
+    float canopyopen = 0.0;
     bool live;
     AircraftSound landsnd;
     AircraftSound propsnd;

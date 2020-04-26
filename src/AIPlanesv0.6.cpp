@@ -991,26 +991,34 @@ void aircraftLoop()
 		volume_ext = XPLMFindDataRef("sim/operation/sound/exterior_volume_ratio");
 		volume_prop = XPLMFindDataRef("sim/operation/sound/prop_volume_ratio");
 		volume_env = XPLMFindDataRef("sim/operation/sound/enviro_volume_ratio");
+		
+		view_mode = XPLMFindDataRef("sim/graphics/view/view_is_external");
+		canopy_ratio = XPLMFindDataRef("sim/operation/sound/users_canopy_open_ratio");
 	}
-	float master = XPLMGetDataf(volume_master);
-
-	float exterior= XPLMGetDataf(volume_ext);
-	// If X-Plane sound is not muted, set ai engine sound gain according to the two sliders
 	float sound_vol=1.0;
 	int enable=XPLMGetDatai(sound_on);
-	int paused=XPLMGetDatai(sound_paused) ;
-	if( enable!= 0 and paused!= 1){
-		sound_vol = master*exterior;
-		/*(message,"AutoATC: AI volume: %f\n",sound_vol);
-		XPLMDebugString(message);
-		printf(message);*/
+	int paused=XPLMGetDatai(sound_paused);
+	float slider_master = XPLMGetDataf(volume_master);
+	float slider_exterior= XPLMGetDataf(volume_ext);
+	int viewisexternal = XPLMGetDatai(view_mode); // Is view external? (1 = yes)
+	float canopyopen = XPLMGetDataf(canopy_ratio); // Canopy open ratio
+	float closedspace_volume_scalar = 0.5; // Scalar for AI sounds in closed spaces (e.g. cockpit)
+	// AI SOUND MIXER
+	if( enable != 0 and paused != 1){
+		if( viewisexternal == 0 and canopyopen == 0 ){
+			sound_vol = slider_master * slider_exterior * closedspace_volume_scalar;
+		} else {
+			static float temp = slider_master * slider_exterior * (closedspace_volume_scalar + (0.5 * canopyopen) + (0.5 * viewisexternal));
+			sound_vol = fmin(fmax(temp,1.0), 0.0); //Ugly clamping implementation
+		}
+		// Debug messages in AISound.cpp
 	} else {
-		/*sprintf(message,"AutoATC: AI sound muted master=%f %d %d %p\n",master,enable,paused,sound_on);
-		XPLMDebugString(message);
-		printf(message);*/
+		// Debug messages in AISound.cpp
 		sound_vol = 0.0;
 	}
-
+	
+	XPLMDebugString(message);
+	printf(message);
 	soundSystem.update(sound_vol);
 	//return -1;
 }

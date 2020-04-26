@@ -97,6 +97,10 @@ static XPLMDataRef  volume_eng = NULL;
 static XPLMDataRef  volume_ext = NULL;
 static XPLMDataRef  volume_prop = NULL;
 static XPLMDataRef  volume_env = NULL;
+
+static XPLMDataRef  view_mode = NULL;
+static XPLMDataRef  canopy_ratio = NULL;
+
 class String 
 { 
 private: 
