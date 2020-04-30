@@ -24,6 +24,7 @@ be distributed under different terms and without source code for the larger work
 #include "XPWidgets.h"
 #include "XPStandardWidgets.h"
 #include "XPLMScenery.h"
+#include "XPLMPlanes.h"
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -102,8 +103,6 @@ void AirframeDef::setData(std::string inLine){
     std::string soundS = inLine.substr (found2+1,found3);
     std::string drefStyleS = inLine.substr (found3+1);
 
-    //strcpy(path,pathS.c_str());
-   // sprintf (path, "%s", pathS.c_str());
     XPLMGetSystemPath(xp_path);
     sprintf (path, "%s%s", xp_path, pathS.c_str());
     char* end;
@@ -112,13 +111,6 @@ void AirframeDef::setData(std::string inLine){
     soundIndex=strtol(soundS.c_str(),&end,10);
     drefStyle=strtol(drefStyleS.c_str(),&end,10);
 
-    /* std::size_t foundwt3 = inLine.find("WorldTraffic");
-
-     if(foundwt3==std::string::npos)
-        yOffset=0;
-     else
-        yOffset=2.0;
-    //sprintf (path, "%s", inLine.c_str());*/
 }
 char* AirframeDef::getPath(void){
     return path;
@@ -300,7 +292,19 @@ bool JVM::connectJVM() {
         //options[2].optionString = "-XX:+UseStringCache";
         options[2].optionString = "-XX:ParallelGCThreads=4";
         options[3].optionString = "-XX:ConcGCThreads=4";
-        vm_args.nOptions = 4;
+        char classpath[MAXLEN];
+        #if defined(__linux__)
+        sprintf(classpath,"-Djava.class.path=%s",linClass);
+        #elif defined(_WIN64)
+        sprintf(classpath,"-Djava.class.path=%s",winClass);
+        #elif defined(__APPLE__)
+        sprintf(classpath,"-Djava.class.path=%s",macClass);
+        #endif
+        sprintf(gBob_debstr2,"AutoATC: Using classpath=%s\n",classpath);
+
+        XPLMDebugString(gBob_debstr2);
+        options[4].optionString = classpath;
+        vm_args.nOptions = 5;
         vm_args.options = options; 
        //vm_args.nOptions = 0; 
                                // number of options
@@ -460,9 +464,9 @@ void JVM::getMorse (){
 void JVM::init_parameters ()
 {
 
-    strncpy (win, "jvm.dll", MAXLEN);
-    strncpy (lin, "libjvm.so", MAXLEN);
-    strncpy (mac, "/usr/local/jre/lib/server/libjvm.dylib", MAXLEN);
+    strncpy (win, "Resources\\plugins\\AutoATC\\jre\\bin\\server\\jvm.dll", MAXLEN);
+    strncpy (lin, "Resources/plugins/AutoATC/jre/lib/amd64/server/libjvm.so", MAXLEN);
+    strncpy (mac, "Resources/plugins/AutoATC/jre/Contents/Home/lib/server/libjvm.dylib", MAXLEN);
     airframeDefs.clear();
     XPLMGetSystemPath(xp_path);
     transponder_codeRef = XPLMFindDataRef("sim/cockpit/radios/transponder_code");
@@ -541,7 +545,13 @@ void JVM::parse_config (char * filename)
     trim (value);
 
     /* Copy into correct entry in parameters struct */
-    if (strcmp(name, "win")==0)
+    if (strcmp(name, "winClass")==0)
+      strncpy (winClass, value, MAXLEN);
+    else if (strcmp(name, "linClass")==0)
+      strncpy (linClass, value, MAXLEN);
+    else if (strcmp(name, "macClass")==0)
+      strncpy (macClass, value, MAXLEN);
+    else if (strcmp(name, "win")==0)
       strncpy (win, value, MAXLEN);
     else if (strcmp(name, "lin")==0)
       strncpy (lin, value, MAXLEN);
@@ -1051,15 +1061,24 @@ void JVM::destroyMenu(){
 }
 void JVM::setICAO(){
    //JVM* jvmO=getJVM();
-    char icao[256];
+    char icao[1024]={0};
     XPLMDataRef	dr_plane_ICAO = XPLMFindDataRef ("sim/aircraft/view/acf_ICAO");
     XPLMGetDatab(dr_plane_ICAO,icao,0,40);
                 
-    jstring jstr = getStringData(icao);
+    //jstring jstr = 
+    getStringData(icao);
 
-    const char* nativeString = env->GetStringUTFChars(jstr, JNI_FALSE);
+    //const char* nativeString = env->GetStringUTFChars(jstr, JNI_FALSE);
    // char* astring=(char *)nativeString;   
-    env->ReleaseStringUTFChars(jstr, nativeString);
+    //env->ReleaseStringUTFChars(jstr, nativeString);
+    char file[256]={0};
+    char path[1024]={0};
+    XPLMGetNthAircraftModel(0, file, path);
+    ;
+    char cmd[1124]={0};
+    sprintf(cmd,"aircraft:%s",path);
+    getStringData(cmd);
+
 }
 void JVM::LogPageWindowPlus(){
     logPage++;

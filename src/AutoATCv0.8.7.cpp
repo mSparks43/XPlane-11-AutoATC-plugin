@@ -83,8 +83,8 @@ int playbackCommandCommandHandler(XPLMCommandRef inCommand,
                         int                  inIsBefore,    
                         void *               inRefcon);*/
 
-char CONFIG_FILE_DEFAULT[] = "Resources/plugins/java/defaultjvm.txt";
-char CONFIG_FILE_USER[] = "Resources/plugins/java/jvmsettings.txt";
+char CONFIG_FILE_DEFAULT[] = "Resources/plugins/AutoATC/defaultjvm.txt";
+char CONFIG_FILE_USER[] = "Resources/plugins/AutoATC/jvmsettings.txt";
 char CONFIG_FILE_ANDROID[] = "Resources/plugins/java/usermobilesettings.txt";
 //char* CONFIG_FILE_USER_AIRFRAMES ="Resources/plugins/java/airframes_user.txt";
 bool file_exists(const std::string &name)
@@ -210,7 +210,7 @@ PLUGIN_API int XPluginStart(
 
     return 1;
 }
-
+static int				g_is_acf_inited = 0;
 PLUGIN_API void XPluginStop(void)
 {
     XPLMDebugString("AUTOATC: XPluginStop\n"); 
@@ -222,6 +222,7 @@ PLUGIN_API void XPluginStop(void)
         XPLMDebugString("AUTOATC: deactivateJVM\n");
         jvmO->deactivateJVM();
     }
+    g_is_acf_inited = 0;
 }
 
 PLUGIN_API void XPluginDisable(void)
@@ -269,6 +270,8 @@ PLUGIN_API void XPluginReceiveMessage(
     void *inParam)
 {
     if (inMessage == XPLM_MSG_PLANE_LOADED){
+        if(inParam == 0)
+			g_is_acf_inited = 0;
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/id");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/af");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/x");  //tell dref editor about it
@@ -279,6 +282,16 @@ PLUGIN_API void XPluginReceiveMessage(
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/out");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/received");  //tell dref editor about it
         
+    }
+    else if (inMessage == XPLM_MSG_PLANE_UNLOADED){
+        g_is_acf_inited = 0;
+    }else if (inMessage == XPLM_MSG_AIRPORT_LOADED){
+        if(!g_is_acf_inited)
+		{
+            JVM *jvmO = getJVM();
+            jvmO->setICAO();
+            g_is_acf_inited = 1;
+        }
     }
 }
 

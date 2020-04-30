@@ -157,6 +157,9 @@ public:
     char win[MAXLEN];
     char lin[MAXLEN];
     char mac[MAXLEN];
+    char winClass[MAXLEN];
+    char linClass[MAXLEN];
+    char macClass[MAXLEN];
     char device[MAXLEN];
     char slave[MAXLEN];
     bool hasjvm;
