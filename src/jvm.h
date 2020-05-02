@@ -23,7 +23,9 @@ be distributed under different terms and without source code for the larger work
 #include <fstream>
 #include <mutex>
 #include <vector>
+#include "json/json.hpp"
 #define MAXLEN 2048
+using nlohmann::json;
 //#define DEBUG_STRINGS
 class acModelDef
 {
@@ -154,12 +156,7 @@ public:
     
     XPLMMenuID g_menu_id;
     int g_menu_container_idx=-1;
-    char win[MAXLEN];
-    char lin[MAXLEN];
-    char mac[MAXLEN];
-    char winClass[MAXLEN];
-    char linClass[MAXLEN];
-    char macClass[MAXLEN];
+    json jsettings;
     char device[MAXLEN];
     char slave[MAXLEN];
     bool hasjvm;
@@ -192,7 +189,7 @@ public:
     JVM();
     ~JVM();
     void init_parameters (void);
-    void init_parameters (char * jvmfilename);
+    //void init_parameters (char * jvmfilename);
     void parse_config (char * filename);
     void activateJVM(void);
     void deactivateJVM(void);

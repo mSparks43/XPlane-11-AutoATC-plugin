@@ -31,8 +31,8 @@ be distributed under different terms and without source code for the larger work
 #include "Settings.h"
 #include "Simulation.h"
 #include "aiplane.h"
-#include "json/json.hpp"
-using nlohmann::json;
+
+
 #include <stdlib.h>
 #include <vector>
 #include <ctype.h>//isspace
@@ -198,15 +198,20 @@ https://forums.x-plane.org/index.php?/forums/topic/175706-sharing-the-jvm/
 */
 bool JVM::connectJVM() {
     
-
-    //getcreatedjvms = (jint(*)(JavaVM**, jsize, jsize *)) dlsym(jvmlib, "JNI_GetCreatedJavaVMs");
+    char * os;
+    
 #if defined(__linux__)
-     sprintf(gBob_debstr2,"AutoATC:Loading jvm so '%s' \n", lin);
+    os="lin";
+        printf("JVM library is %s\n",jsettings[os]["library"].get<std::string>().c_str());
+     sprintf(gBob_debstr2,"AutoATC:Loading jvm so '%s' \n", jsettings[os]["library"].get<std::string>().c_str());
      XPLMDebugString(gBob_debstr2);
-     libnativehelper = dlopen(lin, RTLD_NOW);//"libjvm.so"
+     libnativehelper = dlopen(jsettings[os]["library"].get<std::string>().c_str(), RTLD_NOW);//"libjvm.so"
         if (libnativehelper==NULL) {
             hasjvm=false;
             dlerror();
+            sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm .so\n");
+            printf(gBob_debstr2);
+            XPLMDebugString(gBob_debstr2);
             popupNoJVM();
              createMenu();
             return false;
@@ -218,12 +223,16 @@ bool JVM::connectJVM() {
     sprintf(gBob_debstr2,"AutoATC: Successfully loaded the jvm .so\n");
     XPLMDebugString(gBob_debstr2);
  #elif defined(_WIN64)
+   os="win";
   sprintf(gBob_debstr2,"AutoATC: Loading jvm dll '%s' \n", win);
      XPLMDebugString(gBob_debstr2);
      SetErrorMode(0); 
     libnativehelper = LoadLibraryA(win); //"jvm.dll"
     if (!libnativehelper) {
             hasjvm=false;
+            sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm .so\n");
+            printf(gBob_debstr2);
+            XPLMDebugString(gBob_debstr2);
             popupNoJVM();
              createMenu();
             return false;
@@ -236,9 +245,13 @@ bool JVM::connectJVM() {
     sprintf(gBob_debstr2,"AutoATC: Found CreateJavaVM\n");
     XPLMDebugString(gBob_debstr2);
 #elif defined(__APPLE__)
+    os="mac";
     libnativehelper = dlopen(mac, RTLD_NOW);//"/usr/local/jre/lib/server/libjvm.dylib"
     if (!libnativehelper) {
         hasjvm=false;
+        sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm .so\n");
+        printf(gBob_debstr2);
+        XPLMDebugString(gBob_debstr2);
         dlerror();
         popupNoJVM();
          createMenu();
@@ -276,6 +289,7 @@ bool JVM::connectJVM() {
         }
         jint ver = env->GetVersion();
         sprintf(gBob_debstr2,"AutoATC: Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
+        printf(gBob_debstr2);
         XPLMDebugString(gBob_debstr2);
         jvm= jvms[0]; 
                       
@@ -285,29 +299,32 @@ bool JVM::connectJVM() {
         //no existing JVM, make a new one
         delete[] jvms;
         JavaVMInitArgs vm_args;                        // Initialization arguments
-       vm_args.version = JNI_VERSION_1_6;             // minimum Java version
-       JavaVMOption* options = new JavaVMOption[5];
-        options[0].optionString = "-XX:+UseG1GC";
-        options[1].optionString = "-XX:MaxGCPauseMillis=2";
-        //options[2].optionString = "-XX:+UseStringCache";
-        options[2].optionString = "-XX:ParallelGCThreads=4";
-        options[3].optionString = "-XX:ConcGCThreads=4";
-        char classpath[MAXLEN];
-        #if defined(__linux__)
-        sprintf(classpath,"-Djava.class.path=%s",linClass);
-        #elif defined(_WIN64)
-        sprintf(classpath,"-Djava.class.path=%s",winClass);
-        #elif defined(__APPLE__)
-        sprintf(classpath,"-Djava.class.path=%s",macClass);
-        #endif
-        sprintf(gBob_debstr2,"AutoATC: Using classpath=%s\n",classpath);
+        vm_args.version = JNI_VERSION_1_6;             // minimum Java version
+       //int numOptions=6;
+       std::string s = jsettings.dump();
 
+        sprintf(gBob_debstr2,"AutoATC: Settings are %s\n",s.c_str());
+        printf(gBob_debstr2);
         XPLMDebugString(gBob_debstr2);
-        options[4].optionString = classpath;
-        vm_args.nOptions = 5;
+        std::vector<std::string> optionsV=jsettings[os]["options"].get<std::vector<std::string>>();
+        
+        int numOptions=optionsV.size()+1;    
+        JavaVMOption* options = new JavaVMOption[numOptions]; //one more for lib path
+        for(int i=0;i<optionsV.size();i++){
+            
+            char * opt=const_cast<char*>(optionsV[i].c_str());
+            printf("Using option: %s\n",opt);
+            options[i].optionString = opt;
+        }
+        char classpath[MAXLEN];
+        
+        sprintf(classpath,"-Djava.class.path=%s\n",jsettings[os]["classpath"].get<std::string>().c_str());
+        sprintf(gBob_debstr2,"AutoATC: Using classpath=%s",classpath);
+        printf(gBob_debstr2);
+        XPLMDebugString(gBob_debstr2);
+        options[numOptions-1].optionString=classpath;
+        vm_args.nOptions = numOptions;
         vm_args.options = options; 
-       //vm_args.nOptions = 0; 
-                               // number of options
        vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
            //=============== load and initialize Java VM and JNI interface =============
        JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);  // YES !!
@@ -315,6 +332,7 @@ bool JVM::connectJVM() {
       
        jint ver = env->GetVersion();
        sprintf(gBob_debstr2,"AutoATC: Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
+       printf(gBob_debstr2);
        XPLMDebugString(gBob_debstr2);
        return true;
     }
@@ -371,11 +389,18 @@ void JVM::activateJVM(void){
          XPLMDebugString(gBob_debstr2);  
          //hasjvm=true;
     }
-    }
-catch(...){
-		printf("Exception during JVM test\n");
-        sprintf(gBob_debstr2,"AutoATC: Exception during JVM test\n");
+    }catch(const std::exception& e) {
+        printf("Exception during JVM test %s\n",e.what());
+        sprintf(gBob_debstr2,"AutoATC: Exception during JVM test %s\n",e.what());
          XPLMDebugString(gBob_debstr2);  
+         hasjvm=false;
+		return;
+    }
+    catch(...){
+		printf("Exception during JVM test\n");
+        sprintf(gBob_debstr2,"AutoATC: Unknown Exception during JVM test\n");
+         XPLMDebugString(gBob_debstr2);  
+         hasjvm=false;
 		return;
 	}  
     createMenu();
@@ -463,10 +488,37 @@ void JVM::getMorse (){
 
 void JVM::init_parameters ()
 {
-
-    strncpy (win, "Resources\\plugins\\AutoATC\\jre\\bin\\server\\jvm.dll", MAXLEN);
-    strncpy (lin, "Resources/plugins/AutoATC/jre/lib/amd64/server/libjvm.so", MAXLEN);
-    strncpy (mac, "Resources/plugins/AutoATC/jre/Contents/Home/lib/server/libjvm.dylib", MAXLEN);
+    //strncpy(settingstxt,"{'win':{'library':'Resources\\plugins\\AutoATC\\jre\\bin\\server\\jvm.dll','options':['-XX:ParallelGCThreads=4','-XX:ConcGCThreads=4','-Xgcpolicy:balanced']},'lin':{'library':'Resources/plugins/AutoATC/jre/lib/amd64/server/libjvm.so','options':['-XX:ParallelGCThreads=4','-XX:ConcGCThreads=4','-Xgcpolicy:metronome']},'mac':{'library':'Resources/plugins/AutoATC/jre/Contents/Home/lib/server/libjvm.dylib','options':['-XX:ParallelGCThreads=4','-XX:ConcGCThreads=4','-Xgcpolicy:balanced']}}",MAXLEN);
+    jsettings=R"({
+  "win": {
+    "library": "Resources\\plugins\\AutoATC\\jre\\bin\\server\\jvm.dll",
+    "options": [
+      "-XX:ParallelGCThreads=4",
+      "-XX:ConcGCThreads=4",
+      "-Xgcpolicy:balanced"
+    ],
+    "classpath":"Resources/plugins/AutoATC/jre/bin/java"
+  },
+  "lin": {
+    "library": "Resources/plugins/AutoATC/jre/lib/amd64/server/libjvm.so",
+    "options": [
+      "-XX:ParallelGCThreads=4",
+      "-XX:ConcGCThreads=4",
+      "-Xgcpolicy:metronome"
+    ],
+    "classpath":"Resources/plugins/AutoATC/jre/bin/java"
+  },
+  "mac": {
+    "library": "Resources/plugins/AutoATC/jre/Contents/Home/lib/server/libjvm.dylib",
+    "options": [
+      "-XX:ParallelGCThreads=4",
+      "-XX:ConcGCThreads=4",
+      "-Xgcpolicy:balanced"
+    ],
+    "classpath":"Resources/plugins/AutoATC/jre/Contents/Home/bin/java"
+  }
+})"_json;
+    
     airframeDefs.clear();
     XPLMGetSystemPath(xp_path);
     transponder_codeRef = XPLMFindDataRef("sim/cockpit/radios/transponder_code");
@@ -501,17 +553,18 @@ void JVM::init_parameters ()
     XPLMDebugString(notepad);
     live=false;
 }
-void JVM::init_parameters (char * jvmfilename)
+/*void JVM::init_parameters (char * jvmsettingstxt)
 {
  // struct file_parameters * lparms=&parms;
-  strncpy (win,jvmfilename, MAXLEN);
-  strncpy (lin,jvmfilename, MAXLEN);
-  strncpy (mac,jvmfilename, MAXLEN);
+  //strncpy (win,jvmfilename, MAXLEN);
+  //strncpy (lin,jvmfilename, MAXLEN);
+  //strncpy (mac,jvmfilename, MAXLEN);
+  strncpy (settingstxt,jvmsettingstxt, MAXLEN);
   strncpy (device,"any", MAXLEN);
   strncpy (slave,"0", MAXLEN);
   //airframeDefs.clear();
   XPLMGetSystemPath(xp_path);
-}
+}*/
 
 void JVM::parse_config (char * filename)
 {
@@ -537,7 +590,7 @@ void JVM::parse_config (char * filename)
       continue;
     else
       strncpy (name, s, MAXLEN);
-    s = strtok (NULL, "=");
+    s = strtok (NULL, "\n");
     if (s==NULL)
       continue;
     else
@@ -545,7 +598,7 @@ void JVM::parse_config (char * filename)
     trim (value);
 
     /* Copy into correct entry in parameters struct */
-    if (strcmp(name, "winClass")==0)
+    /*if (strcmp(name, "winClass")==0)
       strncpy (winClass, value, MAXLEN);
     else if (strcmp(name, "linClass")==0)
       strncpy (linClass, value, MAXLEN);
@@ -555,8 +608,10 @@ void JVM::parse_config (char * filename)
       strncpy (win, value, MAXLEN);
     else if (strcmp(name, "lin")==0)
       strncpy (lin, value, MAXLEN);
-    else if (strcmp(name, "mac")==0)
-      strncpy (mac, value, MAXLEN);
+    else*/ if (strcmp(name, "settings")==0){
+
+      jsettings=json::parse(value);
+    }
     else if (strcmp(name, "phone")==0)
       strncpy (device, value, MAXLEN);
     else if (strcmp(name, "isSlave")==0)
@@ -638,8 +693,8 @@ void JVM::joinThread(void){
             XPLMDebugString("AutoATC: ERROR - Method void broadcast() not found!\n");
             return;
         }
-    printf("thread jvm join\n");
-    sprintf(gBob_debstr2,"AutoATC: Thread jvm join\n");
+    printf("AutoATC: Threaded jvm joined\n");
+    sprintf(gBob_debstr2,"AutoATC: Threaded jvm joined\n");
     XPLMDebugString(gBob_debstr2); 
 }
 void JVM::updateAirframes(void){

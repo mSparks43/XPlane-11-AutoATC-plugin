@@ -26,7 +26,7 @@ static XPWidgetID jvmField;
 static XPWidgetID ipField;
 static XPWidgetID isSlaveField;
 static XPWidgetID setButton;
-static XPWidgetID testButton;
+//static XPWidgetID testButton;
 static XPWidgetID resetButton;
 static XPWidgetID statusCaption[5];
 static XPWidgetID w_top;
@@ -71,10 +71,8 @@ void SettingsWidget::setSlave(int isSlave){
      jvmO->setisSlave((long)isSlave);
 }
 
-void SettingsWidget::test(char * jvmBuffer,char *ipbuffer){
-    /*char text[512];
-    sprintf(text,"Test %s\n",buffer);
-     printf(text);*/
+/*void SettingsWidget::test(char * jvmBuffer,char *ipbuffer){
+
      JVM* jvmO;
      try{
          
@@ -110,7 +108,7 @@ void SettingsWidget::test(char * jvmBuffer,char *ipbuffer){
 		printf("Exception during JVM test\n");
 		return;
 	}   
-}
+}*/
 
 
 void SettingsWidget::reset(){
@@ -205,12 +203,12 @@ XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Trans
       XPSetWidgetProperty(w_bottom, xpProperty_SubWindowType, xpSubWindowStyle_SubWindow);                            
   //  XPSetWidgetProperty(w_bottom, xpProperty_SubWindowType, xpMainWindowStyle_Translucent);
        XPAddWidgetCallback(w_window, SettingsWidgetsHandler); 
-
-    XPCreateWidget(x+10, y-20, x+60, y-40,
+    JVM* jvmO=getJVM();
+    /*XPCreateWidget(x+10, y-20, x+60, y-40,
 					1, "JVM:", 0, w_window,
 					xpWidgetClass_Caption);
 //XPSetWidgetProperty(jvmCaption, xpProperty_CaptionLit, 1);
- JVM* jvmO=getJVM();
+ 
  #if defined(__linux__)
   char *lib=jvmO->lin;
    #elif defined(_WIN64)
@@ -222,7 +220,7 @@ XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Trans
 					1, lib, 0, w_window,
 					xpWidgetClass_TextField);
     XPSetWidgetProperty(jvmField, xpProperty_TextFieldType, xpTextEntryField);
-	XPSetWidgetProperty(jvmField, xpProperty_Enabled, !jvmO->loadedLibrary);
+	XPSetWidgetProperty(jvmField, xpProperty_Enabled, !jvmO->loadedLibrary);*/
 
     XPCreateWidget(x+10, y-50, x+60, y-60,
 					1, "Device IP:", 0, w_window,
@@ -244,9 +242,9 @@ XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Trans
 					1, "Extended Cockpit", 0, w_window,
 					xpWidgetClass_Caption);
 
-    testButton = XPCreateWidget(x2-140, y-70, x2-80, y-90,
+   /* testButton = XPCreateWidget(x2-140, y-70, x2-80, y-90,
 					1, "Connect", 0, w_window,
-					xpWidgetClass_Button);
+					xpWidgetClass_Button);*/
 
     XPSetWidgetProperty(resetButton, xpProperty_ButtonType, xpPushButton);
 
@@ -302,11 +300,12 @@ int SettingsWidgetsHandler(
             return 1;
         }
         else */
-        if (inParam1 == (intptr_t)testButton)
+       /* if (inParam1 == (intptr_t)testButton)
         {
             settings.test(jvmBuffer,ipbuffer);
             return 1;
-        }else if (inParam1 == (intptr_t)setButton)
+        }else */
+        if (inParam1 == (intptr_t)setButton)
         {
             settings.setIP(jvmBuffer,ipbuffer);
             return 1;
