@@ -11,9 +11,12 @@ However, a larger work using the licensed work through interfaces provided by th
 be distributed under different terms and without source code for the larger work.
 *****************************************************************************************
 */
+#define NOMINMAX
  #include "XPLMDataAccess.h"
+
  #include <stdlib.h>
  #include <string>
+#include <algorithm>
 float drefV=1.0;
 float getGearState(void * inRefcon) {
     return drefV;
@@ -158,7 +161,7 @@ static int getvb(void * refA, void * out_values, int in_offset, int in_max)
 		return ref->string_data.size();
 	if(in_offset >= ref->string_data.size())
 		return 0;
-	int count = std::min(in_max, (int) ref->string_data.size() - in_offset);
+	int count = std::min(in_max, (int)(ref->string_data.size()) - in_offset);
 	for(int i = 0; i < count; ++i)
 		destination[i] = ref->string_data[i + in_offset];
 	return count;	

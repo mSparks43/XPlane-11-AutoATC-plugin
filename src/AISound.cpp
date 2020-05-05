@@ -580,7 +580,7 @@ void AircraftSounds::start()
 		// Make our context current, so that OpenAL commands affect our, um, stuff.
 		
 		alcMakeContextCurrent(my_ctx);
-		printf("0x%08x: I created the context.\n",XPLMGetMyID(), my_ctx);
+		printf("0x%08x: I created the context.\n",XPLMGetMyID());
 
 		ALCint		major_version, minor_version;
 		const char * al_hw=alcGetString(my_dev,ALC_DEVICE_SPECIFIER	);

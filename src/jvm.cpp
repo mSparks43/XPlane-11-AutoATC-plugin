@@ -224,10 +224,10 @@ bool JVM::connectJVM() {
     XPLMDebugString(gBob_debstr2);
  #elif defined(_WIN64)
    os="win";
-  sprintf(gBob_debstr2,"AutoATC: Loading jvm dll '%s' \n", win);
+  sprintf(gBob_debstr2,"AutoATC: Loading jvm dll '%s' \n", jsettings[os]["library"].get<std::string>().c_str());
      XPLMDebugString(gBob_debstr2);
      SetErrorMode(0); 
-    libnativehelper = LoadLibraryA(win); //"jvm.dll"
+    libnativehelper = LoadLibraryA(jsettings[os]["library"].get<std::string>().c_str()); //"jvm.dll"
     if (!libnativehelper) {
             hasjvm=false;
             sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm .so\n");
@@ -1143,16 +1143,18 @@ void JVM::LogPageWindowPlus(){
 void JVM::processAcars(){
      XPLMDataRef toSendID = XPLMFindDataRef ("autoatc/acars/out");
      int size=XPLMGetDatab(toSendID,NULL,0,0);
-    char acarsoutdata[size];
+
+    char acarsoutdata[1024];
 
     size=XPLMGetDatab(toSendID,acarsoutdata,0,size);
-    char command[size+30];
+    char command[1024];
 
     sprintf(command,"doCommand:sendAcars:%s",acarsoutdata);
 
     printf("SEND ACARS = %s\n",acarsoutdata);
     getData(command);
-    
+    //sprintf(acarsoutdata,"");
+    //XPLMSetDatab(toSendID,acarsoutdata,0,size);
 }
 int offsetStringY=0;
 void JVM::toggleLogWindow(){

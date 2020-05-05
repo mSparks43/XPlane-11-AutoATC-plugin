@@ -160,6 +160,7 @@
   <ItemGroup>
     <ClInclude Include="src\aiplane.h" />
     <ClInclude Include="src\AISound.h" />
+    <ClInclude Include="src\json\json.hpp" />
     <ClInclude Include="src\jvm.h" />
     <ClInclude Include="src\scppnt\cholesky.h" />
     <ClInclude Include="src\scppnt\cmat.h" />
