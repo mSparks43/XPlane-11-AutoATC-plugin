@@ -216,8 +216,8 @@ $(BUILDDIR)/obj64/%.o : %.cpp
 
 clean:
 	@echo Cleaning out everything.
-	rm -rf $(BUILDDIR)
-
+	rm -rf $(BUILDDIR)/$(TARGET)/obj64/
+	rm -rf $(BUILDDIR)/$(TARGET)/64/
 # Include any dependency turds, but don't error out if they don't exist.
 # On the first build, every .c is dirty anyway.  On future builds, if the
 # .c changes, it is rebuilt (as is its dep) so who cares if dependencies

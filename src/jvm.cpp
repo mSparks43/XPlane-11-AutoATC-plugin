@@ -41,7 +41,7 @@ be distributed under different terms and without source code for the larger work
 #include <stdlib.h>
 #endif
 
- const char* plugin_version = "About:0.9.3";
+const char* plugin_version = "About:0.9.4";
 char gBob_debstr2[2048];
 char xp_path[512];
 char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC_java/airframes_860.txt";
