@@ -1,4 +1,0 @@
-# JSON settings to initialise the JVM
-#
-
-settings={"win":{"library":"Resources\\plugins\\AutoATC\\jre\\bin\\server\\jvm.dll","options":["-XX:ParallelGCThreads=4","-XX:ConcGCThreads=4","-Xgcpolicy:balanced"],"classpath":"Resources/plugins/AutoATC/jre/bin/java"},"lin":{"library":"Resources/plugins/AutoATC/jre/lib/amd64/server/libjvm.so","options":["-XX:ParallelGCThreads=4","-XX:ConcGCThreads=4","-Xgcpolicy:metronome","-Xdump:none"],"classpath":"Resources/plugins/AutoATC/jre/bin/java"},"mac":{"library":"Resources/plugins/AutoATC/jre/Contents/Home/lib/server/libjvm.dylib","options":["-XX:ParallelGCThreads=4","-XX:ConcGCThreads=4","-Xgcpolicy:balanced"],"classpath":"Resources/plugins/AutoATC/jre/Contents/Home/bin/java"}}

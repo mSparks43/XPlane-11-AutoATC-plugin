@@ -3,6 +3,6 @@ build/obj64/*
 # airportMaps folder
 airportMaps/*
 include/*
-Makefile
+make.sh
 
 
