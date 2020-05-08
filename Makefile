@@ -12,7 +12,7 @@ TARGET := AutoATC
 ################################
 
 ifeq ($(OS),MACOS)
-BUILDDIR        :=      ./build
+BUILDDIR        :=      ./deploy
 SRC_BASE        :=      .
 
 SOURCES = \
@@ -121,7 +121,7 @@ clean:
 ################################
 
 else ifeq ($(OS),LINUX)
-BUILDDIR	:=	./build
+BUILDDIR	:=	./deploy
 SRC_BASE	:=	.
 #TARGET		:= AutoATC
 ifeq ($(TARGET), AutoATC)
