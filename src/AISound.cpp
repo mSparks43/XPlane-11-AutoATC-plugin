@@ -77,7 +77,9 @@ ALuint WaveFile::load_wave(const char * file_name)
 	FILE * fi = fopen(file_name,"rb");
 	if(fi == NULL)
 	{
-		XPLMDebugString("AutoATC: WAVE file load failed - could not open.\n");	
+		char error[2056];
+		sprintf(error,"AutoATC: WAVE file load failed - could not open:%s\n",file_name);
+		XPLMDebugString(error);	
 		return 0;
 	}
 	fseek(fi,0,SEEK_END);
@@ -185,46 +187,49 @@ ALuint WaveFile::load_wave(const char * file_name)
 					data, data_bytes, fmt->sample_rate);
 	free(mem);
     //snd_buffer=
-	XPLMDebugString("AutoATC: WAVE file loaded.\n");
+	char error[2056];
+	sprintf(error,"AutoATC: WAVE file loaded:%s\n",file_name);
+	XPLMDebugString(error);	
 	return buffers[sound_id];
 }
 //WaveFile buffers[2];
 WaveFile wav;
-char xp_soundpath[512];
+
 AircraftSound::AircraftSound()
 {
    // WaveFile wav;
     ALfloat	zero[3] = { 0 } ;
 
-	
+	char xp_soundpath[512];
+	XPLMGetSystemPath(xp_soundpath);
 	CHECK_ERR();
 	float looping=1.0f;
-	char path[512];
+	char path[1024];
 	if(sound_id==0){
 		alGenSources(6,snd_srcs);
 		looping=0.0f;
 		snd_src=snd_srcs[sound_id];
-		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/java/audio/screech.wav");
-		snd_buffer=wav.load_wave(path);//"/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/java/screech.wav");
+		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/AutoATC/audio/screech.wav");
+		snd_buffer=wav.load_wave(path);
 		sound_id++;
 	}
 	else if(sound_id==1){
 		
 		snd_src=snd_srcs[sound_id];
-		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/java/audio/prop.wav");
-		snd_buffer=wav.load_wave(path);//"/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/java/prop.wav");
+		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/AutoATC/audio/prop.wav");
+		snd_buffer=wav.load_wave(path);
 		sound_id++;
 	}
 	else if(sound_id==2){
 		snd_src=snd_srcs[sound_id];
-		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/java/audio/heli2.wav");//heli
-		snd_buffer=wav.load_wave(path);//"/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/java/jet.wav");
+		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/AutoATC/audio/heli2.wav");//heli
+		snd_buffer=wav.load_wave(path);
 		sound_id++;
 	}
 	else if(sound_id==3){
 		snd_src=snd_srcs[sound_id];
-		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/java/audio/jet.wav");
-		snd_buffer=wav.load_wave(path);//"/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/java/jet.wav");
+		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/AutoATC/audio/jet.wav");
+		snd_buffer=wav.load_wave(path);
 		sound_id++;
 	}
 	
@@ -323,10 +328,11 @@ void AircraftSound::setPitch(float setpitch){
 AircraftSounds::AircraftSounds(Aircraft *aircraft)
 {
     aircrafts=aircraft;
+	
     start();
     ALfloat	zero[3] = { 0,0,0 } ;
     ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};	// Listener facing into the screen
-	XPLMGetSystemPath(xp_soundpath);
+	
     alListenerfv(AL_POSITION,zero);
     alListenerfv(AL_VELOCITY,zero);
     alListenerfv(AL_ORIENTATION,listenerOri); 	// Orientation ...
@@ -597,7 +603,8 @@ void AircraftSounds::start()
 	} 
 	else
 	{
-		printf("AutoATC:0x%08x: I found someone else's openAL context 0x%08x.\n",XPLMGetMyID(), old_ctx);
+		printf("AutoATC:0x%08x: I found someone else's openAL context 0x%08x.\n", old_ctx);
+		old_ctx=old_ctx;
 	}
 	live=true;
 	XPLMDebugString("AutoATC:Using OpenAL device.\n");
@@ -611,13 +618,19 @@ void AircraftSounds::start()
 void AircraftSounds::stop()
 {
 	printf("AutoATC:stopping sound.\n");
-	if(createdContext)
-		alcDestroyContext(my_ctx);
+	
+
 	landsnd.stop();
     propsnd.stop();
     helisnd.stop();
 	for(int i=0;i<3;i++)
     	jetsnd[i].stop();
+	if(my_ctx != NULL)
+		alcDestroyContext(my_ctx);
+	if(createdContext){
+		
+		alcCloseDevice(my_dev);
+	}	
     //snd1.stop();
     //snd2.stop();
 }

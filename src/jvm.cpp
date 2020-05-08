@@ -44,7 +44,7 @@ be distributed under different terms and without source code for the larger work
  const char* plugin_version = "About:0.9.3";
 char gBob_debstr2[2048];
 char xp_path[512];
-char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/java/airframes_860.txt";
+char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC_java/airframes_860.txt";
  bool file_exists (const std::string& name);
  void				draw_atc_text(XPLMWindowID in_window_id, void * in_refcon);
 void				draw_about_text(XPLMWindowID in_window_id, void * in_refcon);
@@ -76,9 +76,7 @@ XPLMDataRef  mslPressureRef = NULL;
 XPLMDataRef fpmRef = NULL;
 XPLMDataRef  pitchRef = NULL;
 XPLMDataRef  rollRef = NULL;
- //XPLMDataRef  com1_freq_hzRef = NULL;
- //XPLMDataRef  com1_stdby_freq_hz = NULL;
- //const char* CONFIG_FILE ="Resources/plugins/java/jvmsettings.txt";
+
  String::String(const char *c) 
 { 
     size = strlen(c); 
@@ -162,7 +160,14 @@ void JVM::addSystemClassLoaderPath(const char* filePath) {
     jclass cls = env->FindClass("java/io/File");
     jmethodID mtdId = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;)V");
     jobject file = env->NewObject(cls, mtdId, fpStr);
-    
+    if(file == NULL) {
+        sprintf(gBob_debstr2,"AutoATC: ERROR - plugin not found!\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    else{
+        sprintf(gBob_debstr2,"AutoATC: plugin found\n");
+        XPLMDebugString(gBob_debstr2);
+    }
     mtdId = env->GetMethodID(cls, "toURI", "()Ljava/net/URI;");
     jobject uri = env->CallObjectMethod(file, mtdId);
     
@@ -178,7 +183,22 @@ void JVM::addSystemClassLoaderPath(const char* filePath) {
     // get addURL method 
     jclass urlClassloaderClass = env->FindClass("java/net/URLClassLoader");
     mtdId = env->GetMethodID(urlClassloaderClass, "addURL", "(Ljava/net/URL;)V");
-    
+    if(urlClassloaderClass == NULL) {
+        sprintf(gBob_debstr2,"AutoATC: ERROR - java/net/URLClassLoader not found!\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    else{
+        sprintf(gBob_debstr2,"AutoATC: URLClassLoader found\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    if(sysClsLoader == NULL) {
+        sprintf(gBob_debstr2,"AutoATC: ERROR - java/lang/ClassLoader not found!\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    else{
+        sprintf(gBob_debstr2,"AutoATC: ClassLoader found\n");
+        XPLMDebugString(gBob_debstr2);
+    }
     // add url
     env->CallVoidMethod(sysClsLoader, mtdId, url);  
     env->DeleteLocalRef(fpStr);   
@@ -313,7 +333,9 @@ bool JVM::connectJVM() {
         for(int i=0;i<optionsV.size();i++){
             
             char * opt=const_cast<char*>(optionsV[i].c_str());
-            printf("Using option: %s\n",opt);
+            sprintf(gBob_debstr2,"AutoATC: Using option: %s\n",opt);
+            printf(gBob_debstr2);
+             XPLMDebugString(gBob_debstr2);
             options[i].optionString = opt;
         }
         char classpath[MAXLEN];
@@ -338,10 +360,10 @@ bool JVM::connectJVM() {
     }
 }
 void JVM::deactivateJVM(void){
-    if(hasjvm){
+    //if(hasjvm){
         stop();
         destroyMenu(); 
-    }   
+    //}   
     //hasjvm=false;  
 }
 void JVM::activateJVM(void){
@@ -350,15 +372,23 @@ void JVM::activateJVM(void){
     
     //hasjvm=false;
     if(!loadedLibrary){
-        if(!connectJVM())
+        if(!connectJVM()){
+            hasjvm=false;
+            loadLibraryFailed=true;
+            sprintf(gBob_debstr2,"AutoATC: ERROR - Couldn't Connect to JVM!\n");
+            XPLMDebugString(gBob_debstr2);
             return;
-        addSystemClassLoaderPath("Resources/plugins/java/AutoATCPlugin.jar");
+        }
+        addSystemClassLoaderPath("Resources/plugins/AutoATC_java/AutoATCPlugin.jar");
 
        
        commandsClass = env->FindClass("jni/Commands");  // try to find the class
     if(commandsClass == NULL) {
+        hasjvm=false;
+        loadedLibrary=true;
         sprintf(gBob_debstr2,"AutoATC: ERROR - Commands not found!\n");
         XPLMDebugString(gBob_debstr2);
+        return;
     }
     else {                                  // if class found, continue
         sprintf(gBob_debstr2,"AutoATC: Commands found\n");
@@ -658,7 +688,7 @@ void JVM::joinThread(void){
 	jvm->AttachCurrentThread((void**)&plane_env, &args);
     threadcommandsClass = plane_env->FindClass("jni/Commands");  // try to find the class
     if(threadcommandsClass == NULL) {
-        sprintf(gBob_debstr2,"AutoATC: ERROR - Commands not found!\n");
+        sprintf(gBob_debstr2,"AutoATC: ERROR - Commands p2 not found!\n");
         XPLMDebugString(gBob_debstr2);
     }
     getPlaneDataThreadMethod = plane_env->GetStaticMethodID(threadcommandsClass, "getPlaneData", "(I)[D");  // find method
@@ -725,8 +755,7 @@ void JVM::updateAirframes(void){
 }
 void JVM::stop(void)
 {
-    if(!hasjvm)
-        return;
+   
     //if(enabledATCPro)
     {
             //printf("JVM STOP\n");
@@ -735,7 +764,8 @@ void JVM::stop(void)
             stopPlanes();
             enabledATCPro=false;
     }
-    
+     if(!hasjvm)
+        return;
 
     systemstop();
     jvm->DetachCurrentThread();
@@ -1095,18 +1125,25 @@ void JVM::createMenu(){
 void JVM::registerFlightLoop(){
     if(hasjvm&&!flightLoopActive){
                setICAO();
-               XPLMRegisterFlightLoopCallback(	SendATCData,	/* Callback */10,					/* Interval */NULL);					/* refcon not used. */
-               sprintf(gBob_debstr2,"AutoATC: Register flight loop\n");
-                XPLMDebugString(gBob_debstr2); 
+               if(!flightLoopregistered){
+                    XPLMRegisterFlightLoopCallback(	SendATCData,	/* Callback */10,					/* Interval */NULL);					/* refcon not used. */
+                    sprintf(gBob_debstr2,"AutoATC: Register flight loop\n");
+                    XPLMDebugString(gBob_debstr2); 
+               }
                 flightLoopActive=true;
+                flightLoopregistered=true;
                //initPlanes();
     }
 }
 void JVM::unregisterFlightLoop(){
-    if(hasjvm&&flightLoopActive){
+    if(flightLoopregistered){
         XPLMUnregisterFlightLoopCallback(SendATCData, NULL);
         sprintf(gBob_debstr2,"AutoATC: Destroy flight loop\n");
         XPLMDebugString(gBob_debstr2); 
+        flightLoopregistered=false;
+    }
+    if(hasjvm&&flightLoopActive){
+        
         flightLoopActive=false;
     }
 }
@@ -1143,18 +1180,18 @@ void JVM::LogPageWindowPlus(){
 void JVM::processAcars(){
      XPLMDataRef toSendID = XPLMFindDataRef ("autoatc/acars/out");
      int size=XPLMGetDatab(toSendID,NULL,0,0);
-
-    char acarsoutdata[1024];
-
+    std::vector<char> acarsoutDataA;
+    acarsoutDataA.resize(size+30,0);
+    //char acarsoutdata[1024];
+    char * acarsoutdata=acarsoutDataA.data();
     size=XPLMGetDatab(toSendID,acarsoutdata,0,size);
-    char command[1024];
+    //char command[1024];
 
-    sprintf(command,"doCommand:sendAcars:%s",acarsoutdata);
-
+    //sprintf(command,"doCommand:sendAcars:%s",acarsoutdata);
+    sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
     printf("SEND ACARS = %s\n",acarsoutdata);
-    getData(command);
-    //sprintf(acarsoutdata,"");
-    //XPLMSetDatab(toSendID,acarsoutdata,0,size);
+    getData(acarsoutdata);
+
 }
 int offsetStringY=0;
 void JVM::toggleLogWindow(){
@@ -1316,7 +1353,7 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
     
     }
     else{
-        char text[]="Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n";
+        char text[]="Java VM not found,\n AutoATC cannot continue \n";
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
 }
@@ -1452,7 +1489,7 @@ int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void
     
     }
     else{
-        char text[]="Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n";
+        char text[]="Java VM not found,\n AutoATC cannot continue \n";
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
 }
@@ -1590,7 +1627,7 @@ void JVM::setDevice( char* newdevice){
 	
 	float col_white[] = {1.0, 1.0, 1.0}; // red, green, blue
     int ww=r-l;
-        char text[]="Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n";
+        char text[]="Java VM not found,\n AutoATC cannot continue \n";
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     
 }

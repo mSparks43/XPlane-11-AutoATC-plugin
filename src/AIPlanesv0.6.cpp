@@ -817,6 +817,8 @@ static void do_model(){
 	while(!liveThread&&run){
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		//std::this_thread::sleep_for(std::chrono::seconds(15));
+		if(jvmO->loadLibraryFailed)
+			run=false;
 		if(jvmO->hasjvm&&!attached){
 			jvmO->joinThread();
 			attached=true;
@@ -874,7 +876,8 @@ static void do_model(){
 	//if(attached)
 	{
 		JVM* jvmO=getJVM();
-		jvmO->jvm->DetachCurrentThread();
+		if(jvmO->hasjvm)
+			jvmO->jvm->DetachCurrentThread();
 	}
 	}catch (const std::exception& ex){
 

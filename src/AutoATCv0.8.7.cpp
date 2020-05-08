@@ -84,9 +84,9 @@ int playbackCommandCommandHandler(XPLMCommandRef inCommand,
                         void *               inRefcon);*/
 
 char CONFIG_FILE_DEFAULT[] = "Resources/plugins/AutoATC/defaultjvm.txt";
-char CONFIG_FILE_USER[] = "Resources/plugins/AutoATC/jvmsettings.txt";
-char CONFIG_FILE_ANDROID[] = "Resources/plugins/java/usermobilesettings.txt";
-//char* CONFIG_FILE_USER_AIRFRAMES ="Resources/plugins/java/airframes_user.txt";
+//char CONFIG_FILE_USER[] = "Resources/plugins/AutoATC/jvmsettings.txt";
+char CONFIG_FILE_ANDROID[] = "Resources/plugins/AutoATC_java/usermobilesettings.txt";
+
 bool file_exists(const std::string &name)
 {
     if (FILE *file = fopen(name.c_str(), "r"))
@@ -117,9 +117,9 @@ PLUGIN_API int XPluginStart(
     initJVM();
     JVM *jvmO = getJVM();
     jvmO->init_parameters();
-    if (file_exists(CONFIG_FILE_USER))
+    /*if (file_exists(CONFIG_FILE_USER))
         jvmO->parse_config(CONFIG_FILE_USER);
-    else
+    else*/
     {
         jvmO->parse_config(CONFIG_FILE_DEFAULT);
     }
@@ -215,13 +215,16 @@ PLUGIN_API void XPluginStop(void)
 {
     XPLMDebugString("AUTOATC: XPluginStop\n"); 
     JVM *jvmO = getJVM();
+    jvmO->unregisterFlightLoop();//make sure the flight loop is stopped
+    
     if (jvmO->hasjvm)
     {
         XPLMDebugString("AUTOATC: jvm systemstop\n");
         jvmO->systemstop();
-        XPLMDebugString("AUTOATC: deactivateJVM\n");
-        jvmO->deactivateJVM();
+        
     }
+    XPLMDebugString("AUTOATC: deactivateJVM\n");
+    jvmO->deactivateJVM();//this is !hasJVM safe and needed to kill the threads
     g_is_acf_inited = 0;
 }
 
@@ -229,10 +232,11 @@ PLUGIN_API void XPluginDisable(void)
 {
     XPLMDebugString("AUTOATC: XPluginDisable\n"); 
     JVM *jvmO = getJVM();
+    
+    jvmO->unregisterFlightLoop();
     if (jvmO->hasjvm)
     {
-        XPLMDebugString("AUTOATC: unregisterFlightLoop\n");
-        jvmO->unregisterFlightLoop();
+        
         XPLMDebugString("AUTOATC: systemstop\n");
         jvmO->systemstop();
        // jvmO->deactivateJVM();
@@ -251,9 +255,9 @@ PLUGIN_API int XPluginEnable(void)
         //initJVM();
         // JVM* jvmO=getJVM();
         jvmO->init_parameters();
-        if (file_exists(CONFIG_FILE_USER))
+        /*if (file_exists(CONFIG_FILE_USER))
             jvmO->parse_config(CONFIG_FILE_USER);
-        else
+        else*/
         {
             jvmO->parse_config(CONFIG_FILE_DEFAULT);
         }

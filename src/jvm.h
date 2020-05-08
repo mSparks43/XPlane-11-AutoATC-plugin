@@ -26,7 +26,7 @@ be distributed under different terms and without source code for the larger work
 #include "json/json.hpp"
 #define MAXLEN 2048
 using nlohmann::json;
-//#define DEBUG_STRINGS
+#define DEBUG_STRINGS
 class acModelDef
 {
 public:
@@ -162,7 +162,9 @@ public:
     bool hasjvm;
     bool setIcaov;
     bool loadedLibrary=false;
+    bool loadLibraryFailed=false;
     bool flightLoopActive=false;
+    bool flightLoopregistered=false;
     int logPage;
     float lastNavAudio;
     int lastFoundNav;
