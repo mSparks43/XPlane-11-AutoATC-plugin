@@ -48,19 +48,7 @@ static XPLMDataRef		gOverRidePlanePosition = NULL;
 static XPLMDataRef		gAGL = NULL;*/
                                 
 float	BeginAI();
-/*static float	MyFlightLoopCallback0(
-                                   float                inElapsedSinceLastCall,    
-                                   float                inElapsedTimeSinceLastFlightLoop,    
-                                   int                  inCounter,    
-                                   void *               inRefcon);  */  
 
-// Used to update each aircraft every frame.
-
-/*static float	AircraftLoopCallback(
-                                   float                inElapsedSinceLastCall,    
-                                   float                inElapsedTimeSinceLastFlightLoop,    
-                                   int                  inCounter,    
-                                   void *               inRefcon);*/  
 							    
 AircraftData::AircraftData(){
 	//time=clock();
@@ -801,10 +789,16 @@ static void do_simulation(){
 	}
 	printf("simulation thread woke up\n");
 	while(liveThread&&run){
+		auto start = std::chrono::high_resolution_clock::now();
 		for(int i=0;i<30;i++){
 			aircraft[i].SimulateAircraftThreadData();
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));//100fps or less
+		auto finish = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double, std::milli> elapsed = finish - start;
+		int diff=std::round(elapsed.count());
+		//printf("%d\n",diff);
+		if(diff<10)
+			std::this_thread::sleep_for(std::chrono::milliseconds(10-diff));//100fps or less
 	}
 #if defined(DEBUG_STRINGS)
 	printf("simulation thread stopped\n");
@@ -845,6 +839,7 @@ static void do_model(){
 	int rolls=0;
 	//printf("thread ready\n");
 	while(liveThread&&run){
+		auto start = std::chrono::high_resolution_clock::now();
 		sendData();
 		
 		rolls++;
@@ -869,7 +864,13 @@ static void do_model(){
 			//printf("%d is index %d waiting for %d live =%d\n",i,aircraft[i].airFrameIndex,aircraft[i].thisData.airframe,aircraft[i].thisData.live);
 			//g_ac_mutex[i].unlock();
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		auto finish = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double, std::milli> elapsed = finish - start;
+		int diff=std::round(elapsed.count());
+		//printf("%d\n",diff);
+		if(diff<20)
+		std::this_thread::sleep_for(std::chrono::milliseconds(20-diff));//100fps or less
+		//std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		//std::this_thread::sleep_for(std::chrono::seconds(15));
 	}
 	
@@ -909,7 +910,7 @@ void initPlanes(){
 	acY = XPLMFindDataRef("autoatc/aircraft/y");
 	acZ = XPLMFindDataRef("autoatc/aircraft/z");
 	sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
-	//XPLMRegisterFlightLoopCallback(	MyFlightLoopCallback0,/* Callback */-1.0,/* Interval */NULL);/* refcon not used. */
+
 	BeginAI();
 	
 	//
@@ -918,17 +919,13 @@ void initPlanes(){
 		aircraft[i].id=i+1;
 	}
 	liveThread=true;
-	//XPLMRegisterFlightLoopCallback(	AircraftLoopCallback,/* Callback */-1.0,	/* Interval */NULL);/* refcon not used. */
+
 
 }
 void stopPlanes(){
-    //XPLMUnregisterFlightLoopCallback(MyFlightLoopCallback0, NULL);
 	printf("stopPlanes\n");
 	soundSystem.stop();
-	/*if(liveThread){
-		XPLMUnregisterFlightLoopCallback(AircraftLoopCallback, NULL);
-		
-	}*/
+
 	liveThread=false;
 	run=false;
 	if(m_thread.joinable())
@@ -943,11 +940,7 @@ void stopPlanes(){
     XPLMDebugString(gBob_debstr2);
 }
 bool loaded=false;
-/*float	MyFlightLoopCallback0(
-                                   float                inElapsedSinceLastCall,    
-                                   float                inElapsedTimeSinceLastFlightLoop,    
-                                   int                  inCounter,    
-                                   void *               inRefcon)*/
+
 float	BeginAI()
 {
 	//int AircraftIndex;

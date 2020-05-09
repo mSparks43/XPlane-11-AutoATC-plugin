@@ -178,6 +178,7 @@ void JVM::addSystemClassLoaderPath(const char* filePath) {
     // get system classloader
     jclass classloaderClass = env->FindClass("java/lang/ClassLoader");
     mtdId = env->GetStaticMethodID(classloaderClass, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
+    //mtdId = env->GetStaticMethodID(classloaderClass, "getPlatformClassLoader", "()Ljava/lang/ClassLoader;");
     jobject sysClsLoader = env->CallStaticObjectMethod(classloaderClass, mtdId);
         
     // get addURL method 
@@ -328,7 +329,7 @@ bool JVM::connectJVM() {
         XPLMDebugString(gBob_debstr2);
         std::vector<std::string> optionsV=jsettings[os]["options"].get<std::vector<std::string>>();
         
-        int numOptions=optionsV.size()+1;    
+        int numOptions=optionsV.size();    
         JavaVMOption* options = new JavaVMOption[numOptions]; //one more for lib path
         for(int i=0;i<optionsV.size();i++){
             
@@ -340,11 +341,11 @@ bool JVM::connectJVM() {
         }
         char classpath[MAXLEN];
         
-        sprintf(classpath,"-Djava.class.path=%s\n",jsettings[os]["classpath"].get<std::string>().c_str());
+        /*sprintf(classpath,"-Djava.class.path=%s\n",jsettings[os]["classpath"].get<std::string>().c_str());
         sprintf(gBob_debstr2,"AutoATC: Using classpath=%s",classpath);
         printf(gBob_debstr2);
         XPLMDebugString(gBob_debstr2);
-        options[numOptions-1].optionString=classpath;
+        options[numOptions-1].optionString=classpath;*/
         vm_args.nOptions = numOptions;
         vm_args.options = options; 
        vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
@@ -696,6 +697,11 @@ void JVM::joinThread(void){
             XPLMDebugString("AutoATC: ERROR - Method void getPlaneData() not found!\n");
             return;
     }
+    getAllPlaneDataThreadMethod = plane_env->GetStaticMethodID(threadcommandsClass, "getAllPlaneData", "()[D");  // find method
+    if(getAllPlaneDataThreadMethod == NULL){
+            XPLMDebugString("AutoATC: ERROR - Method void getAllPlaneData() not found!\n");
+            return;
+    }
     setThreadDataMethod = plane_env->GetStaticMethodID(threadcommandsClass, "setData", "([F)V");  // find method
        
          if(setThreadDataMethod == NULL){
@@ -926,35 +932,80 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
     if(caller_env==env){
        classV=commandsClass;
        method= getPlaneDataMethod;
+       jdoubleArray    jplanedata   = (jdoubleArray) caller_env->CallStaticObjectMethod( classV, method,id-1 );
+
+        jdouble *element = caller_env->GetDoubleArrayElements(jplanedata, 0);
+
+        if(element[0]==0&&element[1]==0&&element[2]==0)
+            {
+                retVal.live=false;
+                caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);
+                return retVal;
+            }
+        retVal.live=true;
+        if(element[2]==-9999.0){
+            caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);   
+            return retVal;
+        }
+        XPLMWorldToLocal(element[0],element[1],element[2],&retVal.x,&retVal.y,&retVal.z);
+        retVal.the=(float)element[3];
+        retVal.phi=(float)element[4];
+        retVal.psi=(float)element[5];
+        retVal.gearDown=(float)element[6];
+        retVal.throttle=element[7];
+        retVal.timeStamp=element[8];
+        retVal.airframe=(int)element[9];
+        caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);                   
     }
     else{
         classV=threadcommandsClass;
        method= getPlaneDataThreadMethod;
+       //printf("get plane id %d\n",id);
+       if(id<1){
+            jdoubleArray    jplanedata   = (jdoubleArray) caller_env->CallStaticObjectMethod( classV, method,id-1 );
+            jdouble *element = caller_env->GetDoubleArrayElements(jplanedata, 0);
+            if(element[0]==0&&element[1]==0&&element[2]==0)
+                {
+                    retVal.live=false;
+                    caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);
+                    return retVal;
+                }
+            retVal.live=true;
+            caller_env->ReleaseDoubleArrayElements(jplanedata,element,0); 
+            return retVal;
+       }
+       else if(id==1){
+            jdoubleArray    jplanedataAll   = (jdoubleArray) caller_env->CallStaticObjectMethod( classV, getAllPlaneDataThreadMethod);
+             jdouble *element = caller_env->GetDoubleArrayElements(jplanedataAll, 0);
+             for(int i=0;i<300;i++){
+                 aiplaneData[i]=element[i]*1.0;
+                
+             }
+             caller_env->ReleaseDoubleArrayElements(jplanedataAll,element,0); 
+       }
+       
+       retVal=aiplanes[id-1];
+        int i=(id-1)*10;
+       if(aiplaneData[i]==0&&aiplaneData[i+1]==0&&aiplaneData[i+2]==0)
+            {
+                retVal.live=false;
+                return retVal;
+            }
+        retVal.live=true;
+        if(aiplaneData[i+2]==-9999.0)
+            return retVal;
+        XPLMWorldToLocal(aiplaneData[i+0],aiplaneData[i+1],aiplaneData[i+2],&retVal.x,&retVal.y,&retVal.z);
+        retVal.the=(float)aiplaneData[i+3];
+        retVal.phi=(float)aiplaneData[i+4];
+        retVal.psi=(float)aiplaneData[i+5];
+        retVal.gearDown=(float)aiplaneData[i+6];
+        retVal.throttle=aiplaneData[i+7];
+        retVal.timeStamp=aiplaneData[i+8];
+        retVal.airframe=(int)aiplaneData[i+9];
+         //printf("data %d = %f\n",i,retVal.airframe);
     }
         //return retVal;
-    jdoubleArray    jplanedata   = (jdoubleArray) caller_env->CallStaticObjectMethod( classV, method,id-1 );
-
-    jdouble *element = caller_env->GetDoubleArrayElements(jplanedata, 0);
-   // jsize len = env->GetArrayLength(jplanedata);
-    /*double v=element[0];
-    retVal.phi=(float)v;*/
-    if(element[0]==0&&element[1]==0&&element[2]==0)
-        {
-            retVal.live=false;
-            return retVal;
-        }
-    retVal.live=true;
-    if(element[2]==-9999.0)
-        return retVal;
-    XPLMWorldToLocal(element[0],element[1],element[2],&retVal.x,&retVal.y,&retVal.z);
-    retVal.the=(float)element[3];
-    retVal.phi=(float)element[4];
-    retVal.psi=(float)element[5];
-    retVal.gearDown=(float)element[6];
-    retVal.throttle=element[7];
-    retVal.timeStamp=element[8];
-    retVal.airframe=(int)element[9];
-    caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);
+    
     return retVal;
 }
 

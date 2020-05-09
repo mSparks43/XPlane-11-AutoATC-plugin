@@ -145,8 +145,8 @@ endif
 INCLUDES = \
 	-I$(SRC_BASE)/SDK/CHeaders/XPLM \
 	-I$(SRC_BASE)/SDK/CHeaders/Widgets \
-	-I$(SRC_BASE)/jdk/lin/include \
-	-I$(SRC_BASE)/jdk/lin/include/linux \
+	-I$(SRC_BASE)/include/lin/include \
+	-I$(SRC_BASE)/include/lin/include/linux \
 	-I/usr/include/AL \
 	
 

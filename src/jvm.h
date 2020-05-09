@@ -152,6 +152,8 @@ private:
    char logpageString[128]={0};
    char logpageData[2048]={0};
    double getLogTime=0;
+   double aiplaneData[300]={0};
+   PlaneData aiplanes[30];
 public:
     
     XPLMMenuID g_menu_id;
@@ -177,6 +179,7 @@ public:
     jclass threadcommandsClass;
     jmethodID getPlaneDataMethod;
     jmethodID getPlaneDataThreadMethod;
+    jmethodID getAllPlaneDataThreadMethod;
     jmethodID threadBroadcastMethod;
     jmethodID setThreadDataMethod;
     jmethodID midToString;
