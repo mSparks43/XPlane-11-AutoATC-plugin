@@ -4,7 +4,7 @@
 OS ?= LINUX
 # AutoATC or Java
 TARGET := AutoATC
-
+XPVER:=11
 
 
 ################################
@@ -149,9 +149,11 @@ INCLUDES = \
 	-I$(SRC_BASE)/include/lin/include/linux \
 	-I/usr/include/AL \
 	
-
-DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=0 -DIBM=0 -DLIN=1 -DXPLM300=1 -DXPLM301=1 -std=c++11
-
+ifeq ($(XPVER),11)
+DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=0 -DIBM=0 -DLIN=1 -DXPLM300=1 -DXPLM301=1 -std=c++11 -DXP11=1
+else ifeq ($(XPVER), 10)
+DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=0 -DIBM=0 -DLIN=1 -std=c++11
+endif
 ############################################################################
 
 

@@ -348,16 +348,39 @@ bool JVM::connectJVM() {
         options[numOptions-1].optionString=classpath;*/
         vm_args.nOptions = numOptions;
         vm_args.options = options; 
-       vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
+       vm_args.ignoreUnrecognized = true;     // invalid options make the JVM init fail
            //=============== load and initialize Java VM and JNI interface =============
+	   sprintf(gBob_debstr2, "AutoATC: Initialising the JVM \n");
+	   printf(gBob_debstr2);
+	   XPLMDebugString(gBob_debstr2);
+	   try{
        JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);  // YES !!
-      
-      
+		
+	   sprintf(gBob_debstr2, "AutoATC: Initialised the JVM \n");
+	   printf(gBob_debstr2);
+	   XPLMDebugString(gBob_debstr2);
        jint ver = env->GetVersion();
        sprintf(gBob_debstr2,"AutoATC: Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
        printf(gBob_debstr2);
        XPLMDebugString(gBob_debstr2);
        return true;
+	   }
+	   catch (const std::exception & ex) {
+		   sprintf(gBob_debstr2, "AutoATC: Error initialising JVM ex \n");
+		   XPLMDebugString(gBob_debstr2);
+		   return false;
+	   }
+	   catch (const std::string & ex) {
+		   sprintf(gBob_debstr2, "AutoATC: Error initialising JVM str \n");
+		   XPLMDebugString(gBob_debstr2);
+		   return false;
+	   }
+	   catch (...)
+	   {
+		   sprintf(gBob_debstr2, "AutoATC: Error initialising JVM \n");
+		   XPLMDebugString(gBob_debstr2);
+		   return false;
+	   }
     }
 }
 void JVM::deactivateJVM(void){
@@ -1246,10 +1269,15 @@ void JVM::processAcars(){
 }
 int offsetStringY=0;
 void JVM::toggleLogWindow(){
+    #if defined(XP11)
+    bool vr_is_enabled = false;
+    
     XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
-    const bool vr_is_enabled = XPLMGetDatai(vr_dref);
+    vr_is_enabled = XPLMGetDatai(vr_dref);
+    
     offsetStringY=0;
     if(log_window==NULL||vr_is_enabled!=loginVR){
+       
          XPLMCreateWindow_t params;
         params.structSize = sizeof(params);
         params.visible = 1;
@@ -1299,6 +1327,7 @@ void JVM::toggleLogWindow(){
          XPLMSetWindowIsVisible(log_window,0);
         log_visible=false;
      }
+     #endif
 }
 void menu_handler(void * in_menu_ref, void * in_item_ref)
 {
@@ -1325,48 +1354,49 @@ void menu_handler(void * in_menu_ref, void * in_item_ref)
     }
 
     if(!strcmp((const char *)in_item_ref, "Menu Item 4"))
-	{
-		 
-    XPLMCreateWindow_t params;
-	params.structSize = sizeof(params);
-	params.visible = 1;
-	params.drawWindowFunc = draw_about_text;
-	// Note on "dummy" handlers:
-	// Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
-	params.handleMouseClickFunc = mouse_handler;
-	params.handleRightClickFunc = dummy_mouse_handler;
-	params.handleMouseWheelFunc = wheel_handler;
-	params.handleKeyFunc = dummy_key_handler;
-	params.handleCursorFunc = dummy_cursor_status_handler;
-	params.refcon = NULL;
-	params.layer = xplm_WindowLayerFloatingWindows;
+        {
+        #if defined(XP11)
+        XPLMCreateWindow_t params;
+        params.structSize = sizeof(params);
+        params.visible = 1;
+        params.drawWindowFunc = draw_about_text;
+        // Note on "dummy" handlers:
+        // Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
+        params.handleMouseClickFunc = mouse_handler;
+        params.handleRightClickFunc = dummy_mouse_handler;
+        params.handleMouseWheelFunc = wheel_handler;
+        params.handleKeyFunc = dummy_key_handler;
+        params.handleCursorFunc = dummy_cursor_status_handler;
+        params.refcon = NULL;
+        params.layer = xplm_WindowLayerFloatingWindows;
 
-	params.decorateAsFloatingWindow = xplm_WindowDecorationRoundRectangle;
-	
-	// Set the window's initial bounds
-	// Note that we're not guaranteed that the main monitor's lower left is at (0, 0)...
-	// We'll need to query for the global desktop bounds!
-	int left, bottom, right, top;
-	XPLMGetScreenBoundsGlobal(&left, &top, &right, &bottom);
-	params.left = left + 50;
-	params.bottom = bottom + 150;
-	params.right = params.left + 400;
-	params.top = params.bottom + 400;
-	
-	 XPLMWindowID	g_window = XPLMCreateWindowEx(&params);
-	
-	// Position the window as a "free" floating window, which the user can drag around
-    XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
-    const bool vr_is_enabled = XPLMGetDatai(vr_dref);
-    if(vr_is_enabled)
-    {
-        XPLMSetWindowPositioningMode(g_window, xplm_WindowVR, 0);
-    }
-    else
-	    XPLMSetWindowPositioningMode(g_window, xplm_WindowPositionFree, -1);
-	// Limit resizing our window: maintain a minimum width/height of 100 boxels and a max width/height of 300 boxels
-	    XPLMSetWindowResizingLimits(g_window, 200, 200, 500, 500);
-	    XPLMSetWindowTitle(g_window, "About AutoATC");
+        params.decorateAsFloatingWindow = xplm_WindowDecorationRoundRectangle;
+        
+        // Set the window's initial bounds
+        // Note that we're not guaranteed that the main monitor's lower left is at (0, 0)...
+        // We'll need to query for the global desktop bounds!
+        int left, bottom, right, top;
+        XPLMGetScreenBoundsGlobal(&left, &top, &right, &bottom);
+        params.left = left + 50;
+        params.bottom = bottom + 150;
+        params.right = params.left + 400;
+        params.top = params.bottom + 400;
+        
+        XPLMWindowID	g_window = XPLMCreateWindowEx(&params);
+        
+        // Position the window as a "free" floating window, which the user can drag around
+        XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
+        const bool vr_is_enabled = XPLMGetDatai(vr_dref);
+        if(vr_is_enabled)
+        {
+            XPLMSetWindowPositioningMode(g_window, xplm_WindowVR, 0);
+        }
+        else
+            XPLMSetWindowPositioningMode(g_window, xplm_WindowPositionFree, -1);
+        // Limit resizing our window: maintain a minimum width/height of 100 boxels and a max width/height of 300 boxels
+        XPLMSetWindowResizingLimits(g_window, 200, 200, 500, 500);
+        XPLMSetWindowTitle(g_window, "About AutoATC");
+        #endif
 	}
     if(!strcmp((const char *)in_item_ref, "Menu Item 5")){
         //printf("called me 1\n");
@@ -1610,6 +1640,7 @@ float SendATCData(float                inElapsedSinceLastCall,
     return -1;
 }
 void JVM::popupNoJVM(){
+    #if defined(XP11)
      XPLMCreateWindow_t params;
 	params.structSize = sizeof(params);
 	params.visible = 1;
@@ -1643,6 +1674,7 @@ void JVM::popupNoJVM(){
 	// Limit resizing our window: maintain a minimum width/height of 100 boxels and a max width/height of 300 boxels
 	XPLMSetWindowResizingLimits(g_window, 200, 200, 300, 300);
 	XPLMSetWindowTitle(g_window, "Java Error");
+    #endif
  }
  
  char* JVM::getDevice(){

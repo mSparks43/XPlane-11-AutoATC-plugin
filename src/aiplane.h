@@ -11,7 +11,9 @@ However, a larger work using the licensed work through interfaces provided by th
 be distributed under different terms and without source code for the larger work.
 *****************************************************************************************
 */
+#if defined(XP11)
 #include "XPLMInstance.h"
+#endif
 #include <time.h>
 
 #include <mutex>
@@ -62,8 +64,9 @@ class Aircraft
 {
 private:
 	XPLMObjectRef* g_object=NULL;
+	#if defined(XP11)
 	XPLMInstanceRef g_instance[12]={NULL};
-
+	#endif
 	int modelCount=1;
 	const char * cls_drefs[18]={ "traf/mw_def",
 	"traf/nw_def",

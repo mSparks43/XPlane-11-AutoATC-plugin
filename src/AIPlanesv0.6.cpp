@@ -106,6 +106,7 @@ int pid=25;
 char found_path[1024];
  static void load_cb(const char * real_path, void * ref)
 {
+
 	XPLMObjectRef * dest = (XPLMObjectRef *) ref;
 	if(*dest == NULL)
 	{
@@ -116,6 +117,7 @@ char found_path[1024];
 		printf("skipped loading object %s\n",real_path);
 }
 void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
+	#if defined(XP11)
 	//XPLMCreateInstance(inObject, drefs);
 	if(inObject)
 	        {
@@ -133,6 +135,7 @@ void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
 				else if(ref_style==2)
 					g_instance[partID] = XPLMCreateInstance(inObject, xmp_drefs);
             }
+	#endif
 }
 //void Aircraft::GetAircraftData(AircraftData userdata)
 void Aircraft::GetAircraftData(){
@@ -264,11 +267,14 @@ void Aircraft::PrepareAircraftData()
 	JVM* jvmO=getJVM();
 
 	if(!thisData.live){
+				#if defined(XP11)
 		        if(g_instance[0])
 		        {
 					printf("dropping object for id= %d\n",(id-1));
 					for(int i=0;i<modelCount;i++){
+						
 						XPLMDestroyInstance(g_instance[i]);
+						
 						g_instance[i]=NULL;
 					}
 					modelCount=1;
@@ -276,6 +282,7 @@ void Aircraft::PrepareAircraftData()
 					toLoadAirframe=false;
 					inLoading=false;
 				}
+				#endif
 				
 		data_mutex.unlock();
 		return;
@@ -286,6 +293,7 @@ void Aircraft::PrepareAircraftData()
 		toLoadAirframe=false;
 		char* af=jvmO->getModel(airFrameIndex);
 		char debugStr[2048];
+#if defined(XP11)	
 		if(g_instance[0])
 	    {
 #if defined(DEBUG_STRINGS)
@@ -297,6 +305,7 @@ void Aircraft::PrepareAircraftData()
 			}
 					
 		}
+#endif
 #if defined(DEBUG_STRINGS)
 		XPLMDebugString("toLoadAirframe\n");
 		sprintf(debugStr,"searching for id=%d afI=%d to %s sound=%d\n",id,airFrameIndex,af,soundIndex);
@@ -713,7 +722,7 @@ void Aircraft::SetAircraftData(void)
 		currentrpm--;
 	thrust*=currentrpm;
 
-	
+#if defined(XP11)	
 	for(int i=0;i<modelCount;i++)
     if(g_instance[i])
     {
@@ -767,8 +776,9 @@ void Aircraft::SetAircraftData(void)
 			float tire[20] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
-        
+     
     }
+ #endif  
 }
 
 
