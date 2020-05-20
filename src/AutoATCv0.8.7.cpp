@@ -37,6 +37,7 @@ be distributed under different terms and without source code for the larger work
 char gBob_debstr[128];
 
 XPLMCommandRef BroadcastObjectCommand = NULL;
+XPLMCommandRef intercomObjectCommand = NULL;
 XPLMCommandRef nextComCommand = NULL;
 XPLMCommandRef swapComCommand = NULL;
 XPLMCommandRef prevComCommand = NULL;
@@ -47,6 +48,9 @@ XPLMCommandRef playpauseCommand = NULL;
 XPLMCommandRef playnextCommand = NULL;
 XPLMCommandRef playbackCommand = NULL;
 int TriggerBroadcastHandler(XPLMCommandRef inCommand,
+                            XPLMCommandPhase inPhase,
+                            void *inRefcon);
+int TriggerIntercomHandler(XPLMCommandRef inCommand,
                             XPLMCommandPhase inPhase,
                             void *inRefcon);
 int nextComHandler(XPLMCommandRef inCommand,
@@ -134,7 +138,11 @@ PLUGIN_API int XPluginStart(
                                TriggerBroadcastHandler, // in Handler
                                1,                       // Receive input before plugin windows.
                                (void *)0);              // inRefcon.
-
+    intercomObjectCommand = XPLMCreateCommand("AutoATC/Intercom", "Intercom");
+    XPLMRegisterCommandHandler(intercomObjectCommand,  // in Command name
+                               TriggerIntercomHandler, // in Handler
+                               1,                       // Receive input before plugin windows.
+                               (void *)0);              // inRefcon.
     nextComCommand = XPLMCreateCommand("AutoATC/NextCom", "Next Stndby Frequency");
 
     XPLMRegisterCommandHandler(nextComCommand, // in Command name
@@ -285,6 +293,7 @@ PLUGIN_API void XPluginReceiveMessage(
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/in");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/out");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/received");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/online");  //tell dref editor about it
         
     }
     else if (inMessage == XPLM_MSG_PLANE_UNLOADED){
@@ -306,11 +315,24 @@ int TriggerBroadcastHandler(XPLMCommandRef inCommand,
     JVM *jvmO = getJVM();
     if (jvmO->hasjvm)
     {
-        jvmO->broadcast();
+        jvmO->broadcast(false);
         //jvmO->testExistingJVM();
     }
     return 0;
 }
+int TriggerIntercomHandler(XPLMCommandRef inCommand,
+                            XPLMCommandPhase inPhase,
+                            void *inRefcon)
+{
+    JVM *jvmO = getJVM();
+    if (jvmO->hasjvm)
+    {
+        jvmO->broadcast(true);
+        //jvmO->testExistingJVM();
+    }
+    return 0;
+}
+
 int roll = 0;
 void setStndby()
 {

@@ -42,6 +42,7 @@ static int g_my_damagearray[ARRAY_DIM] = { 0 };
 static string_dref acarsinarray;
 static string_dref acarsoutarray;
 static int_dref receivedAcars;
+static int_dref onlineAcars;
 static int_dref sendAcars;
  static int getvi(void * ref, int * out_values, int in_offset, int in_max)
 {
@@ -402,6 +403,14 @@ void registerDatarefs(){
 						NULL, NULL,
 						NULL, NULL,
 						NULL, NULL,
-						&receivedAcars, &receivedAcars);										
+						&receivedAcars, &receivedAcars);
+	XPLMRegisterDataAccessor("autoatc/acars/online", xplmType_Int, true,
+						geti, seti,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						&onlineAcars, &onlineAcars);										
 	
 }

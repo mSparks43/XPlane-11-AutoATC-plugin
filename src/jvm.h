@@ -190,6 +190,7 @@ public:
     AirframeDef standbyAirframe;
     bool live;
     bool fireTransmit;
+    bool isIntercom;
     bool fireNewFreq;
     char notepad[1024];
     JVM();
@@ -206,7 +207,7 @@ public:
     void start(void);
     void stop(void);
     void systemstop(void);
-    void broadcast(void);
+    void broadcast(bool intercom);
     int getStndbyFreq(int roll);
     void updateStndbyFreq(void);
     void getData(const char*);

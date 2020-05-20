@@ -40,8 +40,11 @@ be distributed under different terms and without source code for the larger work
 #include <dlfcn.h>
 #include <stdlib.h>
 #endif
-
+#if defined(XP11)
 const char* plugin_version = "About:0.9.4";
+#else
+const char* plugin_version = "About:0.9.4 for XP10";
+#endif
 char gBob_debstr2[2048];
 char xp_path[512];
 char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC_java/airframes_860.txt";
@@ -403,7 +406,7 @@ void JVM::activateJVM(void){
             XPLMDebugString(gBob_debstr2);
             return;
         }
-        addSystemClassLoaderPath("Resources/plugins/AutoATC_java/AutoATCPlugin.jar");
+        //addSystemClassLoaderPath("Resources/plugins/AutoATC_java/AutoATCPlugin.jar");
 
        
        commandsClass = env->FindClass("jni/Commands");  // try to find the class
@@ -431,7 +434,7 @@ void JVM::activateJVM(void){
         
         
         printf("AutoATC active!\n");
-        sprintf(gBob_debstr2,"AutoATC: Dev1 active!\n");
+        sprintf(gBob_debstr2,"AutoATC: active!\n");
          XPLMDebugString(gBob_debstr2); 
          hasjvm=true;
     }
@@ -695,6 +698,7 @@ void JVM::start(void)
     XPLMGetSystemPath(xp_path);
     sprintf(gBob_debstr2,"AutoATC: Start!\n");
     fireTransmit=false;
+    isIntercom=false;
     fireNewFreq=true;
     XPLMDebugString(gBob_debstr2);
      
@@ -746,7 +750,7 @@ void JVM::joinThread(void){
             XPLMDebugString("AutoATC: ERROR - Method void getData() not found!\n");
             return;
         }
-        threadBroadcastMethod = env->GetStaticMethodID(threadcommandsClass, "broadcast", "()V");  // find method
+        threadBroadcastMethod = env->GetStaticMethodID(threadcommandsClass, "broadcast", "(Z)V");  // find method
         
         if(threadBroadcastMethod == NULL){
             XPLMDebugString("AutoATC: ERROR - Method void broadcast() not found!\n");
@@ -824,11 +828,12 @@ void JVM::systemstop(void)
     
      //XPLMDebugString(gBob_debstr2);
 }
-void JVM::broadcast(void){
+void JVM::broadcast(bool intercom){
     if(!hasjvm)
         return;
     command_mutex.lock();  
     fireTransmit=true;
+    isIntercom=intercom;
     command_mutex.unlock();
     
 }
@@ -934,7 +939,8 @@ void JVM::setThreadData(){
 }
 void JVM::doTransmit(){
     command_mutex.lock();
-    plane_env->CallStaticVoidMethod(threadcommandsClass, threadBroadcastMethod);                      // call method
+    jboolean intercom=isIntercom;
+    plane_env->CallStaticVoidMethod(threadcommandsClass, threadBroadcastMethod,intercom);                      // call method
     fireTransmit=false;
     command_mutex.unlock();
 }
@@ -1254,17 +1260,17 @@ void JVM::LogPageWindowPlus(){
 void JVM::processAcars(){
      XPLMDataRef toSendID = XPLMFindDataRef ("autoatc/acars/out");
      int size=XPLMGetDatab(toSendID,NULL,0,0);
-    std::vector<char> acarsoutDataA;
-    acarsoutDataA.resize(size+30,0);
-    //char acarsoutdata[1024];
-    char * acarsoutdata=acarsoutDataA.data();
-    size=XPLMGetDatab(toSendID,acarsoutdata,0,size);
-    //char command[1024];
+    std::vector<char> acarsoutDataA(size);
 
-    //sprintf(command,"doCommand:sendAcars:%s",acarsoutdata);
-    sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
-    printf("SEND ACARS = %s\n",acarsoutdata);
-    getData(acarsoutdata);
+    //char acarsoutdata[1024];
+    //char * acarsoutdata=acarsoutDataA.data();
+    size=XPLMGetDatab(toSendID,acarsoutDataA.data(),0,size);
+    char command[1024]={0};
+
+    sprintf(command,"doCommand:sendAcars:%s",acarsoutDataA.data());
+    //sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
+    printf("SEND ACARS = %s\n",command);
+    getData(command);
 
 }
 int offsetStringY=0;
