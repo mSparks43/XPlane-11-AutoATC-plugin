@@ -38,6 +38,7 @@ In "XPlane-11-AutoATC-plugin":
 > make clean
 
 > make OS=LINUX XPVER=11
+
 > make OS=LINUX XPVER=10
 
 Output is "lin.xpl" in "deploy/XP1X/AutoATC/64/"
