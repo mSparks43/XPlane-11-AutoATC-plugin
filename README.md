@@ -37,11 +37,13 @@ Windows users should use the Visual Studio Community project
 In "XPlane-11-AutoATC-plugin":
 > make clean
 
-> make OS=LINUX
+> make OS=LINUX XPVER=11
+> make OS=LINUX XPVER=10
 
-Output is "lin.xpl" in "build/AutoATC/64/"
+Output is "lin.xpl" in "deploy/XP1X/AutoATC/64/"
 
 ### MacOS
+N.B. With the current Catalina issue a MacOS XP11 build will follow once the latest version for Windows/Linux is tested and deployed
 In "XPlane-11-AutoATC-plugin":
 > make clean
 
