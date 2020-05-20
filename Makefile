@@ -4,7 +4,7 @@
 OS ?= LINUX
 # AutoATC or Java
 TARGET := AutoATC
-XPVER:=11
+XPVER ?=11
 
 
 ################################
@@ -121,7 +121,11 @@ clean:
 ################################
 
 else ifeq ($(OS),LINUX)
-BUILDDIR	:=	./deploy
+ifeq ($(XPVER),11)
+BUILDDIR	:=	./deploy/XP11
+else ifeq ($(XPVER), 10)
+BUILDDIR	:=	./deploy/XP10
+endif
 SRC_BASE	:=	.
 #TARGET		:= AutoATC
 ifeq ($(TARGET), AutoATC)
@@ -190,6 +194,7 @@ CFLAGS := $(DEFINES) $(INCLUDES) -fPIC -fvisibility=hidden -Wall
 # Target rules - these just induce the right .xpl files.
 
 $(TARGET): $(BUILDDIR)/$(TARGET)/64/lin.xpl
+
 	
 
 $(BUILDDIR)/$(TARGET)/64/lin.xpl: $(ALL_OBJECTS64)
@@ -197,6 +202,7 @@ $(BUILDDIR)/$(TARGET)/64/lin.xpl: $(ALL_OBJECTS64)
 	mkdir -p $(dir $@)
 	gcc -m64 -static-libgcc -shared -O2 -Wl,--version-script=exports.txt -o $@ $(ALL_OBJECTS64) $(LIBS)
 	rm -rf $(BUILDDIR)/obj64
+	rm $(BUILDDIR)/$(TARGET)/64/*.pdb
 
 # Compiler rules
 
