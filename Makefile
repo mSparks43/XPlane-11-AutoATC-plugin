@@ -38,7 +38,7 @@ INCLUDES = \
         
 
 
-DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=1 -DIBM=0 -DLIN=0 -DXPLM200 -DXPLM_210  -DXPLM300=1 -DXPLM301=1 -std=c++11 -shared -static -static-libgcc -static-libstdc++ 
+DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=1 -DIBM=0 -DLIN=0 -DXPLM200 -DXPLM_210  -DXPLM300=1 -DXPLM301=1 -std=c++11 -shared -static -static-libgcc -static-libstdc++ -DXP11=1
 ############################################################################
 
 
