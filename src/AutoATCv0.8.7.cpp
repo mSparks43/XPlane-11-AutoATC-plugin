@@ -87,9 +87,9 @@ int playbackCommandCommandHandler(XPLMCommandRef inCommand,
                         int                  inIsBefore,    
                         void *               inRefcon);*/
 
-char CONFIG_FILE_DEFAULT[] = "Resources/plugins/AutoATC/defaultjvm.txt";
+char CONFIG_FILE_DEFAULT[] = "Resources/plugins/AutoATC/jvmsettings.txt";
 //char CONFIG_FILE_USER[] = "Resources/plugins/AutoATC/jvmsettings.txt";
-char CONFIG_FILE_ANDROID[] = "Resources/plugins/AutoATC_java/usermobilesettings.txt";
+char CONFIG_FILE_ANDROID[] = "Resources/plugins/AutoATC/usermobilesettings.txt";
 
 bool file_exists(const std::string &name)
 {

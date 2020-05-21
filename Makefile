@@ -202,7 +202,7 @@ $(BUILDDIR)/$(TARGET)/64/lin.xpl: $(ALL_OBJECTS64)
 	mkdir -p $(dir $@)
 	gcc -m64 -static-libgcc -shared -O2 -Wl,--version-script=exports.txt -o $@ $(ALL_OBJECTS64) $(LIBS)
 	rm -rf $(BUILDDIR)/obj64
-	rm $(BUILDDIR)/$(TARGET)/64/*.pdb
+	#rm $(BUILDDIR)/$(TARGET)/64/*.pdb
 
 # Compiler rules
 

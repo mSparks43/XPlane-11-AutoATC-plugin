@@ -1,5 +1,0 @@
-# JSON settings to initialise the JVM
-#
-
-
-settings={"winhs":{"library":"Resources/plugins/jdk-11.0.7+10-jre/bin/server/jvm.dll","options":["-Djava.class.path=Resources/plugins/AutoATC_java/AutoATCPlugin.jar"]},"win":{"library":"Resources/plugins/jre1.8.0_251/bin/server/jvm.dll","options":["-XX:ParallelGCThreads=4","-XX:MaxGCPauseMillis=2","-XX:+UseG1GC","-XX:ConcGCThreads=4","-Djava.class.path=Resources/plugins/AutoATC_java/AutoATCPlugin.jar"]},"linhs":{"library":"Resources/plugins/jdk-11.0.7+10/lib/server/libjvm.so","options":["-XX:ParallelGCThreads=4","-XX:MaxGCPauseMillis=2","-XX:+UseG1GC","-XX:ConcGCThreads=4","-Djava.class.path=Resources/plugins/AutoATC_java/AutoATCPlugin.jar"]},"lin":{"library":"Resources/plugins/jdk-11.0.7+10-jre/lib/server/libjvm.so","options":["-Xdump:none","-Xgc:scvNoAdaptiveTenure","-Xdisableexplicitgc","-Xgcpolicy:metronome","-Djava.class.path=Resources/plugins/AutoATC_java/AutoATCPlugin.jar"]},"mac":{"library":"Resources/plugins/AutoATC/jre/Contents/Home/lib/server/libjvm.dylib","options":["-XX:ParallelGCThreads=4","-XX:ConcGCThreads=4","-Xgcpolicy:balanced"],"classpath":"Resources/plugins/AutoATC/jre/Contents/Home/bin/java"}}
