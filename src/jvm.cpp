@@ -47,7 +47,7 @@ const char* plugin_version = "About:0.9.4.1 for XP10";
 #endif
 char gBob_debstr2[2048];
 char xp_path[512];
-char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC_java/airframes_860.txt";
+char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC/airframes_860.txt";
  bool file_exists (const std::string& name);
  void				draw_atc_text(XPLMWindowID in_window_id, void * in_refcon);
 void				draw_about_text(XPLMWindowID in_window_id, void * in_refcon);
