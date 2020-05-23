@@ -10,7 +10,8 @@ The complete plugin is required for a complete installation and is hosted on [x-
 
 In order to use ATC services and have a better text to speech output, two companion apps for Android are available, in a basic [freeware version](https://play.google.com/store/apps/details?id=org.zem.atctrans) and a [payware version](https://play.google.com/store/apps/details?id=org.zem.atctranspro) with more features.
 
-
+A discord server for support and discussion is now available at:
+https://discord.gg/vBbESeu
 
 # Building
 ## Dependencies
