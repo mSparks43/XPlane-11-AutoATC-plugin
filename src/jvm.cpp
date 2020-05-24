@@ -606,10 +606,13 @@ void JVM::init_parameters ()
     standbyAirframe=AirframeDef();
     standbyAirframe.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0");
     std::ifstream t("Resources/plugins/AutoATC/notepad.txt");
-    std::stringstream notepadss;
-    notepadss << t.rdbuf();
-    sprintf(notepad,notepadss.str().c_str());
-    XPLMDebugString(notepad);
+    if(!t.fail()){
+        std::stringstream notepadss;
+        notepadss << t.rdbuf();
+        sprintf(notepad,notepadss.str().c_str());
+        XPLMDebugString(notepad);
+    }
+    
     live=false;
 }
 /*void JVM::init_parameters (char * jvmsettingstxt)
@@ -721,7 +724,11 @@ void JVM::joinThread(void){
 	jvm->AttachCurrentThread((void**)&plane_env, &args);
     threadcommandsClass = plane_env->FindClass("jni/Commands");  // try to find the class
     if(threadcommandsClass == NULL) {
-        sprintf(gBob_debstr2,"AutoATC: ERROR - Commands p2 not found!\n");
+        sprintf(gBob_debstr2,"AutoATC: ERROR - Commands Thread 2 not found!\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    else{
+        sprintf(gBob_debstr2,"AutoATC: Commands Thread 2 found!\n");
         XPLMDebugString(gBob_debstr2);
     }
     getPlaneDataThreadMethod = plane_env->GetStaticMethodID(threadcommandsClass, "getPlaneData", "(I)[D");  // find method
@@ -740,22 +747,22 @@ void JVM::joinThread(void){
             XPLMDebugString("AutoATC: ERROR - Method void setData(float[]) not found!\n");
             return;
          }
-    getStndbyMethod=plane_env->GetStaticMethodID(threadcommandsClass, "getStndbyFreq", "(II)I");  // find method
-     if(getStndbyMethod == NULL){
+        getStndbyMethod=plane_env->GetStaticMethodID(threadcommandsClass, "getStndbyFreq", "(II)I");  // find method
+        if(getStndbyMethod == NULL){
          XPLMDebugString("AutoATC: ERROR - Method int getStndbyFreq() not found!\n");
           return;
        }
-    commandString=plane_env->GetStaticMethodID(threadcommandsClass, "getCommandData", "()Ljava/lang/String;");  // find method
+        commandString=plane_env->GetStaticMethodID(threadcommandsClass, "getCommandData", "()Ljava/lang/String;");  // find method
         if(commandString == NULL){
             XPLMDebugString("AutoATC: ERROR - Method void getCommandData() not found!\n");
             return;
         }
-    midToThreadString=env->GetStaticMethodID(threadcommandsClass, "getData", "(Ljava/lang/String;)Ljava/lang/String;");  // find method
+        midToThreadString=plane_env->GetStaticMethodID(threadcommandsClass, "getData", "(Ljava/lang/String;)Ljava/lang/String;");  // find method
         if(midToThreadString == NULL){
-            XPLMDebugString("AutoATC: ERROR - Method void getData() not found!\n");
+            XPLMDebugString("AutoATC: ERROR - Method getData() not found!\n");
             return;
         }
-        threadBroadcastMethod = env->GetStaticMethodID(threadcommandsClass, "broadcast", "(Z)V");  // find method
+        threadBroadcastMethod = plane_env->GetStaticMethodID(threadcommandsClass, "broadcast", "(Z)V");  // find method
         
         if(threadBroadcastMethod == NULL){
             XPLMDebugString("AutoATC: ERROR - Method void broadcast() not found!\n");
@@ -870,8 +877,13 @@ void JVM::retriveLogData(){
         //string_mutex.unlock();
         return;
     }
+    if(midToThreadString == NULL){
+        sprintf(logpageData,"ERROR: getData() not found!");
+        return;
+    }
     jstring stringArg1 = plane_env->NewStringUTF(logpageString);
     //string_mutex.unlock();
+
     jstring jstr = (jstring) plane_env->CallStaticObjectMethod(threadcommandsClass, midToThreadString,stringArg1);
     env->DeleteLocalRef(stringArg1);
     const char* nativeString = plane_env->GetStringUTFChars(jstr, JNI_FALSE);
@@ -1455,7 +1467,7 @@ int startY=0;
 bool scrolling=false;
 int maxScroll=0;
 std::chrono::time_point<std::chrono::system_clock> start;
-int					wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon){
+int	wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon){
     //printf("%d %d %d %d \n",x,y,wheel,clicks);
     start = std::chrono::system_clock::now();
     int height;
@@ -1471,7 +1483,7 @@ int					wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int cl
     }
     return 1;
 }
-int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon){
+int	mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon){
     if(is_down>0){
         start = std::chrono::system_clock::now();
         if(!scrolling)
@@ -1519,7 +1531,7 @@ int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void
     int wh=b-t;
     JVM* jvmO=getJVM();
     if(jvmO->hasjvm){
-        //jstring jstr;
+        
         char* nativeString;
         if(jvmO->logPage==3)
          nativeString= jvmO->getLogData("Console:vor");
@@ -1529,22 +1541,16 @@ int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void
          nativeString= jvmO->getLogData("Console:freq");
         else
          nativeString= jvmO->getLogData("Console");
-        //const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
-    
-        //char* astring=(char *)nativeString; 
+
         char* astring;
         if(jvmO->logPage==0||jvmO->logPage>1)
             astring=(char *)nativeString; 
         else 
            astring =(char *)jvmO->notepad; 
-        
-        //printf("scroll=%d %d\n",offsetStringY,scrolling);
+  
         int height;
 	    XPLMGetFontDimensions(xplmFont_Proportional, NULL, &height, NULL);
-        /*json j2;
-        j2["happy"]=true;
-        std::string s=j2.dump();
-        printf("json = %s",s.c_str());*/
+
         if(scrolling){
             auto end = std::chrono::system_clock::now();
             std::chrono::duration<double> diff = end-start;
@@ -1568,7 +1574,7 @@ int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void
             length=length+10;
             int noLines=(length/ww)+1;
             char * lineS=(char *)line.c_str();
-            //printf("%d line(s) length %s = %f over %d with %d and %d\n",noLines,lineS,length,ww,lineLength,wh);
+
             int ypos=lineNo*height;
             if(offsetStringY-ypos<height && (20+offsetStringY-ypos-noLines*height)>(wh+height))
                 XPLMDrawString(col_white, l + 10, t - 20+offsetStringY-ypos, lineS, &ww, xplmFont_Basic);
@@ -1576,9 +1582,7 @@ int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void
         }  
 
         maxScroll=((lineNo+1)*height)+wh;
-        //printf("maxscroll = %d\n",maxScroll);
-	    //XPLMDrawString(col_white, l + 10, t - 20+offsetStringY, astring, &ww, xplmFont_Basic);
-        //jvmO->env->ReleaseStringUTFChars(jstr, nativeString);
+        
     
     }
     else{

@@ -797,7 +797,9 @@ static void do_simulation(){
 	while(!liveThread&&run){
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
-	printf("simulation thread woke up\n");
+	printf("AutoATC: simulation thread woke up\n");
+	char gBob_debstr2[128];
+    sprintf(gBob_debstr2,"AutoATC: simulation thread woke up\n");
 	while(liveThread&&run){
 		auto start = std::chrono::high_resolution_clock::now();
 		for(int i=0;i<30;i++){
@@ -812,6 +814,7 @@ static void do_simulation(){
 	}
 #if defined(DEBUG_STRINGS)
 	printf("simulation thread stopped\n");
+	sprintf(gBob_debstr2,"AutoATC: simulation thread stopped\n");
 #endif
 }
 static void do_model(){

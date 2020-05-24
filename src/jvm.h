@@ -193,7 +193,7 @@ public:
     bool fireTransmit;
     bool isIntercom;
     bool fireNewFreq;
-    char notepad[1024];
+    char notepad[1024]={0};
     JVM();
     ~JVM();
     void init_parameters (void);
