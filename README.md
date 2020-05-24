@@ -14,10 +14,13 @@ See the releases page for the latest download.
 
 In order to use ATC services and have a better text to speech output, two companion apps for Android are available, in a basic [freeware version](https://play.google.com/store/apps/details?id=org.zem.atctrans) and a [payware version](https://play.google.com/store/apps/details?id=org.zem.atctranspro) with more features.
 
+
+# Installing
+* Extract "AutoATC" and "AutoATC_java" to "X-Plane/Resources/plugins"
+
 # Building
 ## Dependencies
 * openAL
-* [Java Development Kit](https://www.oracle.com/java/technologies/javase-jdk14-downloads.html)
 * [X-Plane SDK](https://developer.x-plane.com/sdk/plugin-sdk-downloads/)
 * Make (building for Linux or MacOS) and/or mingw64 (building for Windows)
 
@@ -56,9 +59,4 @@ In "XPlane-11-AutoATC-plugin":
 Output is "mac.xpl" in "build/AutoATC/64/"
 
 
-
-# Installing
-* Download the remaining files for the plugin from [x-plane.org](https://forums.x-plane.org/index.php?/files/file/45663-main-installation-files-for-autoatc-for-xplane-11/) (requires an account to download)
-* Copy "AutoATC" and "java" to "X-Plane/Resources/plugins"
-* Install a suitable Java Runtime Environment release for your operating system and configure the path to jvm/libjvm in "java/defaultjvm.txt" or "java/jvmsettings.txt"
 * Overwrite the .xpl file in "AutoATC/64/" with the one from the "deploy/XP1X/AutoATC/64/" folder (Where XP1X is either XP10 or XP11 depending on the XP version being targetted)
