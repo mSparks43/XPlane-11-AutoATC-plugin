@@ -125,7 +125,7 @@ public:
     ~String();      // destructor 
 }; 
   
-
+static bool jvmFailed=false;
 
 class JVM
 {
@@ -139,6 +139,7 @@ private:
     // The index of our menu item in the Plugins menu
    bool log_visible;
    bool loginVR;
+   
    jfloat planeData[14];
     XPLMWindowID	log_window = NULL;
   #if defined(__linux__)
@@ -156,23 +157,23 @@ private:
    double aiplaneData[300]={0};
    PlaneData aiplanes[30];
 public:
-    
+    //give up if settings incorrect
     XPLMMenuID g_menu_id;
     int g_menu_container_idx=-1;
     json jsettings;
-    char device[MAXLEN];
-    char slave[MAXLEN];
-    bool hasjvm;
-    bool setIcaov;
+    char device[MAXLEN]={0};
+    char slave[MAXLEN]={0};
+    bool hasjvm=false;
+    bool setIcaov=false;
     bool loadedLibrary=false;
     bool loadLibraryFailed=false;
     bool flightLoopActive=false;
     bool flightLoopregistered=false;
-    int logPage;
-    float lastNavAudio;
-    int lastFoundNav;
-    int standbyFreqInt;
-    int standbyRoll;
+    int logPage=0;
+    float lastNavAudio=0.0;
+    int lastFoundNav=0;
+    int standbyFreqInt=0;
+    int standbyRoll=0;
     JavaVM *jvm;                      // Pointer to the JVM (Java Virtual Machine)
     JNIEnv *env;                      // Pointer to native interface
     JNIEnv *plane_env;                      // Pointer to native interface

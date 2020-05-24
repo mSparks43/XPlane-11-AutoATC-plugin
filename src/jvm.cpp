@@ -223,7 +223,7 @@ https://forums.x-plane.org/index.php?/forums/topic/175706-sharing-the-jvm/
 bool JVM::connectJVM() {
     
     char * os;
-    
+    hasjvm=false;
 #if defined(__linux__)
     os="lin";
         printf("JVM library is %s\n",jsettings[os]["library"].get<std::string>().c_str());
@@ -246,6 +246,7 @@ bool JVM::connectJVM() {
         }
     sprintf(gBob_debstr2,"AutoATC: Successfully loaded the jvm .so\n");
     XPLMDebugString(gBob_debstr2);
+
  #elif defined(_WIN64)
    os="win";
   sprintf(gBob_debstr2,"AutoATC: Loading jvm dll '%s' \n", jsettings[os]["library"].get<std::string>().c_str());
@@ -316,7 +317,7 @@ bool JVM::connectJVM() {
         printf(gBob_debstr2);
         XPLMDebugString(gBob_debstr2);
         jvm= jvms[0]; 
-                      
+        jvmFailed=false;       
         return true;
     }
     else{
@@ -366,6 +367,7 @@ bool JVM::connectJVM() {
        sprintf(gBob_debstr2,"AutoATC: Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
        printf(gBob_debstr2);
        XPLMDebugString(gBob_debstr2);
+       jvmFailed=false; 
        return true;
 	   }
 	   catch (const std::exception & ex) {
@@ -709,6 +711,9 @@ void JVM::start(void)
      setIcaov=false;
 }
 void JVM::joinThread(void){
+    printf("AutoATC: Threaded jvm joining\n");
+    sprintf(gBob_debstr2,"AutoATC: Threaded jvm joining\n");
+    XPLMDebugString(gBob_debstr2); 
     JavaVMAttachArgs args;
 	args.version = JNI_VERSION_1_6; // choose your JNI version
 	args.name = NULL; // you might want to give the java thread a name
@@ -1441,6 +1446,7 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
     }
     else{
         char text[]="Java VM not found,\n AutoATC cannot continue \n";
+        jvmFailed=true;
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
 }
@@ -1577,6 +1583,7 @@ int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void
     }
     else{
         char text[]="Java VM not found,\n AutoATC cannot continue \n";
+         jvmFailed=true;
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
 }
@@ -1646,6 +1653,11 @@ float SendATCData(float                inElapsedSinceLastCall,
     return -1;
 }
 void JVM::popupNoJVM(){
+    JVM* jvmO=getJVM();
+    if(jvmFailed)
+        return;
+        //printf("popup no jvm\n");
+        jvmFailed=true;
     #if defined(XP11)
      XPLMCreateWindow_t params;
 	params.structSize = sizeof(params);
@@ -1716,8 +1728,12 @@ void JVM::setDevice( char* newdevice){
 	
 	float col_white[] = {1.0, 1.0, 1.0}; // red, green, blue
     int ww=r-l;
+
         char text[]="Java VM not found,\n AutoATC cannot continue \n";
+         JVM* jvmO=getJVM();
+         jvmFailed=true;
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
+        
     
 }
 
