@@ -10,7 +10,7 @@ https://discord.gg/vBbESeu
 
 AutoATC provides an ATC "chatbot" for X-Plane 11. It features server-controlled AI airplanes and uses speech recognition and text to speech to interact with the user.
 
-See the releases page for the latest download.
+See the [releases page](https://github.com/mSparks43/XPlane-11-AutoATC-plugin/releases) for the latest download.
 
 In order to use ATC services and have a better text to speech output, two companion apps for Android are available, in a basic [freeware version](https://play.google.com/store/apps/details?id=org.zem.atctrans) and a [payware version](https://play.google.com/store/apps/details?id=org.zem.atctranspro) with more features.
 
