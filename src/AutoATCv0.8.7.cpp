@@ -1,4 +1,16 @@
+/*
+*****************************************************************************************
+*        COPYRIGHT � 2020 Mark Parker/mSparks
 
+
+GNU Lesser General Public License v3.0
+Permissions of this copyleft license are conditioned on making available complete source code of
+licensed works and modifications under the same license or the GNU GPLv3. Copyright and license 
+notices must be preserved. Contributors provide an express grant of patent rights. 
+However, a larger work using the licensed work through interfaces provided by the licensed work may 
+be distributed under different terms and without source code for the larger work.
+*****************************************************************************************
+*/
 #include "XPLMPlugin.h"
 
 #include "XPLMGraphics.h"
@@ -16,27 +28,29 @@
 #include <ctype.h>
 #include <math.h>
 #include <jni.h>
-#include "xplane.h"
 #include <time.h>
-
 #include "jvm.h"
 #include "Simulation.h"
 #include "aiplane.h"
-
 #include "Settings.h"
 
 char gBob_debstr[128];
 
 XPLMCommandRef BroadcastObjectCommand = NULL;
+XPLMCommandRef intercomObjectCommand = NULL;
 XPLMCommandRef nextComCommand = NULL;
 XPLMCommandRef swapComCommand = NULL;
 XPLMCommandRef prevComCommand = NULL;
 XPLMCommandRef logViewCommand = NULL;
 XPLMCommandRef logPageCommand = NULL;
+XPLMCommandRef acarsCommand = NULL;
 XPLMCommandRef playpauseCommand = NULL;
 XPLMCommandRef playnextCommand = NULL;
 XPLMCommandRef playbackCommand = NULL;
 int TriggerBroadcastHandler(XPLMCommandRef inCommand,
+                            XPLMCommandPhase inPhase,
+                            void *inRefcon);
+int TriggerIntercomHandler(XPLMCommandRef inCommand,
                             XPLMCommandPhase inPhase,
                             void *inRefcon);
 int nextComHandler(XPLMCommandRef inCommand,
@@ -54,6 +68,9 @@ int logViewHandler(XPLMCommandRef inCommand,
 int logPageHandler(XPLMCommandRef inCommand,
                    XPLMCommandPhase inPhase,
                    void *inRefcon);
+int acarsHandler(XPLMCommandRef inCommand,
+                   XPLMCommandPhase inPhase,
+                   void *inRefcon);                   
 int playpauseCommandHandler(XPLMCommandRef inCommand,
                             XPLMCommandPhase inPhase,
                             void *inRefcon);
@@ -70,10 +87,10 @@ int playbackCommandCommandHandler(XPLMCommandRef inCommand,
                         int                  inIsBefore,    
                         void *               inRefcon);*/
 
-char CONFIG_FILE_DEFAULT[] = "Resources/plugins/java/defaultjvm.txt";
-char CONFIG_FILE_USER[] = "Resources/plugins/java/jvmsettings.txt";
-char CONFIG_FILE_ANDROID[] = "Resources/plugins/java/usermobilesettings.txt";
-//char* CONFIG_FILE_USER_AIRFRAMES ="Resources/plugins/java/airframes_user.txt";
+char CONFIG_FILE_DEFAULT[] = "Resources/plugins/AutoATC/jvmsettings.txt";
+//char CONFIG_FILE_USER[] = "Resources/plugins/AutoATC/jvmsettings.txt";
+char CONFIG_FILE_ANDROID[] = "Resources/plugins/AutoATC/usermobilesettings.txt";
+
 bool file_exists(const std::string &name)
 {
     if (FILE *file = fopen(name.c_str(), "r"))
@@ -104,9 +121,9 @@ PLUGIN_API int XPluginStart(
     initJVM();
     JVM *jvmO = getJVM();
     jvmO->init_parameters();
-    if (file_exists(CONFIG_FILE_USER))
+    /*if (file_exists(CONFIG_FILE_USER))
         jvmO->parse_config(CONFIG_FILE_USER);
-    else
+    else*/
     {
         jvmO->parse_config(CONFIG_FILE_DEFAULT);
     }
@@ -121,7 +138,11 @@ PLUGIN_API int XPluginStart(
                                TriggerBroadcastHandler, // in Handler
                                1,                       // Receive input before plugin windows.
                                (void *)0);              // inRefcon.
-
+    intercomObjectCommand = XPLMCreateCommand("AutoATC/Intercom", "Intercom");
+    XPLMRegisterCommandHandler(intercomObjectCommand,  // in Command name
+                               TriggerIntercomHandler, // in Handler
+                               1,                       // Receive input before plugin windows.
+                               (void *)0);              // inRefcon.
     nextComCommand = XPLMCreateCommand("AutoATC/NextCom", "Next Stndby Frequency");
 
     XPLMRegisterCommandHandler(nextComCommand, // in Command name
@@ -150,6 +171,13 @@ PLUGIN_API int XPluginStart(
 
     XPLMRegisterCommandHandler(logPageCommand, // in Command name
                                logPageHandler, // in Handler
+                               1,              // Receive input before plugin windows.
+                               (void *)0);     // inRefcon. */
+
+    acarsCommand = XPLMCreateCommand("AutoATC/ACARS", "send ACARS message");
+
+    XPLMRegisterCommandHandler(acarsCommand, // in Command name
+                               acarsHandler, // in Handler
                                1,              // Receive input before plugin windows.
                                (void *)0);     // inRefcon. */
 
@@ -190,28 +218,33 @@ PLUGIN_API int XPluginStart(
 
     return 1;
 }
-
+static int				g_is_acf_inited = 0;
 PLUGIN_API void XPluginStop(void)
 {
     XPLMDebugString("AUTOATC: XPluginStop\n"); 
     JVM *jvmO = getJVM();
+    jvmO->unregisterFlightLoop();//make sure the flight loop is stopped
+    
     if (jvmO->hasjvm)
     {
         XPLMDebugString("AUTOATC: jvm systemstop\n");
         jvmO->systemstop();
-        XPLMDebugString("AUTOATC: deactivateJVM\n");
-        jvmO->deactivateJVM();
+        
     }
+    XPLMDebugString("AUTOATC: deactivateJVM\n");
+    jvmO->deactivateJVM();//this is !hasJVM safe and needed to kill the threads
+    g_is_acf_inited = 0;
 }
 
 PLUGIN_API void XPluginDisable(void)
 {
     XPLMDebugString("AUTOATC: XPluginDisable\n"); 
     JVM *jvmO = getJVM();
+    
+    jvmO->unregisterFlightLoop();
     if (jvmO->hasjvm)
     {
-        XPLMDebugString("AUTOATC: unregisterFlightLoop\n");
-        jvmO->unregisterFlightLoop();
+        
         XPLMDebugString("AUTOATC: systemstop\n");
         jvmO->systemstop();
        // jvmO->deactivateJVM();
@@ -230,9 +263,9 @@ PLUGIN_API int XPluginEnable(void)
         //initJVM();
         // JVM* jvmO=getJVM();
         jvmO->init_parameters();
-        if (file_exists(CONFIG_FILE_USER))
+        /*if (file_exists(CONFIG_FILE_USER))
             jvmO->parse_config(CONFIG_FILE_USER);
-        else
+        else*/
         {
             jvmO->parse_config(CONFIG_FILE_DEFAULT);
         }
@@ -249,12 +282,29 @@ PLUGIN_API void XPluginReceiveMessage(
     void *inParam)
 {
     if (inMessage == XPLM_MSG_PLANE_LOADED){
+        if(inParam == 0)
+			g_is_acf_inited = 0;
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/id");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/af");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/x");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/y");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/z");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/target_damage");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/in");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/out");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/received");  //tell dref editor about it
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/online");  //tell dref editor about it
+        
+    }
+    else if (inMessage == XPLM_MSG_PLANE_UNLOADED){
+        g_is_acf_inited = 0;
+    }else if (inMessage == XPLM_MSG_AIRPORT_LOADED){
+        if(!g_is_acf_inited)
+		{
+            JVM *jvmO = getJVM();
+            jvmO->setICAO();
+            g_is_acf_inited = 1;
+        }
     }
 }
 
@@ -265,11 +315,24 @@ int TriggerBroadcastHandler(XPLMCommandRef inCommand,
     JVM *jvmO = getJVM();
     if (jvmO->hasjvm)
     {
-        jvmO->broadcast();
+        jvmO->broadcast(false);
         //jvmO->testExistingJVM();
     }
     return 0;
 }
+int TriggerIntercomHandler(XPLMCommandRef inCommand,
+                            XPLMCommandPhase inPhase,
+                            void *inRefcon)
+{
+    JVM *jvmO = getJVM();
+    if (jvmO->hasjvm)
+    {
+        jvmO->broadcast(true);
+        //jvmO->testExistingJVM();
+    }
+    return 0;
+}
+
 int roll = 0;
 void setStndby()
 {
@@ -393,6 +456,17 @@ int logPageHandler(XPLMCommandRef inCommand,
     {
         JVM *jvmO = getJVM();
         jvmO->LogPageWindowPlus();
+    }
+    return 0;
+}
+int acarsHandler(XPLMCommandRef inCommand,
+                   XPLMCommandPhase inPhase,
+                   void *inRefcon)
+{
+    if (inPhase == xplm_CommandBegin)
+    {
+        JVM *jvmO = getJVM();
+        jvmO->processAcars();
     }
     return 0;
 }

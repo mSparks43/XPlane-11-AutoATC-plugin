@@ -1,8 +1,12 @@
 # build folder
-build/obj64/*
+.vs
+.vscode
+deploy/obj64/*
 # airportMaps folder
 airportMaps/*
-include/*
-Makefile
+Release/
+deploy/AutoATC/64/win.pdb
+AutoATC.vcxproj.user
+make.sh
 
 

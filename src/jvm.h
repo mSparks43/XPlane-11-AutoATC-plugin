@@ -1,17 +1,33 @@
+/*
+*****************************************************************************************
+*        COPYRIGHT � 2020 Mark Parker/mSparks
+
+
+GNU Lesser General Public License v3.0
+Permissions of this copyleft license are conditioned on making available complete source code of
+licensed works and modifications under the same license or the GNU GPLv3. Copyright and license 
+notices must be preserved. Contributors provide an express grant of patent rights. 
+However, a larger work using the licensed work through interfaces provided by the licensed work may 
+be distributed under different terms and without source code for the larger work.
+*****************************************************************************************
+*/
 #include <jni.h>
 #include <string>
 #include <cstring>
- #include "XPLMMenus.h"
-  #include "XPLMDisplay.h"
-   #include "XPLMDataAccess.h"
-   #include <math.h>
-   #include "vec_opps.h"
-   #include <sstream>
+#include "XPLMMenus.h"
+#include "XPLMDisplay.h"
+#include "XPLMDataAccess.h"
+#include <math.h>
+#include "vec_opps.h"
+#include <sstream>
 #include <fstream>
 #include <mutex>
 #include <vector>
+#include "json/json.hpp"
 #define MAXLEN 2048
+using nlohmann::json;
 #define DEBUG_STRINGS
+
 class acModelDef
 {
 public:
@@ -88,6 +104,7 @@ static XPLMDataRef  HSI_source = NULL;
 static XPLMDataRef  nav1_nav_id = NULL;
 static XPLMDataRef  nav2_nav_id = NULL;
 static XPLMDataRef  adf1_nav_id = NULL;
+
 static XPLMDataRef  adf2_nav_id = NULL;
 
 static XPLMDataRef  sound_on = NULL;
@@ -112,7 +129,7 @@ public:
     ~String();      // destructor 
 }; 
   
-
+static bool jvmFailed=false;
 
 class JVM
 {
@@ -126,6 +143,7 @@ private:
     // The index of our menu item in the Plugins menu
    bool log_visible;
    bool loginVR;
+   
    jfloat planeData[14];
     XPLMWindowID	log_window = NULL;
   #if defined(__linux__)
@@ -135,29 +153,31 @@ private:
    #elif defined(__APPLE__)
    void *libnativehelper;
    #endif
-   
+   std::vector<std::string> getDataList;
    std::vector<String *> commandsList;
    char logpageString[128]={0};
    char logpageData[2048]={0};
    double getLogTime=0;
+   double aiplaneData[300]={0};
+   PlaneData aiplanes[30];
 public:
-    
+    //give up if settings incorrect
     XPLMMenuID g_menu_id;
     int g_menu_container_idx=-1;
-    char win[MAXLEN];
-    char lin[MAXLEN];
-    char mac[MAXLEN];
-    char device[MAXLEN];
-    char slave[MAXLEN];
-    bool hasjvm;
-    bool setIcaov;
+    json jsettings;
+    char device[MAXLEN]={0};
+    char slave[MAXLEN]={0};
+    bool hasjvm=false;
+    bool setIcaov=false;
     bool loadedLibrary=false;
+    bool loadLibraryFailed=false;
     bool flightLoopActive=false;
-    int logPage;
-    float lastNavAudio;
-    int lastFoundNav;
-    int standbyFreqInt;
-    int standbyRoll;
+    bool flightLoopregistered=false;
+    int logPage=0;
+    float lastNavAudio=0.0;
+    int lastFoundNav=0;
+    int standbyFreqInt=0;
+    int standbyRoll=0;
     JavaVM *jvm;                      // Pointer to the JVM (Java Virtual Machine)
     JNIEnv *env;                      // Pointer to native interface
     JNIEnv *plane_env;                      // Pointer to native interface
@@ -165,6 +185,7 @@ public:
     jclass threadcommandsClass;
     jmethodID getPlaneDataMethod;
     jmethodID getPlaneDataThreadMethod;
+    jmethodID getAllPlaneDataThreadMethod;
     jmethodID threadBroadcastMethod;
     jmethodID setThreadDataMethod;
     jmethodID midToString;
@@ -174,12 +195,13 @@ public:
     AirframeDef standbyAirframe;
     bool live;
     bool fireTransmit;
+    bool isIntercom;
     bool fireNewFreq;
-    char notepad[1024];
+    char notepad[1024]={0};
     JVM();
     ~JVM();
     void init_parameters (void);
-    void init_parameters (char * jvmfilename);
+    //void init_parameters (char * jvmfilename);
     void parse_config (char * filename);
     void activateJVM(void);
     void deactivateJVM(void);
@@ -190,10 +212,11 @@ public:
     void start(void);
     void stop(void);
     void systemstop(void);
-    void broadcast(void);
+    void broadcast(bool intercom);
     int getStndbyFreq(int roll);
     void updateStndbyFreq(void);
-    jstring getData(const char*);
+    void getData(const char*);
+    jstring getStringData(const char*);
     char *getLogData(const char*);//inline function to get cached log window data
     void retriveLogData();//queue up log window data
     void setData(jfloat data[]);
@@ -214,6 +237,7 @@ public:
     void updateAirframes();
     void toggleLogWindow();
     void LogPageWindowPlus();
+    void processAcars();
     void getCommandData();
     void getThreadCommandData();
     char* getDevice();

@@ -1,44 +1,63 @@
- #include <jni.h>
-#include "jvm.h"
-#include "xplane.h"
- #include "XPLMPlugin.h"
- #include "XPLMDisplay.h"
- #include "XPLMGraphics.h"
- #include "XPLMMenus.h"
- #include "XPLMProcessing.h"
- #include "XPLMDataAccess.h"
- #include "XPLMMenus.h"
- #include "XPLMUtilities.h"
- #include "XPWidgets.h"
- #include "XPStandardWidgets.h"
- #include "XPLMScenery.h"
- #include <string.h>
- #include <stdio.h>
-  #include <math.h>
-  #include "Settings.h"
-  //#include "vec_opps.h"
-  #include "Simulation.h"
-  #include "aiplane.h"
-  
-  #include <stdlib.h>
- #include <vector>
- #include <ctype.h>//isspace
- #if defined(__linux__) || defined(__APPLE__)
- #include <dlfcn.h>
- #include <stdlib.h>
- #endif
+/*
+*****************************************************************************************
+*        COPYRIGHT � 2020 Mark Parker/mSparks
 
- const char* plugin_version = "About:0.9.3";
+
+GNU Lesser General Public License v3.0
+Permissions of this copyleft license are conditioned on making available complete source code of
+licensed works and modifications under the same license or the GNU GPLv3. Copyright and license 
+notices must be preserved. Contributors provide an express grant of patent rights. 
+However, a larger work using the licensed work through interfaces provided by the licensed work may 
+be distributed under different terms and without source code for the larger work.
+*****************************************************************************************
+*/
+#include <jni.h>
+#include "jvm.h"
+#include "XPLMPlugin.h"
+#include "XPLMDisplay.h"
+#include "XPLMGraphics.h"
+#include "XPLMMenus.h"
+#include "XPLMProcessing.h"
+#include "XPLMDataAccess.h"
+#include "XPLMMenus.h"
+#include "XPLMUtilities.h"
+#include "XPWidgets.h"
+#include "XPStandardWidgets.h"
+#include "XPLMScenery.h"
+#include "XPLMPlanes.h"
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include "Settings.h"
+#include "Simulation.h"
+#include "aiplane.h"
+
+
+#include <stdlib.h>
+#include <vector>
+#include <ctype.h>//isspace
+#if defined(__linux__) || defined(__APPLE__)
+#include <dlfcn.h>
+#include <stdlib.h>
+#endif
+#if defined(XP11)
+const char* plugin_version = "About:0.9.4.1";
+#else
+const char* plugin_version = "About:0.9.4.1 for XP10";
+#endif
 char gBob_debstr2[2048];
 char xp_path[512];
-char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/java/airframes_860.txt";
+char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC/airframes_860.txt";
  bool file_exists (const std::string& name);
  void				draw_atc_text(XPLMWindowID in_window_id, void * in_refcon);
 void				draw_about_text(XPLMWindowID in_window_id, void * in_refcon);
 void	            draw_jvm_text(XPLMWindowID in_window_id, void * in_refcon);
 int					dummy_mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon) { return 0; }
+
+int					mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon);
 XPLMCursorStatus	dummy_cursor_status_handler(XPLMWindowID in_window_id, int x, int y, void * in_refcon) { return xplm_CursorDefault; }
-int					dummy_wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon) { return 0; }
+int					wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon);
+int					dummy_wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon){ return 0; }
 void				dummy_key_handler(XPLMWindowID in_window_id, char key, XPLMKeyFlags flags, char virtual_key, void * in_refcon, int losing_focus) { }
 //bool hot=false;
 bool enabledATCPro;
@@ -60,9 +79,7 @@ XPLMDataRef  mslPressureRef = NULL;
 XPLMDataRef fpmRef = NULL;
 XPLMDataRef  pitchRef = NULL;
 XPLMDataRef  rollRef = NULL;
- //XPLMDataRef  com1_freq_hzRef = NULL;
- //XPLMDataRef  com1_stdby_freq_hz = NULL;
- //const char* CONFIG_FILE ="Resources/plugins/java/jvmsettings.txt";
+
  String::String(const char *c) 
 { 
     size = strlen(c); 
@@ -87,8 +104,6 @@ void AirframeDef::setData(std::string inLine){
     std::string soundS = inLine.substr (found2+1,found3);
     std::string drefStyleS = inLine.substr (found3+1);
 
-    //strcpy(path,pathS.c_str());
-   // sprintf (path, "%s", pathS.c_str());
     XPLMGetSystemPath(xp_path);
     sprintf (path, "%s%s", xp_path, pathS.c_str());
     char* end;
@@ -97,13 +112,6 @@ void AirframeDef::setData(std::string inLine){
     soundIndex=strtol(soundS.c_str(),&end,10);
     drefStyle=strtol(drefStyleS.c_str(),&end,10);
 
-    /* std::size_t foundwt3 = inLine.find("WorldTraffic");
-
-     if(foundwt3==std::string::npos)
-        yOffset=0;
-     else
-        yOffset=2.0;
-    //sprintf (path, "%s", inLine.c_str());*/
 }
 char* AirframeDef::getPath(void){
     return path;
@@ -125,6 +133,7 @@ JVM::JVM(void)
     nav1_nav_id = XPLMFindDataRef("sim/cockpit2/radios/indicators/nav1_nav_id");//	byte[150]	n	string	current selected navID - nav radio 1
     nav2_nav_id = XPLMFindDataRef("sim/cockpit2/radios/indicators/nav2_nav_id");//	byte[150]	n	string	current selected navID - nav radio 2
     adf1_nav_id = XPLMFindDataRef("sim/cockpit2/radios/indicators/adf1_nav_id");//	byte[150]	n	string	current selected navID - ADF 1
+    
     adf2_nav_id = XPLMFindDataRef("sim/cockpit2/radios/indicators/adf2_nav_id");//	byte[150]	n	string	current selected navID - ADF 2
     audio_selection_nav1 = XPLMFindDataRef("sim/cockpit2/radios/actuators/audio_selection_nav1");
     audio_selection_nav2 = XPLMFindDataRef("sim/cockpit2/radios/actuators/audio_selection_nav2");
@@ -154,7 +163,14 @@ void JVM::addSystemClassLoaderPath(const char* filePath) {
     jclass cls = env->FindClass("java/io/File");
     jmethodID mtdId = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;)V");
     jobject file = env->NewObject(cls, mtdId, fpStr);
-    
+    if(file == NULL) {
+        sprintf(gBob_debstr2,"AutoATC: ERROR - plugin not found!\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    else{
+        sprintf(gBob_debstr2,"AutoATC: plugin found\n");
+        XPLMDebugString(gBob_debstr2);
+    }
     mtdId = env->GetMethodID(cls, "toURI", "()Ljava/net/URI;");
     jobject uri = env->CallObjectMethod(file, mtdId);
     
@@ -165,12 +181,28 @@ void JVM::addSystemClassLoaderPath(const char* filePath) {
     // get system classloader
     jclass classloaderClass = env->FindClass("java/lang/ClassLoader");
     mtdId = env->GetStaticMethodID(classloaderClass, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
+    //mtdId = env->GetStaticMethodID(classloaderClass, "getPlatformClassLoader", "()Ljava/lang/ClassLoader;");
     jobject sysClsLoader = env->CallStaticObjectMethod(classloaderClass, mtdId);
         
     // get addURL method 
     jclass urlClassloaderClass = env->FindClass("java/net/URLClassLoader");
     mtdId = env->GetMethodID(urlClassloaderClass, "addURL", "(Ljava/net/URL;)V");
-    
+    if(urlClassloaderClass == NULL) {
+        sprintf(gBob_debstr2,"AutoATC: ERROR - java/net/URLClassLoader not found!\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    else{
+        sprintf(gBob_debstr2,"AutoATC: URLClassLoader found\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    if(sysClsLoader == NULL) {
+        sprintf(gBob_debstr2,"AutoATC: ERROR - java/lang/ClassLoader not found!\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    else{
+        sprintf(gBob_debstr2,"AutoATC: ClassLoader found\n");
+        XPLMDebugString(gBob_debstr2);
+    }
     // add url
     env->CallVoidMethod(sysClsLoader, mtdId, url);  
     env->DeleteLocalRef(fpStr);   
@@ -190,15 +222,20 @@ https://forums.x-plane.org/index.php?/forums/topic/175706-sharing-the-jvm/
 */
 bool JVM::connectJVM() {
     
-
-    //getcreatedjvms = (jint(*)(JavaVM**, jsize, jsize *)) dlsym(jvmlib, "JNI_GetCreatedJavaVMs");
+    char * os;
+    hasjvm=false;
 #if defined(__linux__)
-     sprintf(gBob_debstr2,"AutoATC:Loading jvm so '%s' \n", lin);
+    os="lin";
+        printf("JVM library is %s\n",jsettings[os]["library"].get<std::string>().c_str());
+     sprintf(gBob_debstr2,"AutoATC:Loading jvm so '%s' \n", jsettings[os]["library"].get<std::string>().c_str());
      XPLMDebugString(gBob_debstr2);
-     libnativehelper = dlopen(lin, RTLD_NOW);//"libjvm.so"
+     libnativehelper = dlopen(jsettings[os]["library"].get<std::string>().c_str(), RTLD_NOW);//"libjvm.so"
         if (libnativehelper==NULL) {
             hasjvm=false;
             dlerror();
+            sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm .so\n");
+            printf(gBob_debstr2);
+            XPLMDebugString(gBob_debstr2);
             popupNoJVM();
              createMenu();
             return false;
@@ -209,13 +246,18 @@ bool JVM::connectJVM() {
         }
     sprintf(gBob_debstr2,"AutoATC: Successfully loaded the jvm .so\n");
     XPLMDebugString(gBob_debstr2);
+
  #elif defined(_WIN64)
-  sprintf(gBob_debstr2,"AutoATC: Loading jvm dll '%s' \n", win);
+   os="win";
+  sprintf(gBob_debstr2,"AutoATC: Loading jvm dll '%s' \n", jsettings[os]["library"].get<std::string>().c_str());
      XPLMDebugString(gBob_debstr2);
      SetErrorMode(0); 
-    libnativehelper = LoadLibraryA(win); //"jvm.dll"
+    libnativehelper = LoadLibraryA(jsettings[os]["library"].get<std::string>().c_str()); //"jvm.dll"
     if (!libnativehelper) {
             hasjvm=false;
+            sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm .so\n");
+            printf(gBob_debstr2);
+            XPLMDebugString(gBob_debstr2);
             popupNoJVM();
              createMenu();
             return false;
@@ -228,9 +270,13 @@ bool JVM::connectJVM() {
     sprintf(gBob_debstr2,"AutoATC: Found CreateJavaVM\n");
     XPLMDebugString(gBob_debstr2);
 #elif defined(__APPLE__)
+    os="mac";
     libnativehelper = dlopen(mac, RTLD_NOW);//"/usr/local/jre/lib/server/libjvm.dylib"
     if (!libnativehelper) {
         hasjvm=false;
+        sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm .so\n");
+        printf(gBob_debstr2);
+        XPLMDebugString(gBob_debstr2);
         dlerror();
         popupNoJVM();
          createMenu();
@@ -268,42 +314,85 @@ bool JVM::connectJVM() {
         }
         jint ver = env->GetVersion();
         sprintf(gBob_debstr2,"AutoATC: Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
+        printf(gBob_debstr2);
         XPLMDebugString(gBob_debstr2);
         jvm= jvms[0]; 
-                      
+        jvmFailed=false;       
         return true;
     }
     else{
         //no existing JVM, make a new one
         delete[] jvms;
         JavaVMInitArgs vm_args;                        // Initialization arguments
-       vm_args.version = JNI_VERSION_1_6;             // minimum Java version
-       JavaVMOption* options = new JavaVMOption[5];
-        options[0].optionString = "-XX:+UseG1GC";
-        options[1].optionString = "-XX:MaxGCPauseMillis=2";
-        //options[2].optionString = "-XX:+UseStringCache";
-        options[2].optionString = "-XX:ParallelGCThreads=4";
-        options[3].optionString = "-XX:ConcGCThreads=4";
-        vm_args.nOptions = 4;
+        vm_args.version = JNI_VERSION_1_6;             // minimum Java version
+       //int numOptions=6;
+       std::string s = jsettings.dump();
+
+        sprintf(gBob_debstr2,"AutoATC: Settings are %s\n",s.c_str());
+        printf(gBob_debstr2);
+        XPLMDebugString(gBob_debstr2);
+        std::vector<std::string> optionsV=jsettings[os]["options"].get<std::vector<std::string>>();
+        
+        int numOptions=optionsV.size();    
+        JavaVMOption* options = new JavaVMOption[numOptions]; //one more for lib path
+        for(int i=0;i<optionsV.size();i++){
+            
+            char * opt=const_cast<char*>(optionsV[i].c_str());
+            sprintf(gBob_debstr2,"AutoATC: Using option: %s\n",opt);
+            printf(gBob_debstr2);
+             XPLMDebugString(gBob_debstr2);
+            options[i].optionString = opt;
+        }
+        char classpath[MAXLEN];
+        
+        /*sprintf(classpath,"-Djava.class.path=%s\n",jsettings[os]["classpath"].get<std::string>().c_str());
+        sprintf(gBob_debstr2,"AutoATC: Using classpath=%s",classpath);
+        printf(gBob_debstr2);
+        XPLMDebugString(gBob_debstr2);
+        options[numOptions-1].optionString=classpath;*/
+        vm_args.nOptions = numOptions;
         vm_args.options = options; 
-       //vm_args.nOptions = 0; 
-                               // number of options
-       vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
+       vm_args.ignoreUnrecognized = true;     // invalid options make the JVM init fail
            //=============== load and initialize Java VM and JNI interface =============
+	   sprintf(gBob_debstr2, "AutoATC: Initialising the JVM \n");
+	   printf(gBob_debstr2);
+	   XPLMDebugString(gBob_debstr2);
+	   try{
        JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);  // YES !!
-      
-      
+		
+	   sprintf(gBob_debstr2, "AutoATC: Initialised the JVM \n");
+	   printf(gBob_debstr2);
+	   XPLMDebugString(gBob_debstr2);
        jint ver = env->GetVersion();
        sprintf(gBob_debstr2,"AutoATC: Java Version %d.%d \n", ((ver>>16)&0x0f),(ver&0x0f));
+       printf(gBob_debstr2);
        XPLMDebugString(gBob_debstr2);
+       jvmFailed=false; 
        return true;
+	   }
+	   catch (const std::exception & ex) {
+		   sprintf(gBob_debstr2, "AutoATC: Error initialising JVM ex \n");
+		   XPLMDebugString(gBob_debstr2);
+		   return false;
+	   }
+	   catch (const std::string & ex) {
+		   sprintf(gBob_debstr2, "AutoATC: Error initialising JVM str \n");
+		   XPLMDebugString(gBob_debstr2);
+		   return false;
+	   }
+	   catch (...)
+	   {
+		   sprintf(gBob_debstr2, "AutoATC: Error initialising JVM \n");
+		   XPLMDebugString(gBob_debstr2);
+		   return false;
+	   }
     }
 }
 void JVM::deactivateJVM(void){
-    if(hasjvm){
+    //if(hasjvm){
         stop();
         destroyMenu(); 
-    }   
+    //}   
     //hasjvm=false;  
 }
 void JVM::activateJVM(void){
@@ -312,15 +401,23 @@ void JVM::activateJVM(void){
     
     //hasjvm=false;
     if(!loadedLibrary){
-        if(!connectJVM())
+        if(!connectJVM()){
+            hasjvm=false;
+            loadLibraryFailed=true;
+            sprintf(gBob_debstr2,"AutoATC: ERROR - Couldn't Connect to JVM!\n");
+            XPLMDebugString(gBob_debstr2);
             return;
-        addSystemClassLoaderPath("Resources/plugins/java/AutoATCPlugin.jar");
+        }
+        //addSystemClassLoaderPath("Resources/plugins/AutoATC_java/AutoATCPlugin.jar");
 
        
        commandsClass = env->FindClass("jni/Commands");  // try to find the class
     if(commandsClass == NULL) {
+        hasjvm=false;
+        loadedLibrary=true;
         sprintf(gBob_debstr2,"AutoATC: ERROR - Commands not found!\n");
         XPLMDebugString(gBob_debstr2);
+        return;
     }
     else {                                  // if class found, continue
         sprintf(gBob_debstr2,"AutoATC: Commands found\n");
@@ -339,7 +436,7 @@ void JVM::activateJVM(void){
         
         
         printf("AutoATC active!\n");
-        sprintf(gBob_debstr2,"AutoATC: Dev1 active!\n");
+        sprintf(gBob_debstr2,"AutoATC: active!\n");
          XPLMDebugString(gBob_debstr2); 
          hasjvm=true;
     }
@@ -351,11 +448,18 @@ void JVM::activateJVM(void){
          XPLMDebugString(gBob_debstr2);  
          //hasjvm=true;
     }
-    }
-catch(...){
-		printf("Exception during JVM test\n");
-        sprintf(gBob_debstr2,"AutoATC: Exception during JVM test\n");
+    }catch(const std::exception& e) {
+        printf("Exception during JVM test %s\n",e.what());
+        sprintf(gBob_debstr2,"AutoATC: Exception during JVM test %s\n",e.what());
          XPLMDebugString(gBob_debstr2);  
+         hasjvm=false;
+		return;
+    }
+    catch(...){
+		printf("Exception during JVM test\n");
+        sprintf(gBob_debstr2,"AutoATC: Unknown Exception during JVM test\n");
+         XPLMDebugString(gBob_debstr2);  
+         hasjvm=false;
 		return;
 	}  
     createMenu();
@@ -437,82 +541,43 @@ void JVM::getMorse (){
         getData(com);
         lastNavAudio=nowT;
     }
-    /*
-    if(audio>0&&navdata[0]>0){
-        strcpy(navaid, (char*) &navdata);
-        char com[512];
-        sprintf(com,"doCommand:playMorse:%s",navaid);
-        getData(com);
-        printf("navData 1 %s\n",com);
-        found=true;
-        lastFoundNav=1;
-    }
-    if(!found){
-        size=XPLMGetDatab(nav2_nav_id,navdata,0,150);
-        audio=XPLMGetDatai(audio_selection_nav2);
-        if(audio>0&&navdata[0]>0){
-            strcpy(navaid, (char*) &navdata);
-            char com[512];
-            sprintf(com,"doCommand:playMorse:%s",navaid);
-            getData(com);
-            printf("navData 2 %s\n",com);
-            lastFoundNav=2;
-            found==true;
-        }
-    }
-    if(!found){
-        size=XPLMGetDatab(adf1_nav_id,navdata,0,150);
-        audio=XPLMGetDatai(audio_selection_adf1);
-        if(audio>0&&navdata[0]>0){
-            strcpy(navaid, (char*) &navdata);
-            char com[512];
-            sprintf(com,"doCommand:playMorse:%s",navaid);
-            getData(com);
-            printf("adfData 1 %s\n",com);
-            lastFoundNav=3;
-            found==true;
-        }
-    }
-    if(!found){
-        size=XPLMGetDatab(adf2_nav_id,navdata,0,150);
-        audio=XPLMGetDatai(audio_selection_adf2);
-        if(audio>0&&navdata[0]>0){
-            strcpy(navaid, (char*) &navdata);
-            char com[512];
-            sprintf(com,"doCommand:playMorse:%s",navaid);
-            getData(com);
-            printf("adfData 2 %s\n",com);
-            lastFoundNav=4;
-            found==true;
-        }
-    }*/
+    
     
 }
-/*void JVM::testExistingJVM (){
-    jsize nVMs;
-    JNIEnv *local_env;
-    JNI_GetCreatedJavaVMs(NULL, 0, &nVMs); // 1. just get the required array length
-    JavaVM** jvms = new JavaVM*[nVMs];
-    JNI_GetCreatedJavaVMs(jvms, nVMs, &nVMs);
-    if(nVMs==1){
-        jvms[0]->AttachCurrentThread((void**)&local_env, NULL);
-         if(local_env == NULL)
-            printf("failed to attached \n");
-            else{
-                jclass apiClass = local_env->FindClass("api/XPJVMAPI");  // try to find the class
-                if(apiClass != NULL)
-                    printf("searched and found XPJVMAPI \n");
-                else
-                    printf("searched and NOT found XPJVMAPI \n");
-            }
-    }
-}*/
+
 void JVM::init_parameters ()
 {
-
-    strncpy (win, "jvm.dll", MAXLEN);
-    strncpy (lin, "libjvm.so", MAXLEN);
-    strncpy (mac, "/usr/local/jre/lib/server/libjvm.dylib", MAXLEN);
+    //strncpy(settingstxt,"{'win':{'library':'Resources\\plugins\\AutoATC\\jre\\bin\\server\\jvm.dll','options':['-XX:ParallelGCThreads=4','-XX:ConcGCThreads=4','-Xgcpolicy:balanced']},'lin':{'library':'Resources/plugins/AutoATC/jre/lib/amd64/server/libjvm.so','options':['-XX:ParallelGCThreads=4','-XX:ConcGCThreads=4','-Xgcpolicy:metronome']},'mac':{'library':'Resources/plugins/AutoATC/jre/Contents/Home/lib/server/libjvm.dylib','options':['-XX:ParallelGCThreads=4','-XX:ConcGCThreads=4','-Xgcpolicy:balanced']}}",MAXLEN);
+    jsettings=R"({
+  "win": {
+    "library": "Resources\\plugins\\AutoATC\\jre\\bin\\server\\jvm.dll",
+    "options": [
+      "-XX:ParallelGCThreads=4",
+      "-XX:ConcGCThreads=4",
+      "-Xgcpolicy:balanced"
+    ],
+    "classpath":"Resources/plugins/AutoATC/jre/bin/java"
+  },
+  "lin": {
+    "library": "Resources/plugins/AutoATC/jre/lib/amd64/server/libjvm.so",
+    "options": [
+      "-XX:ParallelGCThreads=4",
+      "-XX:ConcGCThreads=4",
+      "-Xgcpolicy:metronome"
+    ],
+    "classpath":"Resources/plugins/AutoATC/jre/bin/java"
+  },
+  "mac": {
+    "library": "Resources/plugins/AutoATC/jre/Contents/Home/lib/server/libjvm.dylib",
+    "options": [
+      "-XX:ParallelGCThreads=4",
+      "-XX:ConcGCThreads=4",
+      "-Xgcpolicy:balanced"
+    ],
+    "classpath":"Resources/plugins/AutoATC/jre/Contents/Home/bin/java"
+  }
+})"_json;
+    
     airframeDefs.clear();
     XPLMGetSystemPath(xp_path);
     transponder_codeRef = XPLMFindDataRef("sim/cockpit/radios/transponder_code");
@@ -541,23 +606,27 @@ void JVM::init_parameters ()
     standbyAirframe=AirframeDef();
     standbyAirframe.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0");
     std::ifstream t("Resources/plugins/AutoATC/notepad.txt");
-    std::stringstream notepadss;
-    notepadss << t.rdbuf();
-    sprintf(notepad,notepadss.str().c_str());
-    XPLMDebugString(notepad);
+    if(!t.fail()){
+        std::stringstream notepadss;
+        notepadss << t.rdbuf();
+        sprintf(notepad,notepadss.str().c_str());
+        XPLMDebugString(notepad);
+    }
+    
     live=false;
 }
-void JVM::init_parameters (char * jvmfilename)
+/*void JVM::init_parameters (char * jvmsettingstxt)
 {
  // struct file_parameters * lparms=&parms;
-  strncpy (win,jvmfilename, MAXLEN);
-  strncpy (lin,jvmfilename, MAXLEN);
-  strncpy (mac,jvmfilename, MAXLEN);
+  //strncpy (win,jvmfilename, MAXLEN);
+  //strncpy (lin,jvmfilename, MAXLEN);
+  //strncpy (mac,jvmfilename, MAXLEN);
+  strncpy (settingstxt,jvmsettingstxt, MAXLEN);
   strncpy (device,"any", MAXLEN);
   strncpy (slave,"0", MAXLEN);
   //airframeDefs.clear();
   XPLMGetSystemPath(xp_path);
-}
+}*/
 
 void JVM::parse_config (char * filename)
 {
@@ -583,7 +652,7 @@ void JVM::parse_config (char * filename)
       continue;
     else
       strncpy (name, s, MAXLEN);
-    s = strtok (NULL, "=");
+    s = strtok (NULL, "\n");
     if (s==NULL)
       continue;
     else
@@ -591,12 +660,20 @@ void JVM::parse_config (char * filename)
     trim (value);
 
     /* Copy into correct entry in parameters struct */
-    if (strcmp(name, "win")==0)
+    /*if (strcmp(name, "winClass")==0)
+      strncpy (winClass, value, MAXLEN);
+    else if (strcmp(name, "linClass")==0)
+      strncpy (linClass, value, MAXLEN);
+    else if (strcmp(name, "macClass")==0)
+      strncpy (macClass, value, MAXLEN);
+    else if (strcmp(name, "win")==0)
       strncpy (win, value, MAXLEN);
     else if (strcmp(name, "lin")==0)
       strncpy (lin, value, MAXLEN);
-    else if (strcmp(name, "mac")==0)
-      strncpy (mac, value, MAXLEN);
+    else*/ if (strcmp(name, "settings")==0){
+
+      jsettings=json::parse(value);
+    }
     else if (strcmp(name, "phone")==0)
       strncpy (device, value, MAXLEN);
     else if (strcmp(name, "isSlave")==0)
@@ -626,6 +703,7 @@ void JVM::start(void)
     XPLMGetSystemPath(xp_path);
     sprintf(gBob_debstr2,"AutoATC: Start!\n");
     fireTransmit=false;
+    isIntercom=false;
     fireNewFreq=true;
     XPLMDebugString(gBob_debstr2);
      
@@ -636,6 +714,9 @@ void JVM::start(void)
      setIcaov=false;
 }
 void JVM::joinThread(void){
+    printf("AutoATC: Threaded jvm joining\n");
+    sprintf(gBob_debstr2,"AutoATC: Threaded jvm joining\n");
+    XPLMDebugString(gBob_debstr2); 
     JavaVMAttachArgs args;
 	args.version = JNI_VERSION_1_6; // choose your JNI version
 	args.name = NULL; // you might want to give the java thread a name
@@ -643,12 +724,21 @@ void JVM::joinThread(void){
 	jvm->AttachCurrentThread((void**)&plane_env, &args);
     threadcommandsClass = plane_env->FindClass("jni/Commands");  // try to find the class
     if(threadcommandsClass == NULL) {
-        sprintf(gBob_debstr2,"AutoATC: ERROR - Commands not found!\n");
+        sprintf(gBob_debstr2,"AutoATC: ERROR - Commands Thread 2 not found!\n");
+        XPLMDebugString(gBob_debstr2);
+    }
+    else{
+        sprintf(gBob_debstr2,"AutoATC: Commands Thread 2 found!\n");
         XPLMDebugString(gBob_debstr2);
     }
     getPlaneDataThreadMethod = plane_env->GetStaticMethodID(threadcommandsClass, "getPlaneData", "(I)[D");  // find method
     if(getPlaneDataThreadMethod == NULL){
             XPLMDebugString("AutoATC: ERROR - Method void getPlaneData() not found!\n");
+            return;
+    }
+    getAllPlaneDataThreadMethod = plane_env->GetStaticMethodID(threadcommandsClass, "getAllPlaneData", "()[D");  // find method
+    if(getAllPlaneDataThreadMethod == NULL){
+            XPLMDebugString("AutoATC: ERROR - Method void getAllPlaneData() not found!\n");
             return;
     }
     setThreadDataMethod = plane_env->GetStaticMethodID(threadcommandsClass, "setData", "([F)V");  // find method
@@ -657,29 +747,29 @@ void JVM::joinThread(void){
             XPLMDebugString("AutoATC: ERROR - Method void setData(float[]) not found!\n");
             return;
          }
-    getStndbyMethod=plane_env->GetStaticMethodID(threadcommandsClass, "getStndbyFreq", "(II)I");  // find method
-     if(getStndbyMethod == NULL){
+        getStndbyMethod=plane_env->GetStaticMethodID(threadcommandsClass, "getStndbyFreq", "(II)I");  // find method
+        if(getStndbyMethod == NULL){
          XPLMDebugString("AutoATC: ERROR - Method int getStndbyFreq() not found!\n");
           return;
        }
-    commandString=plane_env->GetStaticMethodID(threadcommandsClass, "getCommandData", "()Ljava/lang/String;");  // find method
+        commandString=plane_env->GetStaticMethodID(threadcommandsClass, "getCommandData", "()Ljava/lang/String;");  // find method
         if(commandString == NULL){
             XPLMDebugString("AutoATC: ERROR - Method void getCommandData() not found!\n");
             return;
         }
-    midToThreadString=env->GetStaticMethodID(threadcommandsClass, "getData", "(Ljava/lang/String;)Ljava/lang/String;");  // find method
+        midToThreadString=plane_env->GetStaticMethodID(threadcommandsClass, "getData", "(Ljava/lang/String;)Ljava/lang/String;");  // find method
         if(midToThreadString == NULL){
-            XPLMDebugString("AutoATC: ERROR - Method void getData() not found!\n");
+            XPLMDebugString("AutoATC: ERROR - Method getData() not found!\n");
             return;
         }
-        threadBroadcastMethod = env->GetStaticMethodID(threadcommandsClass, "broadcast", "()V");  // find method
+        threadBroadcastMethod = plane_env->GetStaticMethodID(threadcommandsClass, "broadcast", "(Z)V");  // find method
         
         if(threadBroadcastMethod == NULL){
             XPLMDebugString("AutoATC: ERROR - Method void broadcast() not found!\n");
             return;
         }
-    printf("thread jvm join\n");
-    sprintf(gBob_debstr2,"AutoATC: Thread jvm join\n");
+    printf("AutoATC: Threaded jvm joined\n");
+    sprintf(gBob_debstr2,"AutoATC: Threaded jvm joined\n");
     XPLMDebugString(gBob_debstr2); 
 }
 void JVM::updateAirframes(void){
@@ -710,8 +800,7 @@ void JVM::updateAirframes(void){
 }
 void JVM::stop(void)
 {
-    if(!hasjvm)
-        return;
+   
     //if(enabledATCPro)
     {
             //printf("JVM STOP\n");
@@ -720,7 +809,8 @@ void JVM::stop(void)
             stopPlanes();
             enabledATCPro=false;
     }
-    
+     if(!hasjvm)
+        return;
 
     systemstop();
     jvm->DetachCurrentThread();
@@ -750,11 +840,12 @@ void JVM::systemstop(void)
     
      //XPLMDebugString(gBob_debstr2);
 }
-void JVM::broadcast(void){
+void JVM::broadcast(bool intercom){
     if(!hasjvm)
         return;
     command_mutex.lock();  
     fireTransmit=true;
+    isIntercom=intercom;
     command_mutex.unlock();
     
 }
@@ -786,8 +877,13 @@ void JVM::retriveLogData(){
         //string_mutex.unlock();
         return;
     }
+    if(midToThreadString == NULL){
+        sprintf(logpageData,"ERROR: getData() not found!");
+        return;
+    }
     jstring stringArg1 = plane_env->NewStringUTF(logpageString);
     //string_mutex.unlock();
+
     jstring jstr = (jstring) plane_env->CallStaticObjectMethod(threadcommandsClass, midToThreadString,stringArg1);
     env->DeleteLocalRef(stringArg1);
     const char* nativeString = plane_env->GetStringUTFChars(jstr, JNI_FALSE);
@@ -797,7 +893,21 @@ void JVM::retriveLogData(){
     string_mutex.unlock();
     plane_env->ReleaseStringUTFChars(jstr, nativeString);
 }
-jstring JVM::getData(const char* reference){
+
+void JVM::getData(const char* reference){
+    //jmethodID 
+    if(!hasjvm)
+        return;// ( jstring)"No JVM|";
+    /*jstring stringArg1 = env->NewStringUTF(reference);
+    jstring jstr = (jstring) env->CallStaticObjectMethod(commandsClass, midToString,stringArg1);
+    env->DeleteLocalRef(stringArg1);*/
+    std::string toDo(reference);
+    command_mutex.lock(); 
+    getDataList.push_back(toDo);
+    command_mutex.unlock();
+
+}
+jstring JVM::getStringData(const char* reference){
     //jmethodID 
     if(!hasjvm)
         return ( jstring)"No JVM|";
@@ -846,7 +956,8 @@ void JVM::setThreadData(){
 }
 void JVM::doTransmit(){
     command_mutex.lock();
-    plane_env->CallStaticVoidMethod(threadcommandsClass, threadBroadcastMethod);                      // call method
+    jboolean intercom=isIntercom;
+    plane_env->CallStaticVoidMethod(threadcommandsClass, threadBroadcastMethod,intercom);                      // call method
     fireTransmit=false;
     command_mutex.unlock();
 }
@@ -867,35 +978,80 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
     if(caller_env==env){
        classV=commandsClass;
        method= getPlaneDataMethod;
+       jdoubleArray    jplanedata   = (jdoubleArray) caller_env->CallStaticObjectMethod( classV, method,id-1 );
+
+        jdouble *element = caller_env->GetDoubleArrayElements(jplanedata, 0);
+
+        if(element[0]==0&&element[1]==0&&element[2]==0)
+            {
+                retVal.live=false;
+                caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);
+                return retVal;
+            }
+        retVal.live=true;
+        if(element[2]==-9999.0){
+            caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);   
+            return retVal;
+        }
+        XPLMWorldToLocal(element[0],element[1],element[2],&retVal.x,&retVal.y,&retVal.z);
+        retVal.the=(float)element[3];
+        retVal.phi=(float)element[4];
+        retVal.psi=(float)element[5];
+        retVal.gearDown=(float)element[6];
+        retVal.throttle=element[7];
+        retVal.timeStamp=element[8];
+        retVal.airframe=(int)element[9];
+        caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);                   
     }
     else{
         classV=threadcommandsClass;
        method= getPlaneDataThreadMethod;
+       //printf("get plane id %d\n",id);
+       if(id<1){
+            jdoubleArray    jplanedata   = (jdoubleArray) caller_env->CallStaticObjectMethod( classV, method,id-1 );
+            jdouble *element = caller_env->GetDoubleArrayElements(jplanedata, 0);
+            if(element[0]==0&&element[1]==0&&element[2]==0)
+                {
+                    retVal.live=false;
+                    caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);
+                    return retVal;
+                }
+            retVal.live=true;
+            caller_env->ReleaseDoubleArrayElements(jplanedata,element,0); 
+            return retVal;
+       }
+       else if(id==1){
+            jdoubleArray    jplanedataAll   = (jdoubleArray) caller_env->CallStaticObjectMethod( classV, getAllPlaneDataThreadMethod);
+             jdouble *element = caller_env->GetDoubleArrayElements(jplanedataAll, 0);
+             for(int i=0;i<300;i++){
+                 aiplaneData[i]=element[i]*1.0;
+                
+             }
+             caller_env->ReleaseDoubleArrayElements(jplanedataAll,element,0); 
+       }
+       
+       retVal=aiplanes[id-1];
+        int i=(id-1)*10;
+       if(aiplaneData[i]==0&&aiplaneData[i+1]==0&&aiplaneData[i+2]==0)
+            {
+                retVal.live=false;
+                return retVal;
+            }
+        retVal.live=true;
+        if(aiplaneData[i+2]==-9999.0)
+            return retVal;
+        XPLMWorldToLocal(aiplaneData[i+0],aiplaneData[i+1],aiplaneData[i+2],&retVal.x,&retVal.y,&retVal.z);
+        retVal.the=(float)aiplaneData[i+3];
+        retVal.phi=(float)aiplaneData[i+4];
+        retVal.psi=(float)aiplaneData[i+5];
+        retVal.gearDown=(float)aiplaneData[i+6];
+        retVal.throttle=aiplaneData[i+7];
+        retVal.timeStamp=aiplaneData[i+8];
+        retVal.airframe=(int)aiplaneData[i+9];
+         //printf("data %d = %f\n",i,retVal.airframe);
     }
         //return retVal;
-    jdoubleArray    jplanedata   = (jdoubleArray) caller_env->CallStaticObjectMethod( classV, method,id-1 );
-
-    jdouble *element = caller_env->GetDoubleArrayElements(jplanedata, 0);
-   // jsize len = env->GetArrayLength(jplanedata);
-    /*double v=element[0];
-    retVal.phi=(float)v;*/
-    if(element[0]==0&&element[1]==0&&element[2]==0)
-        {
-            retVal.live=false;
-            return retVal;
-        }
-    retVal.live=true;
-    if(element[2]==-9999.0)
-        return retVal;
-    XPLMWorldToLocal(element[0],element[1],element[2],&retVal.x,&retVal.y,&retVal.z);
-    retVal.the=(float)element[3];
-    retVal.phi=(float)element[4];
-    retVal.psi=(float)element[5];
-    retVal.gearDown=(float)element[6];
-    retVal.throttle=element[7];
-    retVal.timeStamp=element[8];
-    retVal.airframe=(int)element[9];
-    caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);
+    
     return retVal;
 }
 
@@ -914,6 +1070,23 @@ void JVM::getThreadCommandData(){
        command_mutex.unlock();
     }
     plane_env->ReleaseStringUTFChars(jstr, nativeString);
+    if(getDataList.size()>0){
+        std::vector<std::string> incominggetDataList;
+        command_mutex.lock();
+        for(std::string s:getDataList){
+            incominggetDataList.push_back(s);
+        }
+        getDataList.clear();
+        command_mutex.unlock();
+        for(std::string s:incominggetDataList){
+            jstring stringArg1 = plane_env->NewStringUTF(s.c_str());
+            plane_env->CallStaticObjectMethod(threadcommandsClass, midToThreadString,stringArg1);
+            env->DeleteLocalRef(stringArg1);
+        }
+
+
+    }
+
 }
 void JVM::getCommandData(){
     command_mutex.lock();
@@ -941,18 +1114,24 @@ void JVM::getCommandData(){
                 if(dRef!=NULL){
                    // printf("found dataref %s\n",dataref.c_str());
                     std::string value = commandData.substr (found+1);
-                    std::size_t decimalF = value.find(".");
+                    //std::size_t decimalF = value.find(".");
+                    XPLMDataTypeID type = XPLMGetDataRefTypes(dRef);
                     char* end;
-                    if (decimalF==std::string::npos){
+                    if (type&xplmType_Int){
                         long xpvalue=strtol(value.c_str(),&end,10);
                         XPLMSetDatai(dRef, (int)xpvalue);
                         //printf("set dataref %s to %d\n",dataref.c_str(),xpvalue);
 
                     }
-                    else{
+                    else if (type&xplmType_Float){
                         double xpvalue=strtod(value.c_str(),&end);
                         XPLMSetDataf(dRef, (float)xpvalue);
                         //printf("set dataref %s to %f\n",dataref.c_str(),xpvalue);
+                    }
+                    else if (type&xplmType_Data){
+                        const char * begin = value.c_str();
+		                const char * end = begin + value.size();
+                        XPLMSetDatab(dRef, (void *) begin, 0, end - begin);
                     }
                 }
             }
@@ -1043,18 +1222,25 @@ void JVM::createMenu(){
 void JVM::registerFlightLoop(){
     if(hasjvm&&!flightLoopActive){
                setICAO();
-               XPLMRegisterFlightLoopCallback(	SendATCData,	/* Callback */10,					/* Interval */NULL);					/* refcon not used. */
-               sprintf(gBob_debstr2,"AutoATC: Register flight loop\n");
-                XPLMDebugString(gBob_debstr2); 
+               if(!flightLoopregistered){
+                    XPLMRegisterFlightLoopCallback(	SendATCData,	/* Callback */10,					/* Interval */NULL);					/* refcon not used. */
+                    sprintf(gBob_debstr2,"AutoATC: Register flight loop\n");
+                    XPLMDebugString(gBob_debstr2); 
+               }
                 flightLoopActive=true;
+                flightLoopregistered=true;
                //initPlanes();
     }
 }
 void JVM::unregisterFlightLoop(){
-    if(hasjvm&&flightLoopActive){
+    if(flightLoopregistered){
         XPLMUnregisterFlightLoopCallback(SendATCData, NULL);
         sprintf(gBob_debstr2,"AutoATC: Destroy flight loop\n");
         XPLMDebugString(gBob_debstr2); 
+        flightLoopregistered=false;
+    }
+    if(hasjvm&&flightLoopActive){
+        
         flightLoopActive=false;
     }
 }
@@ -1064,34 +1250,66 @@ void JVM::destroyMenu(){
 }
 void JVM::setICAO(){
    //JVM* jvmO=getJVM();
-    char icao[256];
+    char icao[1024]={0};
     XPLMDataRef	dr_plane_ICAO = XPLMFindDataRef ("sim/aircraft/view/acf_ICAO");
     XPLMGetDatab(dr_plane_ICAO,icao,0,40);
                 
-    jstring jstr = getData(icao);
+    //jstring jstr = 
+    getStringData(icao);
 
-    const char* nativeString = env->GetStringUTFChars(jstr, JNI_FALSE);
+    //const char* nativeString = env->GetStringUTFChars(jstr, JNI_FALSE);
    // char* astring=(char *)nativeString;   
-    env->ReleaseStringUTFChars(jstr, nativeString);
+    //env->ReleaseStringUTFChars(jstr, nativeString);
+    char file[256]={0};
+    char path[1024]={0};
+    XPLMGetNthAircraftModel(0, file, path);
+    ;
+    char cmd[1124]={0};
+    sprintf(cmd,"aircraft:%s",path);
+    getStringData(cmd);
+
 }
 void JVM::LogPageWindowPlus(){
     logPage++;
     if(logPage>4)
         logPage=0;
 }
+void JVM::processAcars(){
+     XPLMDataRef toSendID = XPLMFindDataRef ("autoatc/acars/out");
+     int size=XPLMGetDatab(toSendID,NULL,0,0);
+    std::vector<char> acarsoutDataA(size);
+
+    //char acarsoutdata[1024];
+    //char * acarsoutdata=acarsoutDataA.data();
+    size=XPLMGetDatab(toSendID,acarsoutDataA.data(),0,size);
+    char command[1024]={0};
+
+    sprintf(command,"doCommand:sendAcars:%s",acarsoutDataA.data());
+    //sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
+    printf("SEND ACARS = %s\n",command);
+    getData(command);
+
+}
+int offsetStringY=0;
 void JVM::toggleLogWindow(){
+    #if defined(XP11)
+    bool vr_is_enabled = false;
+    
     XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
-    const bool vr_is_enabled = XPLMGetDatai(vr_dref);
+    vr_is_enabled = XPLMGetDatai(vr_dref);
+    
+    offsetStringY=0;
     if(log_window==NULL||vr_is_enabled!=loginVR){
+       
          XPLMCreateWindow_t params;
         params.structSize = sizeof(params);
         params.visible = 1;
         params.drawWindowFunc = draw_atc_text;
         // Note on "dummy" handlers:
         // Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
-        params.handleMouseClickFunc = dummy_mouse_handler;
+        params.handleMouseClickFunc = mouse_handler;
         params.handleRightClickFunc = dummy_mouse_handler;
-        params.handleMouseWheelFunc = dummy_wheel_handler;
+        params.handleMouseWheelFunc = wheel_handler;
         params.handleKeyFunc = dummy_key_handler;
         params.handleCursorFunc = dummy_cursor_status_handler;
         params.refcon = NULL;
@@ -1132,9 +1350,11 @@ void JVM::toggleLogWindow(){
          XPLMSetWindowIsVisible(log_window,0);
         log_visible=false;
      }
+     #endif
 }
 void menu_handler(void * in_menu_ref, void * in_item_ref)
 {
+    offsetStringY=0;
     JVM* jvmO=getJVM();
 	if(!strcmp((const char *)in_item_ref, "Menu Item 1"))
 	{
@@ -1157,48 +1377,49 @@ void menu_handler(void * in_menu_ref, void * in_item_ref)
     }
 
     if(!strcmp((const char *)in_item_ref, "Menu Item 4"))
-	{
-		 
-    XPLMCreateWindow_t params;
-	params.structSize = sizeof(params);
-	params.visible = 1;
-	params.drawWindowFunc = draw_about_text;
-	// Note on "dummy" handlers:
-	// Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
-	params.handleMouseClickFunc = dummy_mouse_handler;
-	params.handleRightClickFunc = dummy_mouse_handler;
-	params.handleMouseWheelFunc = dummy_wheel_handler;
-	params.handleKeyFunc = dummy_key_handler;
-	params.handleCursorFunc = dummy_cursor_status_handler;
-	params.refcon = NULL;
-	params.layer = xplm_WindowLayerFloatingWindows;
+        {
+        #if defined(XP11)
+        XPLMCreateWindow_t params;
+        params.structSize = sizeof(params);
+        params.visible = 1;
+        params.drawWindowFunc = draw_about_text;
+        // Note on "dummy" handlers:
+        // Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
+        params.handleMouseClickFunc = mouse_handler;
+        params.handleRightClickFunc = dummy_mouse_handler;
+        params.handleMouseWheelFunc = wheel_handler;
+        params.handleKeyFunc = dummy_key_handler;
+        params.handleCursorFunc = dummy_cursor_status_handler;
+        params.refcon = NULL;
+        params.layer = xplm_WindowLayerFloatingWindows;
 
-	params.decorateAsFloatingWindow = xplm_WindowDecorationRoundRectangle;
-	
-	// Set the window's initial bounds
-	// Note that we're not guaranteed that the main monitor's lower left is at (0, 0)...
-	// We'll need to query for the global desktop bounds!
-	int left, bottom, right, top;
-	XPLMGetScreenBoundsGlobal(&left, &top, &right, &bottom);
-	params.left = left + 50;
-	params.bottom = bottom + 150;
-	params.right = params.left + 400;
-	params.top = params.bottom + 400;
-	
-	 XPLMWindowID	g_window = XPLMCreateWindowEx(&params);
-	
-	// Position the window as a "free" floating window, which the user can drag around
-    XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
-    const bool vr_is_enabled = XPLMGetDatai(vr_dref);
-    if(vr_is_enabled)
-    {
-        XPLMSetWindowPositioningMode(g_window, xplm_WindowVR, 0);
-    }
-    else
-	    XPLMSetWindowPositioningMode(g_window, xplm_WindowPositionFree, -1);
-	// Limit resizing our window: maintain a minimum width/height of 100 boxels and a max width/height of 300 boxels
-	    XPLMSetWindowResizingLimits(g_window, 200, 200, 500, 500);
-	    XPLMSetWindowTitle(g_window, "About AutoATC");
+        params.decorateAsFloatingWindow = xplm_WindowDecorationRoundRectangle;
+        
+        // Set the window's initial bounds
+        // Note that we're not guaranteed that the main monitor's lower left is at (0, 0)...
+        // We'll need to query for the global desktop bounds!
+        int left, bottom, right, top;
+        XPLMGetScreenBoundsGlobal(&left, &top, &right, &bottom);
+        params.left = left + 50;
+        params.bottom = bottom + 150;
+        params.right = params.left + 400;
+        params.top = params.bottom + 400;
+        
+        XPLMWindowID	g_window = XPLMCreateWindowEx(&params);
+        
+        // Position the window as a "free" floating window, which the user can drag around
+        XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
+        const bool vr_is_enabled = XPLMGetDatai(vr_dref);
+        if(vr_is_enabled)
+        {
+            XPLMSetWindowPositioningMode(g_window, xplm_WindowVR, 0);
+        }
+        else
+            XPLMSetWindowPositioningMode(g_window, xplm_WindowPositionFree, -1);
+        // Limit resizing our window: maintain a minimum width/height of 100 boxels and a max width/height of 300 boxels
+        XPLMSetWindowResizingLimits(g_window, 200, 200, 500, 500);
+        XPLMSetWindowTitle(g_window, "About AutoATC");
+        #endif
 	}
     if(!strcmp((const char *)in_item_ref, "Menu Item 5")){
         //printf("called me 1\n");
@@ -1227,7 +1448,7 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
     int ww=r-l;
     JVM* jvmO=getJVM();
     if(jvmO->hasjvm){
-        jstring jstr = jvmO->getData(plugin_version);
+        jstring jstr = jvmO->getStringData(plugin_version);
         const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
     
         char* astring=(char *)nativeString;   
@@ -1236,9 +1457,57 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
     
     }
     else{
-        char text[]="Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n";
+        char text[]="Java VM not found,\n AutoATC cannot continue \n";
+        jvmFailed=true;
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
+}
+
+int startY=0;
+bool scrolling=false;
+int maxScroll=0;
+std::chrono::time_point<std::chrono::system_clock> start;
+int	wheel_handler(XPLMWindowID in_window_id, int x, int y, int wheel, int clicks, void * in_refcon){
+    //printf("%d %d %d %d \n",x,y,wheel,clicks);
+    start = std::chrono::system_clock::now();
+    int height;
+	XPLMGetFontDimensions(xplmFont_Proportional, NULL, &height, NULL);
+    height+=6;
+    scrolling=true;
+     offsetStringY-=height*clicks;
+    if(offsetStringY<0){
+        offsetStringY=0;
+    }
+    if(offsetStringY>maxScroll){
+        offsetStringY=maxScroll;
+    }
+    return 1;
+}
+int	mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon){
+    if(is_down>0){
+        start = std::chrono::system_clock::now();
+        if(!scrolling)
+            startY=y;
+        
+        scrolling=true;
+        int newoffsetStringY=y-startY;
+        
+        if(newoffsetStringY<0){
+            //scrolling=false;
+             offsetStringY=0;
+             startY=y;
+            return 0;
+        }
+        if(newoffsetStringY<maxScroll)
+            offsetStringY=newoffsetStringY;
+        
+    }
+    else{
+        scrolling=false;
+        offsetStringY=0;
+    }
+    //printf("scroll set =%d %d\n",x,y);
+    return 1;
 }
   void	draw_atc_text(XPLMWindowID in_window_id, void * in_refcon)
 {
@@ -1259,9 +1528,10 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
 	
 	float col_white[] = {1.0, 1.0, 1.0}; // red, green, blue
     int ww=r-l;
+    int wh=b-t;
     JVM* jvmO=getJVM();
     if(jvmO->hasjvm){
-        //jstring jstr;
+        
         char* nativeString;
         if(jvmO->logPage==3)
          nativeString= jvmO->getLogData("Console:vor");
@@ -1271,23 +1541,53 @@ void	draw_about_text(XPLMWindowID in_window_id, void * in_refcon)
          nativeString= jvmO->getLogData("Console:freq");
         else
          nativeString= jvmO->getLogData("Console");
-        //const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
-    
-        //char* astring=(char *)nativeString; 
+
         char* astring;
         if(jvmO->logPage==0||jvmO->logPage>1)
             astring=(char *)nativeString; 
         else 
            astring =(char *)jvmO->notepad; 
-        
+  
+        int height;
+	    XPLMGetFontDimensions(xplmFont_Proportional, NULL, &height, NULL);
 
-            
-	    XPLMDrawString(col_white, l + 10, t - 20, astring, &ww, xplmFont_Proportional);
-        //jvmO->env->ReleaseStringUTFChars(jstr, nativeString);
+        if(scrolling){
+            auto end = std::chrono::system_clock::now();
+            std::chrono::duration<double> diff = end-start;
+            if(diff.count()>1.0){
+                offsetStringY--;
+            }
+            if(offsetStringY<0){
+                offsetStringY=0;
+                start = std::chrono::system_clock::now();
+                scrolling=false;
+
+            }
+        }
+        std::istringstream stream(astring);
+        std::string line;
+        int lineNo=0;
+        height+=6;//3px line spacing
+        while(std::getline(stream, line)) {
+            int lineLength=line.length();
+            float length=XPLMMeasureString(xplmFont_Basic,astring,lineLength);
+            length=length+10;
+            int noLines=(length/ww)+1;
+            char * lineS=(char *)line.c_str();
+
+            int ypos=lineNo*height;
+            if(offsetStringY-ypos<height && (20+offsetStringY-ypos-noLines*height)>(wh+height))
+                XPLMDrawString(col_white, l + 10, t - 20+offsetStringY-ypos, lineS, &ww, xplmFont_Basic);
+            lineNo+=noLines;
+        }  
+
+        maxScroll=((lineNo+1)*height)+wh;
+        
     
     }
     else{
-        char text[]="Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n";
+        char text[]="Java VM not found,\n AutoATC cannot continue \n";
+         jvmFailed=true;
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
     }
 }
@@ -1357,6 +1657,12 @@ float SendATCData(float                inElapsedSinceLastCall,
     return -1;
 }
 void JVM::popupNoJVM(){
+    JVM* jvmO=getJVM();
+    if(jvmFailed)
+        return;
+        //printf("popup no jvm\n");
+        jvmFailed=true;
+    #if defined(XP11)
      XPLMCreateWindow_t params;
 	params.structSize = sizeof(params);
 	params.visible = 1;
@@ -1390,6 +1696,7 @@ void JVM::popupNoJVM(){
 	// Limit resizing our window: maintain a minimum width/height of 100 boxels and a max width/height of 300 boxels
 	XPLMSetWindowResizingLimits(g_window, 200, 200, 300, 300);
 	XPLMSetWindowTitle(g_window, "Java Error");
+    #endif
  }
  
  char* JVM::getDevice(){
@@ -1425,8 +1732,12 @@ void JVM::setDevice( char* newdevice){
 	
 	float col_white[] = {1.0, 1.0, 1.0}; // red, green, blue
     int ww=r-l;
-        char text[]="Java VM not found, see:\n (X-Plane 11/Resources/plugins/java/defaultjvm.txt)\n For installation instructions \n";
+
+        char text[]="Java VM not found,\n AutoATC cannot continue \n";
+         JVM* jvmO=getJVM();
+         jvmFailed=true;
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
+        
     
 }
 

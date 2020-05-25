@@ -1,4 +1,19 @@
+/*
+*****************************************************************************************
+*        COPYRIGHT � 2020 Mark Parker/mSparks
+
+
+GNU Lesser General Public License v3.0
+Permissions of this copyleft license are conditioned on making available complete source code of
+licensed works and modifications under the same license or the GNU GPLv3. Copyright and license 
+notices must be preserved. Contributors provide an express grant of patent rights. 
+However, a larger work using the licensed work through interfaces provided by the licensed work may 
+be distributed under different terms and without source code for the larger work.
+*****************************************************************************************
+*/
+#if defined(XP11)
 #include "XPLMInstance.h"
+#endif
 #include <time.h>
 
 #include <mutex>
@@ -49,8 +64,9 @@ class Aircraft
 {
 private:
 	XPLMObjectRef* g_object=NULL;
+	#if defined(XP11)
 	XPLMInstanceRef g_instance[12]={NULL};
-
+	#endif
 	int modelCount=1;
 	const char * cls_drefs[18]={ "traf/mw_def",
 	"traf/nw_def",
@@ -124,6 +140,7 @@ private:
 	double yOffset;
 	double headingRollover;
 	bool rolledOver;
+	bool visible;
 	v velocity;
 	bool inHover;//for helo taxi
 	Simulation* ll;

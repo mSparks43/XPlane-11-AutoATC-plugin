@@ -1,4 +1,16 @@
+/*
+*****************************************************************************************
+*        COPYRIGHT � 2020 Mark Parker/mSparks
 
+
+GNU Lesser General Public License v3.0
+Permissions of this copyleft license are conditioned on making available complete source code of
+licensed works and modifications under the same license or the GNU GPLv3. Copyright and license 
+notices must be preserved. Contributors provide an express grant of patent rights. 
+However, a larger work using the licensed work through interfaces provided by the licensed work may 
+be distributed under different terms and without source code for the larger work.
+*****************************************************************************************
+*/
 #include <string.h>
 #include <math.h>
 //#include <cmath.h>
@@ -36,19 +48,7 @@ static XPLMDataRef		gOverRidePlanePosition = NULL;
 static XPLMDataRef		gAGL = NULL;*/
                                 
 float	BeginAI();
-/*static float	MyFlightLoopCallback0(
-                                   float                inElapsedSinceLastCall,    
-                                   float                inElapsedTimeSinceLastFlightLoop,    
-                                   int                  inCounter,    
-                                   void *               inRefcon);  */  
 
-// Used to update each aircraft every frame.
-
-/*static float	AircraftLoopCallback(
-                                   float                inElapsedSinceLastCall,    
-                                   float                inElapsedTimeSinceLastFlightLoop,    
-                                   int                  inCounter,    
-                                   void *               inRefcon);*/  
 							    
 AircraftData::AircraftData(){
 	//time=clock();
@@ -106,6 +106,7 @@ int pid=25;
 char found_path[1024];
  static void load_cb(const char * real_path, void * ref)
 {
+
 	XPLMObjectRef * dest = (XPLMObjectRef *) ref;
 	if(*dest == NULL)
 	{
@@ -116,6 +117,7 @@ char found_path[1024];
 		printf("skipped loading object %s\n",real_path);
 }
 void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
+	#if defined(XP11)
 	//XPLMCreateInstance(inObject, drefs);
 	if(inObject)
 	        {
@@ -133,6 +135,7 @@ void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
 				else if(ref_style==2)
 					g_instance[partID] = XPLMCreateInstance(inObject, xmp_drefs);
             }
+	#endif
 }
 //void Aircraft::GetAircraftData(AircraftData userdata)
 void Aircraft::GetAircraftData(){
@@ -264,11 +267,14 @@ void Aircraft::PrepareAircraftData()
 	JVM* jvmO=getJVM();
 
 	if(!thisData.live){
+				#if defined(XP11)
 		        if(g_instance[0])
 		        {
 					printf("dropping object for id= %d\n",(id-1));
 					for(int i=0;i<modelCount;i++){
+						
 						XPLMDestroyInstance(g_instance[i]);
+						
 						g_instance[i]=NULL;
 					}
 					modelCount=1;
@@ -276,15 +282,18 @@ void Aircraft::PrepareAircraftData()
 					toLoadAirframe=false;
 					inLoading=false;
 				}
+				#endif
 				
 		data_mutex.unlock();
 		return;
 	}
 	
 	if(!inLoading&&toLoadAirframe){
+		visible=false;
 		toLoadAirframe=false;
 		char* af=jvmO->getModel(airFrameIndex);
 		char debugStr[2048];
+#if defined(XP11)	
 		if(g_instance[0])
 	    {
 #if defined(DEBUG_STRINGS)
@@ -296,6 +305,7 @@ void Aircraft::PrepareAircraftData()
 			}
 					
 		}
+#endif
 #if defined(DEBUG_STRINGS)
 		XPLMDebugString("toLoadAirframe\n");
 		sprintf(debugStr,"searching for id=%d afI=%d to %s sound=%d\n",id,airFrameIndex,af,soundIndex);
@@ -443,13 +453,12 @@ void Aircraft::PrepareAircraftData()
 	double vy=nextData.y-lastData.y;
 	double vz=nextData.z-lastData.z;
 	velocity=v((nextData.x-lastData.x)/htWindow,(nextData.y-lastData.y)/htWindow,(nextData.z-lastData.z)/htWindow);
-
+	
 
 	double x=lastData.x+(vx*pComplete);
 	double y=lastData.y+(vy*pComplete);
 	double z=lastData.z+(vz*pComplete);
-
-
+		
 	data.x = x;
 	data.y = y;
 	data.z = z;
@@ -471,6 +480,21 @@ void Aircraft::PrepareAircraftData()
 	else{
 		data.engineoff=false;//false;
 		data.inTransit=false;
+	}
+	if(!visible){
+		v distanceV=v(x-ll->getX(),y-ahs->getX(),z-ll->getY());
+		double deviation=distanceV/distanceV;
+		if(data.engineoff){
+			nextData.y-=50.0;
+			lastData.y-=50.0;
+			data.y-=50.0;//make parked aircraft rise from the grave :p
+		}
+		if((!data.engineoff&&deviation<100)||(data.engineoff&&deviation<5)){
+			visible=true;
+	#if defined(DEBUG_STRINGS)		
+			printf("AUTOATC: made %d visible\n",id);
+	#endif
+		}
 	}
     data_mutex.unlock();
 	XPLMProbeInfo_t outInfo;
@@ -624,39 +648,19 @@ void Aircraft::SetAircraftData(void)
 		JVM* jvmO=getJVM();
     XPLMDrawInfo_t		dr;
 	
-	/*
-	moved to another thread
-	ll->xPos=data.x;
-	ll->yPos=data.z;
-	ahs->xPos=data.y;
-
-	float speed=velocity/velocity;
-
-	if(speed>0.1){
-		data.psi=(atan2(velocity.x,-velocity.z)* (180.0/3.141592653589793238463));
-	}
-
-
-	if(data.psi-ahs->last_x[1][0]>180.0||data.psi-ahs->last_x[1][0]<-180.0)
-	{
-
-		ahs->last_x[1][0]=data.psi;//180.0+ahs->last_x[1][0];
-
-		
-	}
-
-	ahs->yPos=data.psi;
-	rp->xPos=data.the;
-	rp->yPos=data.phi;
-	//if(id==2)
-	ll->frame();
-	ahs->frame();
-	rp->frame();*/
-	//printf("plane %d %f %f\n",id,data.psi,ahs->getY());
 	dr.structSize = sizeof(dr);
-	dr.x = ll->getX();//data.x;
-	dr.y = ahs->getX()+yOffset;//data.y+yOffset;
-	dr.z = ll->getY();//data.z;
+	if(visible){
+		dr.x = ll->getX();//data.x;
+		dr.y = ahs->getX()+yOffset;//data.y+yOffset;
+		dr.z = ll->getY();//data.z;
+	}
+	else
+	{
+		dr.x = 0.0;
+		dr.y = 0.0;
+		dr.z = 0.0;
+	}
+	
 	dr.pitch = rp->getX();//data.the;
 	dr.heading = ahs->getY();//data.psi;
 	dr.roll = rp->getY();//data.phi;
@@ -718,7 +722,7 @@ void Aircraft::SetAircraftData(void)
 		currentrpm--;
 	thrust*=currentrpm;
 
-	
+#if defined(XP11)	
 	for(int i=0;i<modelCount;i++)
     if(g_instance[i])
     {
@@ -772,8 +776,9 @@ void Aircraft::SetAircraftData(void)
 			float tire[20] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
-        
+     
     }
+ #endif  
 }
 
 
@@ -792,15 +797,24 @@ static void do_simulation(){
 	while(!liveThread&&run){
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
-	printf("simulation thread woke up\n");
+	printf("AutoATC: simulation thread woke up\n");
+	char gBob_debstr2[128];
+    sprintf(gBob_debstr2,"AutoATC: simulation thread woke up\n");
 	while(liveThread&&run){
+		auto start = std::chrono::high_resolution_clock::now();
 		for(int i=0;i<30;i++){
 			aircraft[i].SimulateAircraftThreadData();
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));//100fps or less
+		auto finish = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double, std::milli> elapsed = finish - start;
+		int diff=std::round(elapsed.count());
+		//printf("%d\n",diff);
+		if(diff<10)
+			std::this_thread::sleep_for(std::chrono::milliseconds(10-diff));//100fps or less
 	}
 #if defined(DEBUG_STRINGS)
 	printf("simulation thread stopped\n");
+	sprintf(gBob_debstr2,"AutoATC: simulation thread stopped\n");
 #endif
 }
 static void do_model(){
@@ -810,6 +824,8 @@ static void do_model(){
 	while(!liveThread&&run){
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		//std::this_thread::sleep_for(std::chrono::seconds(15));
+		if(jvmO->loadLibraryFailed)
+			run=false;
 		if(jvmO->hasjvm&&!attached){
 			jvmO->joinThread();
 			attached=true;
@@ -836,6 +852,7 @@ static void do_model(){
 	int rolls=0;
 	//printf("thread ready\n");
 	while(liveThread&&run){
+		auto start = std::chrono::high_resolution_clock::now();
 		sendData();
 		
 		rolls++;
@@ -860,14 +877,21 @@ static void do_model(){
 			//printf("%d is index %d waiting for %d live =%d\n",i,aircraft[i].airFrameIndex,aircraft[i].thisData.airframe,aircraft[i].thisData.live);
 			//g_ac_mutex[i].unlock();
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		auto finish = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double, std::milli> elapsed = finish - start;
+		int diff=std::round(elapsed.count());
+		//printf("%d\n",diff);
+		if(diff<20)
+		std::this_thread::sleep_for(std::chrono::milliseconds(20-diff));//100fps or less
+		//std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		//std::this_thread::sleep_for(std::chrono::seconds(15));
 	}
 	
 	//if(attached)
 	{
 		JVM* jvmO=getJVM();
-		jvmO->jvm->DetachCurrentThread();
+		if(jvmO->hasjvm)
+			jvmO->jvm->DetachCurrentThread();
 	}
 	}catch (const std::exception& ex){
 
@@ -899,7 +923,7 @@ void initPlanes(){
 	acY = XPLMFindDataRef("autoatc/aircraft/y");
 	acZ = XPLMFindDataRef("autoatc/aircraft/z");
 	sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
-	//XPLMRegisterFlightLoopCallback(	MyFlightLoopCallback0,/* Callback */-1.0,/* Interval */NULL);/* refcon not used. */
+
 	BeginAI();
 	
 	//
@@ -908,17 +932,13 @@ void initPlanes(){
 		aircraft[i].id=i+1;
 	}
 	liveThread=true;
-	//XPLMRegisterFlightLoopCallback(	AircraftLoopCallback,/* Callback */-1.0,	/* Interval */NULL);/* refcon not used. */
+
 
 }
 void stopPlanes(){
-    //XPLMUnregisterFlightLoopCallback(MyFlightLoopCallback0, NULL);
 	printf("stopPlanes\n");
 	soundSystem.stop();
-	/*if(liveThread){
-		XPLMUnregisterFlightLoopCallback(AircraftLoopCallback, NULL);
-		
-	}*/
+
 	liveThread=false;
 	run=false;
 	if(m_thread.joinable())
@@ -933,11 +953,7 @@ void stopPlanes(){
     XPLMDebugString(gBob_debstr2);
 }
 bool loaded=false;
-/*float	MyFlightLoopCallback0(
-                                   float                inElapsedSinceLastCall,    
-                                   float                inElapsedTimeSinceLastFlightLoop,    
-                                   int                  inCounter,    
-                                   void *               inRefcon)*/
+
 float	BeginAI()
 {
 	//int AircraftIndex;

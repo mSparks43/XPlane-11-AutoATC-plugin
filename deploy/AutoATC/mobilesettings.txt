@@ -1,0 +1,6 @@
+#use usermobilesettings.txt file (this is the default and will only be read one) to force AutoATC to synchronise 
+#with a specific mobile instead of any listening for the
+#simulator. simply replace "any" with the IP address of the device (e.g. 192.168.0.32)
+#This should only need changing if you are having trouble with multiple users on the same network, or the phone is
+#on a different network which doesn't receive broadcast packets.
+phone=any

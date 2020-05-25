@@ -1,0 +1,3 @@
+towerVoice=dfki-spike-hsmm
+voiceSetting=FIRFilter+jetPilot+Volume(0.95)
+#volume stops excessive distortion
