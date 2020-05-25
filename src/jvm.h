@@ -117,6 +117,7 @@ static XPLMDataRef  volume_env = NULL;
 
 static XPLMDataRef  view_mode = NULL;
 static XPLMDataRef  canopy_ratio = NULL;
+static XPLMDataRef  door_open_ratio = NULL;
 
 class String 
 { 

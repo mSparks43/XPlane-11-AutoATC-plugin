@@ -68,6 +68,7 @@ class AircraftSounds
     float slider_exterior = 1.0;
     int viewisexternal = 0;
     float canopyopen = 0.0;
+    int dooropen = 0;
     bool live;
     AircraftSound landsnd;
     AircraftSound propsnd;

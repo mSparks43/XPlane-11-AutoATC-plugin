@@ -1010,6 +1010,7 @@ void aircraftLoop()
 		
 		view_mode = XPLMFindDataRef("sim/graphics/view/view_is_external");
 		canopy_ratio = XPLMFindDataRef("sim/operation/sound/users_canopy_open_ratio");
+		door_open_ratio = XPLMFindDataRef("sim/operation/sound/users_door_open_ratio");
 	}
 	float sound_vol=1.0;
 	int enable=XPLMGetDatai(sound_on);
@@ -1019,13 +1020,34 @@ void aircraftLoop()
 	int viewisexternal = XPLMGetDatai(view_mode); // Is view external? (1 = yes)
 	float canopyopen = XPLMGetDataf(canopy_ratio); // Canopy open ratio
 	float closedspace_volume_scalar = 0.5; // Scalar for AI sounds in closed spaces (e.g. cockpit)
+	float doorarray [10] = { };
+	static float doorsum = 0.0;
+	int dooropen = 0;
+	
+
+	//Get door array dref values
+	XPLMGetDatavf(door_open_ratio,doorarray,0,9);
+	
+	//Loop through door array dataref and summarize all the door values
+	doorsum = 0.0;
+	for (int i = 0; i < 10; i++) {
+			doorsum = doorsum + doorarray[i];
+	}
+	//If any door is open, change variable value
+	if (doorsum >= 0.025) {
+		dooropen = 1;
+	} else {
+		dooropen = 0;
+	}
+		
 	// AI SOUND MIXER
 	if( enable != 0 and paused != 1){
-		if( viewisexternal == 0 and canopyopen == 0 ){
+		if( viewisexternal == 0 and canopyopen == 0 and dooropen == 0){
 			sound_vol = slider_master * slider_exterior * closedspace_volume_scalar;
 		} else {
-			static float temp = slider_master * slider_exterior * (closedspace_volume_scalar + (0.5 * canopyopen) + (0.5 * viewisexternal));
-			sound_vol = fmin(fmax(temp,1.0), 0.0); //Ugly clamping implementation
+			//static float temp = slider_master * slider_exterior * (closedspace_volume_scalar + (0.33 * canopyopen) + (0.33 * viewisexternal) + (0.33 * dooropen));
+			//sound_vol = fmin(fmax(temp,1.0), 0.0); //Ugly clamping implementation
+			sound_vol = slider_master * slider_exterior;
 		}
 		// Debug messages in AISound.cpp
 	} else {
@@ -1033,8 +1055,9 @@ void aircraftLoop()
 		sound_vol = 0.0;
 	}
 	
-	XPLMDebugString(message);
-	printf(message);
+	//sprintf(message,"AutoATC: External view (%i), Door/Canopy (%i/%f)\n",viewisexternal,dooropen,canopyopen);
+	//XPLMDebugString(message);
+	//printf(message);
 	soundSystem.update(sound_vol);
 	//return -1;
 }
