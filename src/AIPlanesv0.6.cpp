@@ -1020,9 +1020,9 @@ void aircraftLoop()
 	int viewisexternal = XPLMGetDatai(view_mode); // Is view external? (1 = yes)
 	float canopyopen = XPLMGetDataf(canopy_ratio); // Canopy open ratio
 	float closedspace_volume_scalar = 0.5; // Scalar for AI sounds in closed spaces (e.g. cockpit)
-	float doorarray [10] = { };
-	static float doorsum = 0.0;
-	int dooropen = 0;
+	static float doorarray [10] = { }; //Door open ratio array
+	static float doorsum = 0.0; //Helper
+	int dooropen = 0; //Is any door open (1 = yes)?
 	
 
 	//Get door array dref values
@@ -1034,7 +1034,7 @@ void aircraftLoop()
 			doorsum = doorsum + doorarray[i];
 	}
 	//If any door is open, change variable value
-	if (doorsum >= 0.025) {
+	if (doorsum >= 0.075) {
 		dooropen = 1;
 	} else {
 		dooropen = 0;
