@@ -12,7 +12,7 @@ XPVER ?=11
 ################################
 
 ifeq ($(OS),MACOS)
-BUILDDIR        :=      ./deploy
+BUILDDIR        :=      ./deploy/XP11
 SRC_BASE        :=      .
 
 SOURCES = \
