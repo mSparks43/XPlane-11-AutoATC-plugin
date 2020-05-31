@@ -116,27 +116,27 @@ void SettingsWidget::reset(){
 }
 void SettingsWidget::updateData(){
     JVM* jvmO;
-    char Buffer[512];
+    char Buffer[1024]={0};
     //std::string Buffer;
     try{
 		jvmO=getJVM();
         if(!jvmO->hasjvm){
             XPSetWidgetDescriptor(statusCaption[0], "JVM Offline");
             XPSetWidgetDescriptor(statusCaption[1], "Update JVM location");
-            XPSetWidgetDescriptor(statusCaption[2], "And press test");
+
             for(int i=2;i<5;i++)
                 XPSetWidgetDescriptor(statusCaption[i], "  ");
             return;
         }
-        jvmO->setICAO();
-         jstring jstr = jvmO->getStringData("Network");
+        //jvmO->setICAO();
+        jstring jstr = jvmO->getStringData("Network");
         const char* nativeString = jvmO->env->GetStringUTFChars(jstr, JNI_FALSE);
     
         char* astring=(char *)nativeString; 
         sprintf(Buffer, "%s",astring); 
         std::string inLine = Buffer;
         std::size_t lastFound=0;
-        char gBob_debstr2[128];
+        char gBob_debstr2[1024]={0};
         sprintf(gBob_debstr2,Buffer);
         XPLMDebugString(gBob_debstr2); 
         
@@ -185,7 +185,7 @@ void SettingsWidget::init(){
 					NULL,	// no container
 					xpWidgetClass_MainWindow);
     XPSetWidgetProperty(w_window, xpProperty_MainWindowHasCloseBoxes, 1);
-XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Translucent);
+    XPSetWidgetProperty(w_window, xpProperty_MainWindowType, xpMainWindowStyle_Translucent);
 	w_top = XPCreateWidget(x+10, y-20, x2-10, y-98,
 					1,	// Visible
 					"Device IP",	// desc

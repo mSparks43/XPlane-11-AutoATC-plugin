@@ -822,7 +822,7 @@ void JVM::stop(void)
 }
 void JVM::systemstop(void)
 {
-    
+    setIcaov=false;
     if(!hasjvm)
         return;
     
@@ -1370,7 +1370,9 @@ void menu_handler(void * in_menu_ref, void * in_item_ref)
             XPLMDebugString(gBob_debstr2); 
                 jvmO->systemstop();
             }
+            
            jvmO->start();
+           
         }
         else
             jvmO->popupNoJVM();
