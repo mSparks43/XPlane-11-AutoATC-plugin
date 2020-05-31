@@ -25,7 +25,7 @@ SOURCES = \
 	src/scppnt/scppnt_error.cpp \
 	src/datarefs.cpp
 
-LIBS = -FSDK/Libraries/Mac/ -framework XPLM -framework XPWidgets -L/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/jre/lib/server -lstdc++ -framework OpenAL
+LIBS = -FSDK/Libraries/Mac/ -framework XPLM -framework XPWidgets -L/Library/Java/JavaVirtualMachines/adoptopenjdk-8-openj9.jdk/Contents/Home/jre/lib/server -lstdc++ -framework OpenAL
 
 #-L/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/jre/lib/server \
 #        -l XPLM_64 -ljvm -lstdc++
@@ -33,8 +33,8 @@ LIBS = -FSDK/Libraries/Mac/ -framework XPLM -framework XPWidgets -L/Library/Java
 INCLUDES = \
         -I$(SRC_BASE)/SDK/CHeaders/XPLM \
         -I$(SRC_BASE)/SDK/CHeaders/Widgets \
-        -I/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/include \
-        -I/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/include/darwin
+        -I/Library/Java/JavaVirtualMachines/adoptopenjdk-8-openj9.jdk/Contents/Home/include \
+        -I/Library/Java/JavaVirtualMachines/adoptopenjdk-8-openj9.jdk/Contents/Home/include/darwin
         
 
 
