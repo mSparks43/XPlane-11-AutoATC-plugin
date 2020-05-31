@@ -271,7 +271,9 @@ bool JVM::connectJVM() {
     XPLMDebugString(gBob_debstr2);
 #elif defined(__APPLE__)
     os="mac";
-    libnativehelper = dlopen(mac, RTLD_NOW);//"/usr/local/jre/lib/server/libjvm.dylib"
+    printf("JVM library is %s\n",jsettings[os]["library"].get<std::string>().c_str());
+     sprintf(gBob_debstr2,"AutoATC:Loading jvm dylib '%s' \n", jsettings[os]["library"].get<std::string>().c_str());
+    libnativehelper = dlopen(jsettings[os]["library"].get<std::string>().c_str(), RTLD_NOW);//"/usr/local/jre/lib/server/libjvm.dylib"
     if (!libnativehelper) {
         hasjvm=false;
         sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm .so\n");
