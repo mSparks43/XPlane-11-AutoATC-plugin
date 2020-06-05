@@ -41,9 +41,9 @@ be distributed under different terms and without source code for the larger work
 #include <stdlib.h>
 #endif
 #if defined(XP11)
-const char* plugin_version = "About:0.9.4.1";
+const char* plugin_version = "About:0.9.4.2";
 #else
-const char* plugin_version = "About:0.9.4.1 for XP10";
+const char* plugin_version = "About:0.9.4.2 for XP10";
 #endif
 char gBob_debstr2[2048];
 char xp_path[512];

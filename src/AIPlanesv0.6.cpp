@@ -453,7 +453,7 @@ void Aircraft::PrepareAircraftData()
 	double vy=nextData.y-lastData.y;
 	double vz=nextData.z-lastData.z;
 	velocity=v((nextData.x-lastData.x)/htWindow,(nextData.y-lastData.y)/htWindow,(nextData.z-lastData.z)/htWindow);
-	
+	float speed=velocity/velocity;
 
 	double x=lastData.x+(vx*pComplete);
 	double y=lastData.y+(vy*pComplete);
@@ -474,7 +474,8 @@ void Aircraft::PrepareAircraftData()
 	}
 	else if(thisData.gearDown==2.0){
 		data.engineoff=true;
-		data.psi=thisData.psi;
+		if(speed==0.0f)
+			data.psi=thisData.psi;
 		data.inTransit=false;
 	}
 	else{
@@ -547,7 +548,7 @@ void Aircraft::PrepareAircraftData()
 			data.the=-1.0;
     		data.phi=0.0;
 			if(soundIndex==2){//Heli
-				float speed=velocity/velocity;
+				
 				float now=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
 				if(speed>0.1f){
 					

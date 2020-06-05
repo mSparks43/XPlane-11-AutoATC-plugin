@@ -22,6 +22,7 @@ be distributed under different terms and without source code for the larger work
 #include "XPWidgets.h"
 #include "XPStandardWidgets.h"
 #include "XPLMScenery.h"
+#include "XPLMPlanes.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -215,7 +216,7 @@ PLUGIN_API int XPluginStart(
     
     registerDatarefs();
     jvmO->start();
-
+    XPLMSetActiveAircraftCount(0);
     return 1;
 }
 static int				g_is_acf_inited = 0;
