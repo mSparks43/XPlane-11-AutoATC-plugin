@@ -369,7 +369,7 @@ int nextComHandler(XPLMCommandRef inCommand,
         if (jvmO->hasjvm)
         {
             roll++;
-            if (roll > 50)
+            if (roll > 350)
                 roll = 0;
             setStndby();
         }
@@ -432,7 +432,7 @@ int prevComHandler(XPLMCommandRef inCommand,
         {
             roll--;
             if (roll < 0)
-                roll = 50;
+                roll = 350;
             setStndby();
         }
     }
