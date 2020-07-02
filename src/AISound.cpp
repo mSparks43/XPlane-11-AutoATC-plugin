@@ -113,8 +113,11 @@ ALuint WaveFile::load_wave(const char * file_name)
 		riff = find_chunk(mem, mem_end, RIFF_ID, 1);
 		if(riff)
 			swapped = 1;
-		else
-			FAIL("Could not find RIFF chunk in wave file.\n")
+		else{
+			XPLMDebugString("Could not find RIFF chunk in wave file.\n"); 
+			free(mem);
+		}
+			//FAIL("Could not find RIFF chunk in wave file.\n")
 	}
 	
 	// The wave chunk isn't really a chunk at all. :-(  It's just a "WAVE" tag 
@@ -125,11 +128,19 @@ ALuint WaveFile::load_wave(const char * file_name)
 		riff[1] != 'A' ||
 		riff[2] != 'V' ||
 		riff[3] != 'E')
-		FAIL("Could not find WAVE signature in wave file.\n")
+		{
+			XPLMDebugString("Could not find WAVE signature in wave file.\n"); 
+			free(mem);
+		}
+			//FAIL("Could not find WAVE signature in wave file.\n")
 
 	char * format = find_chunk(riff+4, chunk_end(riff,swapped), FMT_ID, swapped);
 	if(format == NULL)
-		FAIL("Could not find FMT  chunk in wave file.\n")
+		{
+			XPLMDebugString("Could not find FMT  chunk in wave file.\n"); 
+			free(mem);
+		}
+			//FAIL("Could not find FMT  chunk in wave file.\n")
 	
 	// Find the format chunk, and swap the values if needed.  This gives us our real format.
 	
@@ -146,12 +157,28 @@ ALuint WaveFile::load_wave(const char * file_name)
 	
 	// Reject things we don't understand...expand this code to support weirder audio formats.
 	
-	if(fmt->format != 1) FAIL("Wave file is not PCM format data.\n")
-	if(fmt->num_channels != 1 && fmt->num_channels != 2) FAIL("Must have mono or stereo sound.\n")
-	if(fmt->bits_per_sample != 8 && fmt->bits_per_sample != 16) FAIL("Must have 8 or 16 bit sounds.\n")
+	if(fmt->format != 1){
+			XPLMDebugString("Wave file is not PCM format data.\n"); 
+			free(mem);
+		}
+			// FAIL("Wave file is not PCM format data.\n")
+	if(fmt->num_channels != 1 && fmt->num_channels != 2){
+			XPLMDebugString("Must have mono or stereo sound.\n"); 
+			free(mem);
+		}
+			// FAIL("Must have mono or stereo sound.\n")
+	if(fmt->bits_per_sample != 8 && fmt->bits_per_sample != 16){
+			XPLMDebugString("Must have 8 or 16 bit sounds.\n"); 
+			free(mem);
+		}
+			// FAIL("Must have 8 or 16 bit sounds.\n")
 	char * data = find_chunk(riff+4, chunk_end(riff,swapped), DATA_ID, swapped) ;
 	if(data == NULL)
-		FAIL("I could not find the DATA chunk.\n")
+		{
+			XPLMDebugString("I could not find the DATA chunk.\n"); 
+			free(mem);
+		}
+			//FAIL("I could not find the DATA chunk.\n")
 	
 	int sample_size = fmt->num_channels * fmt->bits_per_sample / 8;
 	int data_bytes = chunk_end(data,swapped) - data;
@@ -179,7 +206,11 @@ ALuint WaveFile::load_wave(const char * file_name)
 	if(sound_id==0)
 		alGenBuffers(4, buffers);
 	//CHECK_ERR();
-	if(buffers[sound_id] == 0) FAIL("Could not generate buffer id.\n");
+	if(buffers[sound_id] == 0){
+			XPLMDebugString("Could not generate buffer id.\n"); 
+			free(mem);
+		}
+			//("Could not generate buffer id.\n");
 	
 	alBufferData(buffers[sound_id], fmt->bits_per_sample == 16 ? 
 							(fmt->num_channels == 2 ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16) :
@@ -209,26 +240,26 @@ AircraftSound::AircraftSound()
 		alGenSources(6,snd_srcs);
 		looping=0.0f;
 		snd_src=snd_srcs[sound_id];
-		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/AutoATC/audio/screech.wav");
+		sprintf (path, "%s",  "Resources/plugins/AutoATC/audio/screech.wav");
 		snd_buffer=wav.load_wave(path);
 		sound_id++;
 	}
 	else if(sound_id==1){
 		
 		snd_src=snd_srcs[sound_id];
-		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/AutoATC/audio/prop.wav");
+		sprintf (path, "%s",  "Resources/plugins/AutoATC/audio/prop.wav");
 		snd_buffer=wav.load_wave(path);
 		sound_id++;
 	}
 	else if(sound_id==2){
 		snd_src=snd_srcs[sound_id];
-		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/AutoATC/audio/heli2.wav");//heli
+		sprintf (path, "%s",  "Resources/plugins/AutoATC/audio/heli2.wav");//heli
 		snd_buffer=wav.load_wave(path);
 		sound_id++;
 	}
 	else if(sound_id==3){
 		snd_src=snd_srcs[sound_id];
-		sprintf (path, "%s%s", xp_soundpath, "Resources/plugins/AutoATC/audio/jet.wav");
+		sprintf (path, "%s",  "Resources/plugins/AutoATC/audio/jet.wav");
 		snd_buffer=wav.load_wave(path);
 		sound_id++;
 	}

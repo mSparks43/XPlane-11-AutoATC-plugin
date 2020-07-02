@@ -224,6 +224,11 @@ bool JVM::connectJVM() {
     
     char * os;
     hasjvm=false;
+    std::string s = jsettings.dump();
+
+        sprintf(gBob_debstr2,"AutoATC: Settings are %s\n",s.c_str());
+        printf(gBob_debstr2);
+        XPLMDebugString(gBob_debstr2);
 #if defined(__linux__)
     os="lin";
         printf("JVM library is %s\n",jsettings[os]["library"].get<std::string>().c_str());
@@ -273,10 +278,11 @@ bool JVM::connectJVM() {
     os="mac";
     printf("JVM library is %s\n",jsettings[os]["library"].get<std::string>().c_str());
      sprintf(gBob_debstr2,"AutoATC:Loading jvm dylib '%s' \n", jsettings[os]["library"].get<std::string>().c_str());
+     XPLMDebugString(gBob_debstr2);
     libnativehelper = dlopen(jsettings[os]["library"].get<std::string>().c_str(), RTLD_NOW);//"/usr/local/jre/lib/server/libjvm.dylib"
     if (!libnativehelper) {
         hasjvm=false;
-        sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm .so\n");
+        sprintf(gBob_debstr2,"AutoATC: ERROR failed to load the jvm dylib\n");
         printf(gBob_debstr2);
         XPLMDebugString(gBob_debstr2);
         dlerror();
@@ -328,11 +334,7 @@ bool JVM::connectJVM() {
         JavaVMInitArgs vm_args;                        // Initialization arguments
         vm_args.version = JNI_VERSION_1_6;             // minimum Java version
        //int numOptions=6;
-       std::string s = jsettings.dump();
-
-        sprintf(gBob_debstr2,"AutoATC: Settings are %s\n",s.c_str());
-        printf(gBob_debstr2);
-        XPLMDebugString(gBob_debstr2);
+       
         std::vector<std::string> optionsV=jsettings[os]["options"].get<std::vector<std::string>>();
         
         int numOptions=optionsV.size();    

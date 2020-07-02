@@ -96,7 +96,7 @@ class AircraftSounds
          ((((unsigned int)value)>> 8) & 0x0000FF00)  | \
          ((((unsigned int)value)>>24) & 0x000000FF))
 
-#define FAIL(X) { XPLMDebugString(X); free(mem); return 0; }
+//#define FAIL(X) { XPLMDebugString(X); free(mem); return 0; }
 
 #define RIFF_ID 0x46464952			// 'RIFF'
 #define FMT_ID  0x20746D66			// 'FMT '

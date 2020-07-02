@@ -46,7 +46,7 @@ void SettingsWidget::setIP(char * jvmBuffer,char *ipbuffer){
      printf(text);
      char gBob_debstr2[128];
      sprintf(gBob_debstr2,text);
-     XPLMDebugString(gBob_debstr2); 
+     //XPLMDebugString(gBob_debstr2); 
      char com[512];
      sprintf(com,"Network mobile:phone=%s",ipbuffer);
       JVM* jvmO;
@@ -62,7 +62,7 @@ void SettingsWidget::setSlave(int isSlave){
      printf(text);
      char gBob_debstr2[128];
      sprintf(gBob_debstr2,text);
-     XPLMDebugString(gBob_debstr2); 
+     //XPLMDebugString(gBob_debstr2); 
     char com[512];
      sprintf(com,"Network mobile:isSlave=%d",isSlave);
       JVM* jvmO;
@@ -138,7 +138,7 @@ void SettingsWidget::updateData(){
         std::size_t lastFound=0;
         char gBob_debstr2[1024]={0};
         sprintf(gBob_debstr2,Buffer);
-        XPLMDebugString(gBob_debstr2); 
+        //XPLMDebugString(gBob_debstr2); 
         
         for(int i=0;i<5;i++){
            

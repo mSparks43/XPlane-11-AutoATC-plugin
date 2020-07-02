@@ -27,7 +27,7 @@ be distributed under different terms and without source code for the larger work
 #define MAXLEN 2048
 using nlohmann::json;
 #define DEBUG_STRINGS
-
+#define XP11
 class acModelDef
 {
 public:
