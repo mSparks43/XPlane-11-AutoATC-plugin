@@ -106,6 +106,7 @@ bool file_exists(const std::string &name)
 }
 
 void registerDatarefs();
+//void unregisterDatarefs();
 
 PLUGIN_API int XPluginStart(
     char *outName,
@@ -235,6 +236,7 @@ PLUGIN_API void XPluginStop(void)
     XPLMDebugString("AUTOATC: deactivateJVM\n");
     jvmO->deactivateJVM();//this is !hasJVM safe and needed to kill the threads
     g_is_acf_inited = 0;
+    //unregisterDatarefs();
 }
 
 PLUGIN_API void XPluginDisable(void)

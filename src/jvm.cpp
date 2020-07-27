@@ -32,7 +32,7 @@ be distributed under different terms and without source code for the larger work
 #include "Simulation.h"
 #include "aiplane.h"
 
-
+#include "datarefs.h"
 #include <stdlib.h>
 #include <vector>
 #include <ctype.h>//isspace
@@ -41,9 +41,9 @@ be distributed under different terms and without source code for the larger work
 #include <stdlib.h>
 #endif
 #if defined(XP11)
-const char* plugin_version = "About:0.9.4.4";
+const char* plugin_version = "About:0.9.4.5";
 #else
-const char* plugin_version = "About:0.9.4.4 for XP10";
+const char* plugin_version = "About:0.9.4.5 for XP10";
 #endif
 char gBob_debstr2[2048];
 char xp_path[512];
@@ -95,6 +95,7 @@ std::vector<AirframeDef> airframeDefs;
 AirframeDef::AirframeDef(void){
     
 }
+std::string getAcarsOut();
 void AirframeDef::setData(std::string inLine){
     std::size_t found = inLine.find(",");
     std::string pathS = inLine.substr (0,found);
@@ -1288,7 +1289,8 @@ void JVM::processAcars(){
     size=XPLMGetDatab(toSendID,acarsoutDataA.data(),0,size);
     char command[1024]={0};
 
-    sprintf(command,"doCommand:sendAcars:%s",acarsoutDataA.data());
+    //sprintf(command,"doCommand:sendAcars:%s",acarsoutDataA.data());
+    sprintf(command,"doCommand:sendAcars:%s",getAcarsOut().c_str());
     //sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
     printf("SEND ACARS = %s\n",command);
     getData(command);
@@ -1304,7 +1306,8 @@ void JVM::toggleLogWindow(){
     
     offsetStringY=0;
     if(log_window==NULL||vr_is_enabled!=loginVR){
-       
+        if(vr_is_enabled!=loginVR)
+            XPLMSetWindowIsVisible(log_window,0);
          XPLMCreateWindow_t params;
         params.structSize = sizeof(params);
         params.visible = 1;
@@ -1318,9 +1321,10 @@ void JVM::toggleLogWindow(){
         params.handleCursorFunc = dummy_cursor_status_handler;
         params.refcon = NULL;
         params.layer = xplm_WindowLayerFloatingWindows;
-
-        params.decorateAsFloatingWindow = xplm_WindowDecorationRoundRectangle;
-        
+        if(vr_is_enabled)
+            params.decorateAsFloatingWindow = xplm_WindowDecorationSelfDecoratedResizable;//xplm_WindowDecorationRoundRectangle;
+        else
+            params.decorateAsFloatingWindow = xplm_WindowDecorationRoundRectangle;
         // Set the window's initial bounds
         // Note that we're not guaranteed that the main monitor's lower left is at (0, 0)...
         // We'll need to query for the global desktop bounds!
@@ -1531,10 +1535,11 @@ int	mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * i
 	
 	int l, t, r, b;
 	XPLMGetWindowGeometry(in_window_id, &l, &t, &r, &b);
-	
+	XPLMDrawTranslucentDarkBox(l, t, r+10, b);
 	float col_white[] = {1.0, 1.0, 1.0}; // red, green, blue
     int ww=r-l;
     int wh=b-t;
+    
     JVM* jvmO=getJVM();
     if(jvmO->hasjvm){
         
@@ -1574,6 +1579,7 @@ int	mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * i
         std::string line;
         int lineNo=0;
         height+=6;//3px line spacing
+        //bottom left is 0,0
         while(std::getline(stream, line)) {
             int lineLength=line.length();
             float length=XPLMMeasureString(xplmFont_Basic,astring,lineLength);
@@ -1581,12 +1587,17 @@ int	mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * i
             int noLines=(length/ww)+1;
             char * lineS=(char *)line.c_str();
 
-            int ypos=lineNo*height;
-            if(offsetStringY-ypos<height && (20+offsetStringY-ypos-noLines*height)>(wh+height))
+            int ypos=lineNo*(height+2);
+            if(offsetStringY-ypos<height && (20+offsetStringY-ypos-noLines*height)>(wh+height)){
+               // XPLMDrawTranslucentDarkBox(l + 5,t - 25+offsetStringY-ypos,r-5,t - 25+offsetStringY-ypos+noLines*6);
+               int bTop=t - 20+offsetStringY-ypos;
+               XPLMDrawTranslucentDarkBox(l-5, bTop+height-4, r+10, bTop-4-height*(noLines-1));
+               XPLMDrawTranslucentDarkBox(l-5, bTop+height-4, r+10, bTop-4-height*(noLines-1));
                 XPLMDrawString(col_white, l + 10, t - 20+offsetStringY-ypos, lineS, &ww, xplmFont_Basic);
+            }
             lineNo+=noLines;
         }  
-
+        
         maxScroll=((lineNo+1)*height)+wh;
         
     

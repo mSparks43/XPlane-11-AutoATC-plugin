@@ -13,7 +13,7 @@ be distributed under different terms and without source code for the larger work
 */
 #define NOMINMAX
  #include "XPLMDataAccess.h"
-
+#include "datarefs.h"
  #include <stdlib.h>
  #include <string>
 #include <algorithm>
@@ -27,23 +27,18 @@ void setGearState(void * inRefcon,float outvalue) {
 }
 #define ARRAY_DIM 25
 
-struct	string_dref {
-	std::string					string_data;
-};
-struct	int_dref {
-	int					data;
-};
+
 static int g_my_idarray[ARRAY_DIM] = { 0 };
 static int g_my_afarray[ARRAY_DIM] = { 0 };
 static int g_my_xarray[ARRAY_DIM] = { 0 };
 static int g_my_yarray[ARRAY_DIM] = { 0 };
 static int g_my_zarray[ARRAY_DIM] = { 0 };
 static int g_my_damagearray[ARRAY_DIM] = { 0 };
-static string_dref acarsinarray;
-static string_dref acarsoutarray;
+//static string_dref acarsinarray;
+
 static int_dref receivedAcars;
 static int_dref onlineAcars;
-static int_dref sendAcars;
+
  static int getvi(void * ref, int * out_values, int in_offset, int in_max)
 {
     int n, r;
@@ -178,6 +173,11 @@ static void setvb(void * refA, void * in_values, int in_offset, int in_max)
 	for(int i = 0; i < in_max; ++i)
 		ref->string_data[i + in_offset] = source[i];
 
+	printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());	
+
+}
+std::string getAcarsOut(){
+	return acarsoutarray.string_data;
 }
 // For nunmbers
 static int	geti(void * refA)

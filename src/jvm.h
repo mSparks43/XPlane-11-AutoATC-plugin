@@ -26,7 +26,7 @@ be distributed under different terms and without source code for the larger work
 #include "json/json.hpp"
 #define MAXLEN 2048
 using nlohmann::json;
-#define DEBUG_STRINGS
+//#define DEBUG_STRINGS
 #define XP11
 class acModelDef
 {
