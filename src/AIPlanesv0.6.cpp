@@ -81,7 +81,7 @@ Aircraft::Aircraft()
 Aircraft aircraft[30];
 AircraftSounds soundSystem(aircraft);
 //planeid *plnid=NULL;
-bool inLoading;
+int inLoading=0;
 /*typedef struct {
 	int acID;
 	int pID;
@@ -92,19 +92,21 @@ static void loadedobject(XPLMObjectRef inObject, void *inRef){
 	int id=acDef.acID;//*(int *)inRef;
 	int modelPart=acDef.pID;//*(int *)modelPartRef;
 	char debugStr[512];
-#if defined(DEBUG_STRINGS)
-	sprintf(debugStr,"loaded object C++id=%d ref=%d\n",id,inObject);
-	XPLMDebugString(debugStr);
+	sprintf(debugStr,"loaded object C++id=%d ref=%d (%d)\n",id,inObject,inLoading);
 	printf(debugStr);
+#if defined(DEBUG_STRINGS)
+	
+	XPLMDebugString(debugStr);
+	
 #endif
 	aircraft[id-1].setModelObject(inObject,modelPart);
-	inLoading=false;
+	inLoading--;
 	
 	
 }
 int pid=25;
 char found_path[1024];
- static void load_cb(const char * real_path, void * ref)
+ /*static void load_cb(const char * real_path, void * ref)
 {
 
 	XPLMObjectRef * dest = (XPLMObjectRef *) ref;
@@ -115,7 +117,7 @@ char found_path[1024];
 	}
 	else
 		printf("skipped loading object %s\n",real_path);
-}
+}*/
 void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
 	#if defined(XP11)
 	//XPLMCreateInstance(inObject, drefs);
@@ -257,6 +259,7 @@ void Aircraft::GetAircraftThreadData(){
 		return;
 	}
 }
+
 void Aircraft::PrepareAircraftData()
 {
    
@@ -273,14 +276,16 @@ void Aircraft::PrepareAircraftData()
 					printf("dropping object for id= %d\n",(id-1));
 					for(int i=0;i<modelCount;i++){
 						
-						XPLMDestroyInstance(g_instance[i]);
-						
+						if(g_instance[i]!=NULL){
+						XPLMInstanceRef kill=g_instance[i];
 						g_instance[i]=NULL;
+						XPLMDestroyInstance(kill);
+						}
 					}
 					modelCount=1;
 					airFrameIndex=-1;
 					toLoadAirframe=false;
-					inLoading=false;
+					//inLoading=false;
 				}
 				#endif
 				
@@ -288,20 +293,24 @@ void Aircraft::PrepareAircraftData()
 		return;
 	}
 	
-	if(!inLoading&&toLoadAirframe){
+	if(inLoading==0&&toLoadAirframe){
 		visible=false;
 		toLoadAirframe=false;
 		char* af=jvmO->getModel(airFrameIndex);
 		char debugStr[2048];
 #if defined(XP11)	
-		if(g_instance[0])
+		if(g_instance[0]!=NULL)
 	    {
 #if defined(DEBUG_STRINGS)
 			printf("dropping inloading object for load id= %d\n",id);
 #endif
 			for(int i=0;i<modelCount;i++){
-						XPLMDestroyInstance(g_instance[i]);
+					if(g_instance[i]!=NULL){
+						XPLMInstanceRef kill=g_instance[i];
 						g_instance[i]=NULL;
+						XPLMDestroyInstance(kill);
+					}
+					
 			}
 					
 		}
@@ -313,7 +322,7 @@ void Aircraft::PrepareAircraftData()
 #endif
 		
 		//int *pid=&id;
-		inLoading=true;
+		//inLoading=true;
 		//acDef->acID=id;
 		//acDef->pID=0;
 		std::string afData (af); 
@@ -326,10 +335,12 @@ void Aircraft::PrepareAircraftData()
 			std::size_t foundV=afData.find("|");
 			if (foundV==std::string::npos){
 				acDef->partoffsets.x=acDef->partoffsets.y=acDef->partoffsets.z=0.0;
+				inLoading++;
 				XPLMLoadObjectAsync(af, loadedobject,acDef);
 			}
 			else{
 				std::string pathS = afData.substr (0,foundV);
+				inLoading++;
 				XPLMLoadObjectAsync(pathS.c_str(), loadedobject,acDef);
 				std::size_t foundV2 = afData.find("|",foundV+1);
 				pathS = afData.substr (foundV+1,foundV2-foundV-1);
@@ -361,13 +372,14 @@ void Aircraft::PrepareAircraftData()
 			if (foundV==std::string::npos){
 				acDef->partoffsets.x=acDef->partoffsets.y=acDef->partoffsets.z=0.0;
 				printf("to sub model load %s part %d\n",pathSV.c_str(),0);
+				inLoading++;
 				XPLMLoadObjectAsync(pathSV.c_str(), loadedobject,acDef);
 				printf("got nill offsets %f %f %f\n",acDef->partoffsets.x,acDef->partoffsets.y,acDef->partoffsets.z);
 			}
 			else{
 				
 				printf("to sub model load %s part %d\n",pathSV.c_str(),0);
-				
+				inLoading++;
 				XPLMLoadObjectAsync(pathSV.c_str(), loadedobject,acDef);
 				std::size_t foundV2 = afData.find("|",foundV+1);
 				pathS = afData.substr (foundV+1,foundV2-foundV-1);
@@ -398,13 +410,14 @@ void Aircraft::PrepareAircraftData()
 				if (foundV==std::string::npos){
 					acDef->partoffsets.x=acDef->partoffsets.y=acDef->partoffsets.z=0.0;
 					printf("to sub model load %s part %d\n",pathSV.c_str(),modelCount);
+					inLoading++;
 					XPLMLoadObjectAsync(pathSV.c_str(), loadedobject,acDef);
 					printf("got nill offsets %f %f %f\n",acDef->partoffsets.x,acDef->partoffsets.y,acDef->partoffsets.z);
 				}
 				else{
 					
 					printf("to sub model load %s part %d\n",pathSV.c_str(),modelCount);
-					
+					inLoading++;
 					XPLMLoadObjectAsync(pathSV.c_str(), loadedobject,acDef);
 					pathSV=pathS;
 					std::size_t foundV2 = pathSV.find("|",foundV+1);
@@ -741,12 +754,12 @@ void Aircraft::SetAircraftData(void)
 			XPLMSetDatavf(acZ,&dr.z,id,1);	
 		}
 		if(ref_style==0){	//cls_drefs	
-			float tire[18] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,NULL};
+			float tire[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,(float)dr.y,NULL};
 			
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
 		else if(ref_style==1){//wt3_drefs
-			float tire[20] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,NULL};
+			float tire[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,(float)dr.y,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
 		else if(ref_style==3){
@@ -774,7 +787,7 @@ void Aircraft::SetAircraftData(void)
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
 		else{ //xmp_drefs
-			float tire[20] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,NULL};
+			float tire[21] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,(float)dr.y,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
 		}
      

@@ -1,0 +1,11 @@
+I
+800
+OBJ
+PARTICLE_SYSTEM aircraft_system.pss
+
+ANIM_begin
+ANIM_hide -1000.000000 1000.0 autoatc/altitude
+ANIM_show 1000.0 100000.0 autoatc/altitude
+EMITTER		Jet_Fire			5.4853   1.1721    5.5630		0 0 0	0
+ANIM_end
+#EMITTER		Jet_Fire			-5.4853   1.1721    5.5630		0 0 0	1

@@ -68,7 +68,7 @@ private:
 	XPLMInstanceRef g_instance[12]={NULL};
 	#endif
 	int modelCount=1;
-	const char * cls_drefs[18]={ "traf/mw_def",
+	const char * cls_drefs[19]={ "traf/mw_def",
 	"traf/nw_def",
 	"traf/lgear",
 	"traf/flaps",
@@ -82,15 +82,15 @@ private:
 	"traf/vint",
 	"traf/touch_down",
 	"traf/vint_circle",
-	"traf/vint_circle2","autoatc/destroyed", NULL };
-	const char * acf_drefs[9]={ "autoatc/engine/POINT_tacrad0",
+	"traf/vint_circle2","autoatc/destroyed", "autoatc/altitude",NULL };
+	const char * acf_drefs[10]={ "autoatc/engine/POINT_tacrad0",
 	"autoatc/engine/POINT_tacrad1",
 	"autoatc/engine/POINT_prop_ang_deg0",
 	"autoatc/engine/POINT_prop_ang_deg1",
 	"autoatc/flak",
 	"autoatc/engineon",
 	"autoatc/altitude","autoatc/destroyed",NULL};
-	const char * wt3_drefs[20]={ "traf/mw_def",
+	const char * wt3_drefs[21]={ "traf/mw_def",
 	"traf/nw_def",
 	"cjs/world_traffic/main_gear_retraction_ratio",
 	"cjs/world_traffic/nose_gear_retraction_ratio",
@@ -105,8 +105,8 @@ private:
 	"cjs/world_traffic/engine_rpm1",
 	"cjs/world_traffic/engine_rpm2",
 	"cjs/world_traffic/engine_rotation_angle1",
-	"cjs/world_traffic/engine_rotation_angle2","autoatc/destroyed", NULL };
-	const char * xmp_drefs[20]={ "traf/mw_def",
+	"cjs/world_traffic/engine_rotation_angle2","autoatc/destroyed","autoatc/altitude", NULL };
+	const char * xmp_drefs[21]={ "traf/mw_def",
 	"traf/nw_def",
 	"libxplanemp/controls/gear_ratio",
 	"libxplanemp/controls/flap_ratio",
@@ -123,7 +123,7 @@ private:
 	"cjs/world_traffic/engine_rpm2",
 	"cjs/world_traffic/engine_rotation_angle1",
 	"cjs/world_traffic/engine_rotation_angle2",
-	"libxplanemp/controls/speed_brake_ratio","autoatc/destroyed", NULL };
+	"libxplanemp/controls/speed_brake_ratio","autoatc/destroyed","autoatc/altitude", NULL };
 	int ref_style=0;
 	bool wt3;
 	XPLMProbeRef ground_probe;

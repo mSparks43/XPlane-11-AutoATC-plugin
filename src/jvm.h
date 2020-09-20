@@ -43,7 +43,7 @@ class AirframeDef{
     int drefStyle;
     
     public:
-    acModelDef acDefs[12];
+    acModelDef acDefs[12];//up to 12 parts
     AirframeDef();
     void setData(std::string inLine);
     char* getPath(void);
