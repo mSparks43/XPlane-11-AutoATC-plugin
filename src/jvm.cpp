@@ -999,6 +999,9 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
             return retVal;
         }
         XPLMWorldToLocal(element[0],element[1],element[2],&retVal.x,&retVal.y,&retVal.z);
+        /*etVal.x=element[0];
+        retVal.y=element[1];
+        retVal.z=element[2];*/
         retVal.the=(float)element[3];
         retVal.phi=(float)element[4];
         retVal.psi=(float)element[5];
@@ -1046,6 +1049,9 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
         if(aiplaneData[i+2]==-9999.0)
             return retVal;
         XPLMWorldToLocal(aiplaneData[i+0],aiplaneData[i+1],aiplaneData[i+2],&retVal.x,&retVal.y,&retVal.z);
+        /*retVal.x=aiplaneData[i+0];
+        retVal.y=aiplaneData[i+1];
+        retVal.z=aiplaneData[i+2];*/
         retVal.the=(float)aiplaneData[i+3];
         retVal.phi=(float)aiplaneData[i+4];
         retVal.psi=(float)aiplaneData[i+5];

@@ -25,15 +25,17 @@ void setGearState(void * inRefcon,float outvalue) {
     drefV=outvalue;
     //return 0;
 }
-#define ARRAY_DIM 25
 
 
-static int g_my_idarray[ARRAY_DIM] = { 0 };
-static int g_my_afarray[ARRAY_DIM] = { 0 };
-static int g_my_xarray[ARRAY_DIM] = { 0 };
-static int g_my_yarray[ARRAY_DIM] = { 0 };
-static int g_my_zarray[ARRAY_DIM] = { 0 };
-static int g_my_damagearray[ARRAY_DIM] = { 0 };
+
+//moved to datarefs.h
+//#define ARRAY_DIM 25
+int g_my_idarray[ARRAY_DIM] = { 0 };
+int g_my_afarray[ARRAY_DIM] = { 0 };
+int g_my_xarray[ARRAY_DIM] = { 0 };
+int g_my_yarray[ARRAY_DIM] = { 0 };
+int g_my_zarray[ARRAY_DIM] = { 0 };
+int g_my_damagearray[ARRAY_DIM] = { 0 };
 //static string_dref acarsinarray;
 
 static int_dref receivedAcars;

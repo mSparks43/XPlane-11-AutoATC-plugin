@@ -24,6 +24,7 @@ be distributed under different terms and without source code for the larger work
 #include "XPLMDisplay.h"
 #include "XPLMScenery.h"
 #include "XPLMInstance.h"
+#include "XPLMGraphics.h"
 //#include "XPLMPlugin.h"
  #include "XPLMMenus.h"
 #include "jvm.h"
@@ -32,6 +33,7 @@ be distributed under different terms and without source code for the larger work
 
 
   #include "AISound.h"
+  #include "datarefs.h"
  #include <thread>
 //#include <mutex>
 #include <chrono>
@@ -60,7 +62,8 @@ Aircraft::Aircraft()
 	yOffset=5.0;//yOffsetp;
 	airFrameIndex=-1;
 	toLoadAirframe=false;
-	ll=new Simulation(0.01);
+	//ll=new Simulation(0.01);
+	ll=new Simulation(0.1);
 	rp=new Simulation(0.01);
 	ahs=new Simulation(0.01);
 	thisData.live=false;
@@ -451,7 +454,7 @@ void Aircraft::PrepareAircraftData()
 		}
 	}
 
-   
+	
     float timeNow = jvmO->getSysTime();//clock();
 	float lastTime= lastData.time;
 	double duration=((double)timeNow-(double)lastTime);// /CLOCKS_PER_SEC;
@@ -471,7 +474,7 @@ void Aircraft::PrepareAircraftData()
 	double x=lastData.x+(vx*pComplete);
 	double y=lastData.y+(vy*pComplete);
 	double z=lastData.z+(vz*pComplete);
-		
+	//printf("Aircraft %d is %d and %f\n",id,thisData.live,y);	
 	data.x = x;
 	data.y = y;
 	data.z = z;
@@ -496,7 +499,9 @@ void Aircraft::PrepareAircraftData()
 		data.inTransit=false;
 	}
 	if(!visible){
+		
 		v distanceV=v(x-ll->getX(),y-ahs->getX(),z-ll->getY());
+
 		double deviation=distanceV/distanceV;
 		if(data.engineoff){
 			nextData.y-=50.0;
@@ -506,9 +511,12 @@ void Aircraft::PrepareAircraftData()
 		if((!data.engineoff&&deviation<100)||(data.engineoff&&deviation<5)){
 			visible=true;
 	#if defined(DEBUG_STRINGS)		
-			printf("AUTOATC: made %d visible\n",id);
+			printf("AUTOATC: made %d visible with %f\n",id,deviation);
 	#endif
 		}
+		/*else{
+			printf("AUTOATC: %d invisible with %f\n",id,deviation);
+		}*/
 	}
     data_mutex.unlock();
 	XPLMProbeInfo_t outInfo;
@@ -664,6 +672,13 @@ void Aircraft::SetAircraftData(void)
 	
 	dr.structSize = sizeof(dr);
 	if(visible){
+		/*double xV=0;
+		double yV=0;
+		double zV=0;
+		XPLMWorldToLocal(ll->getX(),ll->getY(),ahs->getX(),&xV,&yV,&zV);
+		dr.x = xV;
+		dr.y = yV+yOffset;//data.y+yOffset;
+		dr.z = zV;*/
 		dr.x = ll->getX();//data.x;
 		dr.y = ahs->getX()+yOffset;//data.y+yOffset;
 		dr.z = ll->getY();//data.z;
@@ -671,7 +686,7 @@ void Aircraft::SetAircraftData(void)
 	else
 	{
 		dr.x = 0.0;
-		dr.y = 0.0;
+		dr.y = -10000.0;
 		dr.z = 0.0;
 	}
 	
@@ -741,17 +756,27 @@ void Aircraft::SetAircraftData(void)
     if(g_instance[i])
     {
 		float thisdamage=0.0;
-		if(damage!=NULL){
+		if(damage!=NULL&&i==0){
 			float donedamage;
 			
-			XPLMGetDatavf(damage,&donedamage,id,1);
+			/*XPLMGetDatavf(damage,&donedamage,id,1);
 			if(donedamage>20)
 				thisdamage=1.0;
 			XPLMSetDatavi(acID,&id,id,1);
 			XPLMSetDatavi(acAF,&airFrameIndex,id,1);
 			XPLMSetDatavf(acX,&dr.x,id,1);
 			XPLMSetDatavf(acY,&dr.y,id,1);
-			XPLMSetDatavf(acZ,&dr.z,id,1);	
+			XPLMSetDatavf(acZ,&dr.z,id,1);	*/
+
+			g_my_idarray[id]=id;
+			g_my_afarray[id]=airFrameIndex;
+    		g_my_xarray[id]=dr.x;
+    		g_my_yarray[id]=dr.y;
+    		g_my_zarray[id]=dr.z;
+			if(g_my_damagearray[id]>20)
+				thisdamage=1.0;
+    		
+    
 		}
 		if(ref_style==0){	//cls_drefs	
 			float tire[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,(float)dr.y,NULL};
