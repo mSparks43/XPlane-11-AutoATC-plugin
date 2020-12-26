@@ -34,6 +34,7 @@ be distributed under different terms and without source code for the larger work
 
   #include "AISound.h"
   #include "datarefs.h"
+  #include "tcas.h"
  #include <thread>
 //#include <mutex>
 #include <chrono>
@@ -170,7 +171,7 @@ void Aircraft::SimulateAircraftThreadData(){
 
 	float speed=velocity/velocity;
 
-	if(speed>0.05){
+	if(speed>0.02){
 		data.psi=(atan2(velocity.x,-velocity.z)* (180.0/3.141592653589793238463));
 	}
 
@@ -665,8 +666,11 @@ v Aircraft::getVelocity(){
 }
 void Aircraft::SetAircraftData(void)
 {
-	if(!thisData.live)
+	TCASAPI* tcasAPI=getTCASAPI();
+	if(!thisData.live){
+		tcasAPI->SetData(id+1,0,0,0,0,0);
 		return;
+	}
 		JVM* jvmO=getJVM();
     XPLMDrawInfo_t		dr;
 	
@@ -682,12 +686,15 @@ void Aircraft::SetAircraftData(void)
 		dr.x = ll->getX();//data.x;
 		dr.y = ahs->getX()+yOffset;//data.y+yOffset;
 		dr.z = ll->getY();//data.z;
+
+		
 	}
 	else
 	{
 		dr.x = 0.0;
 		dr.y = -10000.0;
 		dr.z = 0.0;
+		tcasAPI->SetData(id+1,0,0,0,0,0);
 	}
 	
 	dr.pitch = rp->getX();//data.the;
@@ -778,6 +785,8 @@ void Aircraft::SetAircraftData(void)
     		
     
 		}
+		if(visible)
+			tcasAPI->SetData(id+1,1,(float)dr.x,(float)dr.y,(float)dr.z,(float)dr.heading);
 		if(ref_style==0){	//cls_drefs	
 			float tire[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,(float)dr.y,NULL};
 			

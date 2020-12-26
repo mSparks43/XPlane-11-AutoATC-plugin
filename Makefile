@@ -137,6 +137,7 @@ SOURCES = \
 	src/SettingsWidget.cpp \
 	src/Simulation.cpp \
 	src/scppnt/scppnt_error.cpp \
+	src/tcas.cpp \
 	src/datarefs.cpp
 #LIBS = -L/home/mSparks/Downloads/jdk1.8.0_40/jre/lib/amd64/server \
 	-ljvm 
