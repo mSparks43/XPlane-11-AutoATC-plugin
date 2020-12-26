@@ -17,6 +17,7 @@ be distributed under different terms and without source code for the larger work
  #include <stdlib.h>
  #include <string>
 #include <algorithm>
+#include "jvm.h"
 float drefV=1.0;
 float getGearState(void * inRefcon) {
     return drefV;
@@ -176,6 +177,50 @@ static void setvb(void * refA, void * in_values, int in_offset, int in_max)
 		ref->string_data[i + in_offset] = source[i];
 
 	printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());	
+
+}
+static void setacarsvb(void * refA, void * in_values, int in_offset, int in_max)
+{
+    const char * source = (const char *) in_values;
+	int new_length = in_offset + in_max;
+
+	string_dref * ref =(string_dref *)refA;
+	ref->string_data.resize(new_length);
+	for(int i = 0; i < in_max; ++i)
+		ref->string_data[i + in_offset] = source[i];
+	char command[1024]={0};
+	printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());
+	sprintf(command,"doCommand:sendAcars:%s",ref->string_data.c_str());
+    //sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
+    printf("SEND ACARS = %s\n",command);
+	JVM *jvmO = getJVM();
+	jvmO->getData(command);	
+    //
+
+}
+static void setcduvb(void * refA, void * in_values, int in_offset, int in_max)
+{
+    const char * source = (const char *) in_values;
+	int new_length = in_offset + in_max;
+
+	string_dref * ref =(string_dref *)refA;
+	ref->string_data.resize(new_length);
+	bool newData=false;
+	for(int i = 0; i < in_max; ++i){
+		if(ref->string_data[i + in_offset] != source[i])
+			newData=true;
+		ref->string_data[i + in_offset] = source[i];
+	}
+	if(newData){
+		char command[1024]={0};
+		printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());
+		sprintf(command,"doCommand:CDU:%s",ref->string_data.c_str());
+		//sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
+		printf("SEND CDU = %s\n",command);
+		JVM *jvmO = getJVM();
+		jvmO->getData(command);	
+	}
+    //
 
 }
 std::string getAcarsOut(){
@@ -388,16 +433,16 @@ void registerDatarefs(){
 						NULL, NULL,
 						NULL, NULL,
 						NULL, NULL,
-						getvb, setvb,
+						getvb, setacarsvb,
 						&acarsoutarray, &acarsoutarray);
-	/*XPLMRegisterDataAccessor("autoatc/acars/send", xplmType_Int, true,
+	XPLMRegisterDataAccessor("autoatc/cdu", xplmType_Data, true,
 						geti, seti,
 						NULL, NULL,
 						NULL, NULL,
 						NULL, NULL,
 						NULL, NULL,
-						NULL, NULL,
-						&sendAcars, &sendAcars);*/
+						getvb, setcduvb,
+						&cduoutarray, &cduoutarray);
 	XPLMRegisterDataAccessor("autoatc/acars/received", xplmType_Int, true,
 						geti, seti,
 						NULL, NULL,
