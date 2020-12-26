@@ -34,7 +34,7 @@ be distributed under different terms and without source code for the larger work
 #include "Simulation.h"
 #include "aiplane.h"
 #include "Settings.h"
-
+#include "tcas.h"
 char gBob_debstr[128];
 
 XPLMCommandRef BroadcastObjectCommand = NULL;
@@ -218,6 +218,8 @@ PLUGIN_API int XPluginStart(
     registerDatarefs();
     jvmO->start();
     XPLMSetActiveAircraftCount(0);
+
+
     return 1;
 }
 static int				g_is_acf_inited = 0;
@@ -252,6 +254,8 @@ PLUGIN_API void XPluginDisable(void)
         jvmO->systemstop();
        // jvmO->deactivateJVM();
     }
+    TCASAPI* tcasAPI=getTCASAPI();
+    tcasAPI->Disable();
 }
 
 #define MSG_ADD_DATAREF 0x01000000           //  Add dataref to DRE message
@@ -276,6 +280,8 @@ PLUGIN_API int XPluginEnable(void)
     jvmO->activateJVM();
     jvmO->start();
     jvmO->registerFlightLoop();
+    TCASAPI* tcasAPI=getTCASAPI();
+    tcasAPI->Enable();
     return 1;
 }
 
