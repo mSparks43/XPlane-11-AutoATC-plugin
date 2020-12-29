@@ -176,7 +176,7 @@ static void setvb(void * refA, void * in_values, int in_offset, int in_max)
 	for(int i = 0; i < in_max; ++i)
 		ref->string_data[i + in_offset] = source[i];
 
-	printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());	
+	//printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());	
 
 }
 static void setacarsvb(void * refA, void * in_values, int in_offset, int in_max)
@@ -189,10 +189,10 @@ static void setacarsvb(void * refA, void * in_values, int in_offset, int in_max)
 	for(int i = 0; i < in_max; ++i)
 		ref->string_data[i + in_offset] = source[i];
 	char command[1024]={0};
-	printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());
+	//printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());
 	sprintf(command,"doCommand:sendAcars:%s",ref->string_data.c_str());
     //sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
-    printf("SEND ACARS = %s\n",command);
+    //printf("SEND ACARS = %s\n",command);
 	JVM *jvmO = getJVM();
 	jvmO->getData(command);	
     //
@@ -213,10 +213,10 @@ static void setcduvb(void * refA, void * in_values, int in_offset, int in_max)
 	}
 	if(newData){
 		char command[1024]={0};
-		printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());
+		//printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());
 		sprintf(command,"doCommand:CDU:%s",ref->string_data.c_str());
 		//sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
-		printf("SEND CDU = %s\n",command);
+		//printf("SEND CDU = %s\n",command);
 		JVM *jvmO = getJVM();
 		jvmO->getData(command);	
 	}
@@ -242,178 +242,178 @@ static void	seti(void * refA, int val)
 }
 void registerDatarefs(){
 	XPLMRegisterDataAccessor("traf/nw_def", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/lgear", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/flaps", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/nw_rot", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/bcn", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/strobe", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/land", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/nav", xplmType_Float,0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/taxi", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/vint_circle", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/vint", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/touch_down", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("traf/sb", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	//WT3
 	XPLMRegisterDataAccessor("cjs/world_traffic/main_gear_retraction_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/nose_gear_retraction_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/beacon_lights_on", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/strobe_lights_on", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/wing_landing_lights_on", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/nav_lights_on", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/taxi_lights_on", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/engine_rotation_angle2", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/engine_rotation_angle1", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("autoatc/engine/POINT_prop_ang_deg0", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("autoatc/engine/POINT_prop_ang_deg1", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("autoatc/engine/POINT_tacrad0", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("autoatc/engineon", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("autoatc/destroyed", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("autoatc/altitude", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("autoatc/flak", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("autoatc/engine/POINT_tacrad1", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/touch_down", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/engine_rpm1", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	XPLMRegisterDataAccessor("cjs/world_traffic/engine_rpm2", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 
 	//CSL from https://github.com/kuroneko/libxplanemp/blob/master/src/XPMPMultiplayerObj8.cpp
 	XPLMRegisterDataAccessor("libxplanemp/controls/gear_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/flap_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/spoiler_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/speed_brake_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/slat_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/wing_sweep_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/thrust_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/yoke_pitch_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/yoke_heading_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/yoke_roll_ratio", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 
 		XPLMRegisterDataAccessor("libxplanemp/controls/landing_lites_on", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/beacon_lites_on", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/strobe_lites_on", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 		XPLMRegisterDataAccessor("libxplanemp/controls/nav_lites_on", xplmType_Float, 0, NULL,
-	NULL, getGearState, setGearState, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("autoatc/aircraft/id", xplmType_IntArray, 1, 
+	XPLMRegisterDataAccessor("autoatc/aircraft/id", xplmType_IntArray, 0, 
     NULL,NULL,  NULL, 
     NULL, NULL, NULL, 
     getvi, setvi,getvf, setvf, 
     NULL, NULL,g_my_idarray, g_my_idarray);//create it
-	XPLMRegisterDataAccessor("autoatc/aircraft/af", xplmType_IntArray, 1, 
+	XPLMRegisterDataAccessor("autoatc/aircraft/af", xplmType_IntArray, 0, 
     NULL,NULL,  NULL, 
     NULL, NULL, NULL, 
     getvi, setvi,getvf, setvf, 
     NULL, NULL,g_my_afarray, g_my_afarray);//create it
-	XPLMRegisterDataAccessor("autoatc/aircraft/x", xplmType_FloatArray, 1, 
+	XPLMRegisterDataAccessor("autoatc/aircraft/x", xplmType_FloatArray, 0, 
     NULL,NULL,  NULL, 
     NULL, NULL, NULL, 
     NULL, NULL,getvf, setvf, 
     NULL, NULL,g_my_xarray, g_my_xarray);//create it
-	XPLMRegisterDataAccessor("autoatc/aircraft/y", xplmType_FloatArray, 1, 
+	XPLMRegisterDataAccessor("autoatc/aircraft/y", xplmType_FloatArray, 0, 
     NULL,NULL,  NULL, 
     NULL, NULL, NULL, 
     NULL, NULL,getvf, setvf, 
     NULL, NULL,g_my_yarray, g_my_yarray);//create it
 
-	XPLMRegisterDataAccessor("autoatc/aircraft/z", xplmType_FloatArray, 1, 
+	XPLMRegisterDataAccessor("autoatc/aircraft/z", xplmType_FloatArray, 0, 
     NULL,NULL,  NULL, 
     NULL, NULL, NULL, 
     NULL, NULL,getvf, setvf, 
     NULL, NULL,g_my_zarray, g_my_zarray);//create it
 
-	XPLMRegisterDataAccessor("autoatc/aircraft/target_damage", xplmType_FloatArray, 1, 
+	XPLMRegisterDataAccessor("autoatc/aircraft/target_damage", xplmType_FloatArray, 0, 
     NULL,NULL,  NULL, 
     NULL, NULL, NULL, 
     NULL, NULL,getvf, setvf, 
@@ -436,7 +436,7 @@ void registerDatarefs(){
 						getvb, setacarsvb,
 						&acarsoutarray, &acarsoutarray);
 	XPLMRegisterDataAccessor("autoatc/cdu", xplmType_Data, true,
-						geti, seti,
+						NULL, NULL,
 						NULL, NULL,
 						NULL, NULL,
 						NULL, NULL,

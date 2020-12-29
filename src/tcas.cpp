@@ -17,15 +17,16 @@ float floop_cb(float elapsed1, float elapsed2, int ctr, void* refcon)
     //tcasAPI.absalts[3] -= 600 * elapsed1 / 60.f;                            // target descending 600fpm
     if (tcasAPI.plugin_owns_tcas)
     {
-        for (int i = 0; i < TARGETS; ++i)
+        for (int i = 1; i < TARGETS; ++i)
         {
         // targets are just flying perfect circles around the user.
         /*tcasAPI.absbrgs[i] += (i+1) * elapsed1;                             // this just makes the targets fly circles of varying speed
         relbrgs[i] = tcasAPI.absbrgs[i] - XPLMGetDataf(tcasAPI.psi);                // convert to relative position for TCAS dataref. Use true_psi, not hpath or something else
 
         relalts[i] = tcasAPI.absalts[i] * fttomtr - XPLMGetDatad(tcasAPI.ele);      // convert to relative position for TCAS dataref. Use elevation, not local_y!*/
+            
             if(tcasAPI.alive[i]>0){
-                XPLMSetDatavi(tcasAPI.id, &tcasAPI.ids[i], i, 1);
+                XPLMSetDatavi(tcasAPI.id, &i, i, 1);//always write the id
                 XPLMSetDatavf(tcasAPI.xRef, &tcasAPI.x[i], i, 1);
                 XPLMSetDatavf(tcasAPI.yRef, &tcasAPI.y[i], i, 1);
                 XPLMSetDatavf(tcasAPI.zRef, &tcasAPI.z[i], i, 1);
@@ -70,7 +71,7 @@ void my_planes_now()
 {
     XPLMDebugString("TCAS test plugin now has the AI planes!\n");
     XPLMSetDatai(tcasAPI.override, 1);      // If you try to set this dataref when not owning the planes, it will fail!
-    
+    XPLMSetDatai(XPLMFindDataRef("sim/operation/override/override_multiplayer_map_layer"),1); //disable lame broken xplane map layer (ffs)
     // query the array size. This might change with X-Plane updates.
     std::size_t max_targets = XPLMGetDatavi(tcasAPI.id, NULL, 0, 0);
     //assert(TARGETS < max_targets);
@@ -83,7 +84,7 @@ void my_planes_now()
     // These IDs can be used by other plugins to keep track of your aircraft if you shuffle slots. 
     // Note that the ID cannot be left 0! X-Plane will not update your target's dependent datarefs if it has no ID!!
     // If you haven't updated a target for 10 frames, X-Plane will forget it and reset the ID of the slot to 0.
-    XPLMSetDatavi(tcasAPI.id, tcasAPI.ids, 1, TARGETS);
+    //XPLMSetDatavi(tcasAPI.id, tcasAPI.ids, 1, TARGETS);
 
 
     // Each target can have a 7 ASCII character flight ID, usually the tailnumber or flightnumber
@@ -91,9 +92,11 @@ void my_planes_now()
     // The array is 64*8 bytes long, and the first 8 bytes are the user's tailnumber obviously.
     // Note that this is, unlike the Mode-S ID, totally optional.
     // But it is nice to see the tainumber on the map obviously!
+    int mode=1200;
     for (int i = 1; i <= TARGETS; ++i){
         XPLMSetDatab(tcasAPI.flt_id, tcasAPI.tailnum[i - 1], i * 8, strnlen(tcasAPI.tailnum[i-1], 8));  // copy at most 8 characters, but not more than we actually have.
-        
+        XPLMSetDatab(tcasAPI.icaoType, tcasAPI.icaonum[i - 1], i * 8, strnlen(tcasAPI.icaonum[i-1], 8));
+        XPLMSetDatavi(tcasAPI.modeC_code,&mode,i,1);
     }
 
 
@@ -131,8 +134,9 @@ void retry_acquiring_planes(void*)
         my_planes_now();
     }
 }
-void TCASAPI::SetData(int id,int isAlive,float nx,float ny,float nz,float npsi)
+void TCASAPI::SetData(int id,int isAlive,float nx,float ny,float nz,float npsi,float lat,float lon,float alt,int aicon)
 {
+    //printf("set tcas data %d %d %f %f %f\n",id,isAlive,nx,ny,nz);
     if(isAlive>0){
         alive[id] = 1;
         x[id]=nx;
@@ -145,7 +149,13 @@ void TCASAPI::SetData(int id,int isAlive,float nx,float ny,float nz,float npsi)
         x[id]=0;
         y[id]=0;
         z[id]=0;
+        psi[id]=0;
+
     }
+    alat[id]=lat;
+    alon[id]=lon;
+    aalt[id]=alt*3.3;
+    icon[id]=aicon;
 }
 void TCASAPI::Enable()
 {
@@ -158,10 +168,11 @@ void TCASAPI::Enable()
     yRef = XPLMFindDataRef("sim/cockpit2/tcas/targets/position/y");
     zRef = XPLMFindDataRef("sim/cockpit2/tcas/targets/position/z");
     psiRef = XPLMFindDataRef("sim/cockpit2/tcas/targets/position/psi");
+    icaoType = XPLMFindDataRef("sim/cockpit2/tcas/targets/icao_type");
     // these datarefs are new to 11.50
     id = XPLMFindDataRef("sim/cockpit2/tcas/targets/modeS_id");         // array of 64 integers
     flt_id = XPLMFindDataRef("sim/cockpit2/tcas/targets/flight_id");    // array of 64*8 bytes
-
+    modeC_code=XPLMFindDataRef("sim/cockpit2/tcas/targets/modeC_code"); 
     // this dataref can only be set if we own the AI planes!
     override = XPLMFindDataRef("sim/operation/override/override_TCAS");
 

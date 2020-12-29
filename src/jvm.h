@@ -41,7 +41,7 @@ class AirframeDef{
     char path[2048];
     int soundIndex;
     int drefStyle;
-    
+    int icon;
     public:
     acModelDef acDefs[12];//up to 12 parts
     AirframeDef();
@@ -49,6 +49,7 @@ class AirframeDef{
     char* getPath(void);
     double getOffset(void);
     int getSound(void);
+    int getIcon(void);
     int getDrefStyle(void);
 };
 class PlaneData{
@@ -62,6 +63,9 @@ public:
     float		the;
 	float		phi;
 	float		psi;
+    double       lat;
+    double       lon;
+    double       alt;
     double timeStamp;
     //double remoteTimestamp;
     int airframe;
@@ -228,6 +232,7 @@ public:
     double getOffset(int id);
     v getOffset(int id,int PartID);
     int getSound(int id);
+    int getIcon(int id);
     int getDrefStyle(int id);
     void createMenu();
     void destroyMenu();

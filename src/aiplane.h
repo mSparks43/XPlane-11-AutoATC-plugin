@@ -151,6 +151,12 @@ private:
 public:
 	int id;
 	int soundIndex;
+	/*
+	0 Jet
+	1 Prop
+	2 heli
+	*/
+	int icon;
 	int airFrameIndex=-1;
 	PlaneData thisData;
 	AircraftData data;

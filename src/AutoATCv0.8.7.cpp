@@ -35,6 +35,7 @@ be distributed under different terms and without source code for the larger work
 #include "aiplane.h"
 #include "Settings.h"
 #include "tcas.h"
+#include "map_layer.h"
 char gBob_debstr[128];
 
 XPLMCommandRef BroadcastObjectCommand = NULL;
@@ -238,6 +239,7 @@ PLUGIN_API void XPluginStop(void)
     XPLMDebugString("AUTOATC: deactivateJVM\n");
     jvmO->deactivateJVM();//this is !hasJVM safe and needed to kill the threads
     g_is_acf_inited = 0;
+    MapLayerStop();
     //unregisterDatarefs();
 }
 
@@ -282,6 +284,7 @@ PLUGIN_API int XPluginEnable(void)
     jvmO->registerFlightLoop();
     TCASAPI* tcasAPI=getTCASAPI();
     tcasAPI->Enable();
+    MapLayerEnable();
     return 1;
 }
 

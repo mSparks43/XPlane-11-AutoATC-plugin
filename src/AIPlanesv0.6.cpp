@@ -211,6 +211,9 @@ void Aircraft::GetAircraftThreadData(){
 		thisData.x=newData.x;
     	thisData.y=newData.y;
    		thisData.z=newData.z;
+		thisData.lat=newData.lat;
+    	thisData.lon=newData.lon;
+   		thisData.alt=newData.alt;   
     	thisData.gearDown=newData.gearDown;
     	thisData.throttle=newData.throttle;
     	thisData.the=newData.the;
@@ -638,6 +641,7 @@ void Aircraft::PrepareAircraftData()
 		if((airFrameIndex==-1&&airFrameIndex!=inAirframe)||(inAirframe>0&&airFrameIndex!=inAirframe)){
 
 			soundIndex=jvmO->getSound(inAirframe);
+			icon=jvmO->getIcon(inAirframe);
 			yOffset=jvmO->getOffset(inAirframe);
 
 			ref_style=jvmO->getDrefStyle(inAirframe);
@@ -668,7 +672,7 @@ void Aircraft::SetAircraftData(void)
 {
 	TCASAPI* tcasAPI=getTCASAPI();
 	if(!thisData.live){
-		tcasAPI->SetData(id+1,0,0,0,0,0);
+		tcasAPI->SetData(id+1,0,0,0,0,0,0,0,-9999,0);
 		return;
 	}
 		JVM* jvmO=getJVM();
@@ -694,7 +698,7 @@ void Aircraft::SetAircraftData(void)
 		dr.x = 0.0;
 		dr.y = -10000.0;
 		dr.z = 0.0;
-		tcasAPI->SetData(id+1,0,0,0,0,0);
+		tcasAPI->SetData(id+1,0,0,0,0,0,0,0,-9999,0);
 	}
 	
 	dr.pitch = rp->getX();//data.the;
@@ -785,8 +789,8 @@ void Aircraft::SetAircraftData(void)
     		
     
 		}
-		if(visible)
-			tcasAPI->SetData(id+1,1,(float)dr.x,(float)dr.y,(float)dr.z,(float)dr.heading);
+		if(visible&&i==0)
+			tcasAPI->SetData(id+1,1,(float)dr.x,(float)dr.y,(float)dr.z,(float)dr.heading,thisData.lat,thisData.lon,thisData.alt,icon);
 		if(ref_style==0){	//cls_drefs	
 			float tire[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,(float)dr.y,NULL};
 			

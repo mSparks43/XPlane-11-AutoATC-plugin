@@ -47,7 +47,7 @@ const char* plugin_version = "About:0.9.4.5 for XP10";
 #endif
 char gBob_debstr2[2048];
 char xp_path[512];
-char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC/airframes_860.txt";
+char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC/airframes_940.txt";
  bool file_exists (const std::string& name);
  void				draw_atc_text(XPLMWindowID in_window_id, void * in_refcon);
 void				draw_about_text(XPLMWindowID in_window_id, void * in_refcon);
@@ -103,8 +103,9 @@ void AirframeDef::setData(std::string inLine){
     std::string offsetS = inLine.substr (found+1,found2);
     std::size_t found3 = inLine.find(",",found2+1);
     std::string soundS = inLine.substr (found2+1,found3);
-    std::string drefStyleS = inLine.substr (found3+1);
-
+    std::size_t found4 = inLine.find(",",found3+1);
+    std::string drefStyleS = inLine.substr (found3+1,found4);
+    std::string iconS = inLine.substr (found4+1);
     XPLMGetSystemPath(xp_path);
     sprintf (path, "%s%s", xp_path, pathS.c_str());
     char* end;
@@ -112,13 +113,17 @@ void AirframeDef::setData(std::string inLine){
     yOffset=strtod(offsetS.c_str(),&end);
     soundIndex=strtol(soundS.c_str(),&end,10);
     drefStyle=strtol(drefStyleS.c_str(),&end,10);
-
+    icon=strtol(iconS.c_str(),&end,10);
+    //printf("set aircraft data %s %d\n",path,icon);
 }
 char* AirframeDef::getPath(void){
     return path;
 }
 double AirframeDef::getOffset(void){
     return yOffset;
+}
+int AirframeDef::getIcon(void){
+    return icon;
 }
 int AirframeDef::getSound(void){
     return soundIndex;
@@ -609,7 +614,7 @@ void JVM::init_parameters ()
 	volume_prop = XPLMFindDataRef("sim/operation/sound/prop_volume_ratio");
 	volume_env = XPLMFindDataRef("sim/operation/sound/enviro_volume_ratio");
     standbyAirframe=AirframeDef();
-    standbyAirframe.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0");
+    standbyAirframe.setData("Resources/default scenery/airport scenery/Aircraft/Heavy_Metal/747United.obj,0.0,0,0,0");
     std::ifstream t("Resources/plugins/AutoATC/notepad.txt");
     if(!t.fail()){
         std::stringstream notepadss;
@@ -1002,6 +1007,9 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
         /*etVal.x=element[0];
         retVal.y=element[1];
         retVal.z=element[2];*/
+        retVal.lat=element[0];
+        retVal.lon=element[1];
+        retVal.alt=element[2];
         retVal.the=(float)element[3];
         retVal.phi=(float)element[4];
         retVal.psi=(float)element[5];
@@ -1052,6 +1060,9 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
         /*retVal.x=aiplaneData[i+0];
         retVal.y=aiplaneData[i+1];
         retVal.z=aiplaneData[i+2];*/
+        retVal.lat=aiplaneData[i+0];
+        retVal.lon=aiplaneData[i+1];
+        retVal.alt=aiplaneData[i+2];
         retVal.the=(float)aiplaneData[i+3];
         retVal.phi=(float)aiplaneData[i+4];
         retVal.psi=(float)aiplaneData[i+5];
@@ -1192,6 +1203,15 @@ int JVM::getSound(int id){
     if(id>=airframeDefs.size()||id<0)
         return standbyAirframe.getSound();
     return airframeDefs[id].getSound();
+}
+int JVM::getIcon(int id){
+    /*if(id>=airframeDefs.size()){
+        updateAirframes();
+
+    }*/
+    if(id>=airframeDefs.size()||id<0)
+        return standbyAirframe.getIcon();
+    return airframeDefs[id].getIcon();
 }
 int JVM::getDrefStyle(int id){
     /*if(id>=airframeDefs.size()){
