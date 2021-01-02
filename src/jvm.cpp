@@ -41,9 +41,9 @@ be distributed under different terms and without source code for the larger work
 #include <stdlib.h>
 #endif
 #if defined(XP11)
-const char* plugin_version = "About:0.9.4.5";
+const char* plugin_version = "About:0.9.5.1";
 #else
-const char* plugin_version = "About:0.9.4.5 for XP10";
+const char* plugin_version = "About:0.9.5.1 for XP10";
 #endif
 char gBob_debstr2[2048];
 char xp_path[512];
@@ -596,8 +596,8 @@ void JVM::init_parameters ()
     altitudeRef = XPLMFindDataRef ("sim/flightmodel/position/elevation");
     battery_onRef = XPLMFindDataRef ("sim/cockpit/electrical/battery_array_on");
     com1_onRef = XPLMFindDataRef ("sim/cockpit2/radios/actuators/com1_power");
-    com1_freq_hzRef = XPLMFindDataRef ("sim/cockpit/radios/com1_freq_hz");
-    com1_stdby_freq_hz = XPLMFindDataRef ("sim/cockpit/radios/com1_stdby_freq_hz");
+    com1_freq_hzRef = XPLMFindDataRef ("sim/cockpit2/radios/actuators/com1_frequency_hz_833");
+    com1_stdby_freq_hz = XPLMFindDataRef ("sim/cockpit2/radios/actuators/com1_standby_frequency_hz_833");
     iasRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/airspeed_kts_pilot");
     gyroHeadingRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/heading_vacuum_deg_mag_pilot");;
     altPressureRef = XPLMFindDataRef ("sim/cockpit2/gauges/indicators/altitude_ft_pilot");
@@ -935,7 +935,7 @@ int JVM::getStndbyFreq(int roll){
     //jint fOnehundred = (jint) env->CallStaticIntMethod(commandsClass, getStndbyMethod,roll,logPage);
     int retVal=0;
     int_mutex.lock();
-    retVal=standbyFreqInt;
+    retVal=standbyFreqInt*10;
     standbyRoll=roll;
     fireNewFreq=true;
     int_mutex.unlock();

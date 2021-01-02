@@ -18,6 +18,7 @@ be distributed under different terms and without source code for the larger work
  #include <string>
 #include <algorithm>
 #include "jvm.h"
+
 float drefV=1.0;
 float getGearState(void * inRefcon) {
     return drefV;
@@ -241,151 +242,86 @@ static void	seti(void * refA, int val)
 	ref->data=val;
 }
 void registerDatarefs(){
-	XPLMRegisterDataAccessor("traf/nw_def", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/lgear", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/flaps", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/nw_rot", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/bcn", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/strobe", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/land", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/nav", xplmType_Float,0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/taxi", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/vint_circle", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/vint", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/touch_down", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("traf/sb", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	//WT3
-	XPLMRegisterDataAccessor("cjs/world_traffic/main_gear_retraction_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/nose_gear_retraction_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/beacon_lights_on", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/strobe_lights_on", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/wing_landing_lights_on", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/nav_lights_on", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/taxi_lights_on", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/engine_rotation_angle2", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/engine_rotation_angle1", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("autoatc/engine/POINT_prop_ang_deg0", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("autoatc/engine/POINT_prop_ang_deg1", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("autoatc/engine/POINT_tacrad0", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("autoatc/engineon", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("autoatc/destroyed", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("autoatc/altitude", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("autoatc/flak", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("autoatc/engine/POINT_tacrad1", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/touch_down", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/engine_rpm1", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-	XPLMRegisterDataAccessor("cjs/world_traffic/engine_rpm2", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
+	const char * cls_drefs[15]={ "traf/mw_def",
+	"traf/nw_def",
+	"traf/lgear",
+	"traf/flaps",
+	"traf/nw_rot",
+	"traf/bcn",
+	"traf/strobe"
+	,"traf/land",
+	"traf/nav",
+	"traf/taxi",
+	"traf/sb",
+	"traf/vint",
+	"traf/touch_down",
+	"traf/vint_circle",
+	"traf/vint_circle2"};
+	const char * acf_drefs[7]={ "autoatc/engine/POINT_tacrad0",
+	"autoatc/engine/POINT_tacrad1",
+	"autoatc/engine/POINT_prop_ang_deg0",
+	"autoatc/engine/POINT_prop_ang_deg1",
+	"autoatc/flak",
+	"autoatc/engineon",
+	"autoatc/altitude"};
+	const char * wt3_drefs[17]={ "traf/mw_def",
+	"traf/nw_def",
+	"cjs/world_traffic/main_gear_retraction_ratio",
+	"cjs/world_traffic/nose_gear_retraction_ratio",
+	"traf/nw_rot",
+	"cjs/world_traffic/beacon_lights_on",
+	"cjs/world_traffic/strobe_lights_on",
+	"cjs/world_traffic/wing_landing_lights_on",
+	"cjs/world_traffic/nav_lights_on",
+	"cjs/world_traffic/taxi_lights_on",
+	"traf/sb"
+	,"traf/vint",
+	"cjs/world_traffic/touch_down",
+	"cjs/world_traffic/engine_rpm1",
+	"cjs/world_traffic/engine_rpm2",
+	"cjs/world_traffic/engine_rotation_angle1",
+	"cjs/world_traffic/engine_rotation_angle2" };
+	const char * xmp_drefs[17]={ "libxplanemp/controls/beacon_lites_on",
+	"libxplanemp/controls/nav_lites_on",
+	"libxplanemp/controls/strobe_lites_on",
+	"libxplanemp/controls/gear_ratio",
+	"libxplanemp/controls/flap_ratio",
+	"libxplanemp/controls/landing_lites_on",
+	"libxplanemp/engines/engine_rotation_angle_deg1",
+	"libxplanemp/engines/engine_rotation_angle_deg2",
+	"libxplanemp/engines/engine_rotation_angle_deg3",
+	"libxplanemp/engines/engine_rotation_angle_deg4",
+	"libxplanemp/engines/engine_rotation_speed_rad_sec1",
+	"libxplanemp/engines/engine_rotation_speed_rad_sec2",
+	"libxplanemp/engines/engine_rotation_speed_rpm1",
+	"libxplanemp/engines/engine_rotation_speed_rpm2",
+	"libxplanemp/engines/engine_rotation_speed_rpm3",
+	"libxplanemp/engines/engine_rotation_speed_rpm4",
+	"libxplanemp/controls/speed_brake_ratio"};
+	for(int i=0;i<15;i++){
 
-	//CSL from https://github.com/kuroneko/libxplanemp/blob/master/src/XPMPMultiplayerObj8.cpp
-	XPLMRegisterDataAccessor("libxplanemp/controls/gear_ratio", xplmType_Float, 0, NULL,
+		XPLMRegisterDataAccessor(cls_drefs[i], xplmType_Float, 0, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/flap_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/spoiler_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/speed_brake_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/slat_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/wing_sweep_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/thrust_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/yoke_pitch_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/yoke_heading_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/yoke_roll_ratio", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
+	}
+	for(int i=0;i<17;i++){
 
-		XPLMRegisterDataAccessor("libxplanemp/controls/landing_lites_on", xplmType_Float, 0, NULL,
+		XPLMRegisterDataAccessor(acf_drefs[i], xplmType_Float, 0, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/beacon_lites_on", xplmType_Float, 0, NULL,
+	}
+	for(int i=0;i<17;i++){
+
+		XPLMRegisterDataAccessor(wt3_drefs[i], xplmType_Float, 0, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/strobe_lites_on", xplmType_Float, 0, NULL,
+	}
+	for(int i=0;i<17;i++){
+
+		XPLMRegisterDataAccessor(xmp_drefs[i], xplmType_Float, 0, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
-		XPLMRegisterDataAccessor("libxplanemp/controls/nav_lites_on", xplmType_Float, 0, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL);
+	}
 	XPLMRegisterDataAccessor("autoatc/aircraft/id", xplmType_IntArray, 0, 
     NULL,NULL,  NULL, 
     NULL, NULL, NULL, 

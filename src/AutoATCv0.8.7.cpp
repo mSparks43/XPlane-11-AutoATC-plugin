@@ -202,12 +202,12 @@ PLUGIN_API int XPluginStart(
                                playbackCommandCommandHandler, // in Handler
                                1,                             // Receive input before plugin windows.
                                (void *)0);
-    com1_freq_hzRef = XPLMFindDataRef("sim/cockpit/radios/com1_freq_hz");
+    com1_freq_hzRef = XPLMFindDataRef("sim/cockpit2/radios/actuators/com1_frequency_hz_833");
     nav1_freq_hzRef = XPLMFindDataRef("sim/cockpit/radios/nav1_freq_hz");
     nav2_freq_hzRef = XPLMFindDataRef("sim/cockpit/radios/nav2_freq_hz");
     adf1_freq_hzRef = XPLMFindDataRef("sim/cockpit/radios/adf1_freq_hz");
     adf2_freq_hzRef = XPLMFindDataRef("sim/cockpit/radios/adf2_freq_hz");
-    com1_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/com1_stdby_freq_hz");
+    com1_stdby_freq_hz = XPLMFindDataRef("sim/cockpit2/radios/actuators/com1_standby_frequency_hz_833");
     nav1_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/nav1_stdby_freq_hz");
     nav2_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/nav2_stdby_freq_hz");
     adf1_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/adf1_stdby_freq_hz");

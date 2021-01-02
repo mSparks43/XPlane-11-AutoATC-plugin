@@ -36,6 +36,7 @@ public:
 	float		time;
 	double      remoteTimestamp;
 	float      updateAlt=0;
+	bool onGround;
     AircraftData(void);
 
 };
@@ -106,24 +107,27 @@ private:
 	"cjs/world_traffic/engine_rpm2",
 	"cjs/world_traffic/engine_rotation_angle1",
 	"cjs/world_traffic/engine_rotation_angle2","autoatc/destroyed","autoatc/altitude", NULL };
-	const char * xmp_drefs[21]={ "traf/mw_def",
-	"traf/nw_def",
-	"libxplanemp/controls/gear_ratio",
-	"libxplanemp/controls/flap_ratio",
-	"traf/nw_rot",
-	"libxplanemp/controls/beacon_lites_on",
-	"libxplanemp/controls/strobe_lites_on",
-	"libxplanemp/controls/landing_lites_on",
+	const char * xmp_drefs[20]={ "libxplanemp/controls/beacon_lites_on",
 	"libxplanemp/controls/nav_lites_on",
 	"libxplanemp/controls/strobe_lites_on",
-	"traf/sb",
-	"traf/vint",
-	"cjs/world_traffic/touch_down",
-	"cjs/world_traffic/engine_rpm1",
-	"cjs/world_traffic/engine_rpm2",
-	"cjs/world_traffic/engine_rotation_angle1",
-	"cjs/world_traffic/engine_rotation_angle2",
-	"libxplanemp/controls/speed_brake_ratio","autoatc/destroyed","autoatc/altitude", NULL };
+	"libxplanemp/controls/gear_ratio",
+	"libxplanemp/controls/flap_ratio",
+	"libxplanemp/controls/landing_lites_on",
+	"libxplanemp/engines/engine_rotation_angle_deg1",
+	"libxplanemp/engines/engine_rotation_angle_deg2",
+	"libxplanemp/engines/engine_rotation_angle_deg3",
+	"libxplanemp/engines/engine_rotation_angle_deg4",
+	"libxplanemp/engines/engine_rotation_speed_rad_sec1",
+	"libxplanemp/engines/engine_rotation_speed_rad_sec2",
+	"libxplanemp/engines/engine_rotation_speed_rpm1",
+	"libxplanemp/engines/engine_rotation_speed_rpm2",
+	"libxplanemp/engines/engine_rotation_speed_rpm3",
+	"libxplanemp/engines/engine_rotation_speed_rpm4",
+	"libxplanemp/controls/speed_brake_ratio",
+	"autoatc/destroyed",
+	"autoatc/altitude", 
+	NULL }; //make it public to register
+	
 	int ref_style=0;
 	bool wt3;
 	XPLMProbeRef ground_probe;
@@ -149,6 +153,7 @@ private:
 //	PlaneData thisData;
 	std::mutex data_mutex;
 public:
+	
 	int id;
 	int soundIndex;
 	/*

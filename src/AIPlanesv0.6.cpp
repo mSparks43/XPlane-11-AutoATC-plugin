@@ -134,9 +134,7 @@ void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
 				else if(ref_style==1)
 					g_instance[partID] = XPLMCreateInstance(inObject, wt3_drefs);
 				else if(ref_style==3){
-					g_instance[partID] = XPLMCreateInstance(inObject, acf_drefs);
-					
-
+					g_instance[partID] = XPLMCreateInstance(inObject, acf_drefs);	
 				}
 				else if(ref_style==2)
 					g_instance[partID] = XPLMCreateInstance(inObject, xmp_drefs);
@@ -562,8 +560,9 @@ void Aircraft::PrepareAircraftData()
 	
     {
 	
-		
+		data.onGround=false;
 		if(requestedAGL<18.0){
+			data.onGround=true;
 			data.y=outInfo.locationY;
 			if(inTouchDown&&targetAGL<0.5){
 				touchDownTime=jvmO->getSysTime();///CLOCKS_PER_SEC;
@@ -615,6 +614,7 @@ void Aircraft::PrepareAircraftData()
 		}
 		else if(requestedAGL<=198.0){
 			//data.the=0.0;
+			
     		data.phi=setPHI/3;
 			if(soundIndex!=2)//no screech for helos
 				inTouchDown=true;
@@ -712,7 +712,12 @@ void Aircraft::SetAircraftData(void)
 		touchDownSmoke=1.0;
 	float thrust=timeNow+171.0;
 	float gear=data.gear_deploy;
-
+	float landingLights=0.0;
+	float flaps=0.0;
+	if((!data.onGround&&!data.inTransit)||touchDownSmoke>0.0)
+		landingLights=1.0;
+	if(!data.inTransit&&!data.engineoff)	
+		flaps=0.7;
 	if(velocity/velocity>0.1f){
 		if(rpm<=100){
 			//begin move
@@ -791,14 +796,15 @@ void Aircraft::SetAircraftData(void)
 		}
 		if(visible&&i==0)
 			tcasAPI->SetData(id+1,1,(float)dr.x,(float)dr.y,(float)dr.z,(float)dr.heading,thisData.lat,thisData.lon,thisData.alt,icon);
+		float engineon=!data.engineoff?1.0:0.0;
 		if(ref_style==0){	//cls_drefs	
-			float tire[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,(float)dr.y,NULL};
+			float drefVals[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,(float)dr.y,NULL};
 			
-			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
+			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
 		else if(ref_style==1){//wt3_drefs
-			float tire[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,(float)dr.y,NULL};
-			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
+			float drefVals[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,(float)dr.y,NULL};
+			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
 		else if(ref_style==3){
 			float spin=((int)(thrust)%360);;
@@ -812,7 +818,7 @@ void Aircraft::SetAircraftData(void)
 			if(nowT>(startFlakTime)){
 				flak=1.0;
 			}
-			float engineon=!data.engineoff?1.0:0.0;
+			
 			
 			
 			//printf("damage %d=%f",id,donedamage);	
@@ -821,12 +827,13 @@ void Aircraft::SetAircraftData(void)
 			dr.y = ahs->getX()+yOffset+acDef->partoffsets.y;//data.y+yOffset;
 			dr.z = ll->getY()+acDef->partoffsets.z;
 			
-			float tire[10] = {(float)8.0,(float)8.0,spin,spin,flak,engineon,gear,thisdamage,NULL};
-			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
+			float drefVals[10] = {(float)8.0,(float)8.0,spin,spin,flak,engineon,gear,thisdamage,NULL};
+			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
 		else{ //xmp_drefs
-			float tire[21] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,(float)dr.y,NULL};
-			XPLMInstanceSetPosition(g_instance[i], &dr, tire);
+			//float drefVals[21] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,(float)dr.y,NULL};
+			float drefVals[20] = {engineon,engineon,engineon,gear,flaps,landingLights,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,(float)dr.y,NULL};
+			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
      
     }

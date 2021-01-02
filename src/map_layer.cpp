@@ -142,7 +142,7 @@ void draw_marking_icons(XPLMMapLayerID layer, const float * inMapBoundsLeftTopRi
         XPLMMapProject(projection, tcasAPI->alat[i], tcasAPI->alon[i], &x, &y);
         XPLMDrawMapIconFromSheet(
 						layer, SAMPLE_IMG,
-						((int)tcasAPI->icon[i]/3), ((int)tcasAPI->icon[i]%3), // draw the image cell at (s, t) == (0, 0) (i.e., the bottom left cell in the sample image)
+						((int)tcasAPI->icon[i]%3),((int)tcasAPI->icon[i]/3), // draw the image cell at (s, t) == (0, 0) (i.e., the bottom left cell in the sample image)
 						3, 2, // our sample image is two image cell wide, and two image cells tall
 						x, y,
 						xplm_MapOrientation_Map, // Orient the icon relative to the map itself, rather than relative to the UI
