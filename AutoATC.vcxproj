@@ -222,15 +222,18 @@
     <ClCompile Include="src\AutoATCv0.8.7.cpp" />
     <ClCompile Include="src\datarefs.cpp" />
     <ClCompile Include="src\jvm.cpp" />
+    <ClCompile Include="src\map_layer.cpp" />
     <ClCompile Include="src\scppnt\scppnt_error.cpp" />
     <ClCompile Include="src\SettingsWidget.cpp" />
     <ClCompile Include="src\Simulation.cpp" />
+    <ClCompile Include="src\tcas.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\aiplane.h" />
     <ClInclude Include="src\AISound.h" />
     <ClInclude Include="src\json\json.hpp" />
     <ClInclude Include="src\jvm.h" />
+    <ClInclude Include="src\map_layer.h" />
     <ClInclude Include="src\scppnt\cholesky.h" />
     <ClInclude Include="src\scppnt\cmat.h" />
     <ClInclude Include="src\scppnt\index.h" />

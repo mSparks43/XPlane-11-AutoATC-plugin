@@ -1543,7 +1543,7 @@ int	mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * i
         offsetStringY=0;
     }
     //printf("scroll set =%d %d\n",x,y);
-    return 1;
+    return 0;
 }
   void	draw_atc_text(XPLMWindowID in_window_id, void * in_refcon)
 {
