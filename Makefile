@@ -23,6 +23,8 @@ SOURCES = \
 	src/SettingsWidget.cpp \
 	src/Simulation.cpp \
 	src/scppnt/scppnt_error.cpp \
+	src/tcas.cpp \
+	src/map_layer.cpp \
 	src/datarefs.cpp
 
 LIBS = -FSDK/Libraries/Mac/ -framework XPLM -framework XPWidgets -L/Library/Java/JavaVirtualMachines/adoptopenjdk-8-openj9.jdk/Contents/Home/jre/lib/server -lstdc++ -framework OpenAL

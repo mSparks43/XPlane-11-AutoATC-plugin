@@ -49,7 +49,8 @@ In "XPlane-11-AutoATC-plugin":
 Output is "lin.xpl" in "deploy/XP1X/AutoATC/64/"
 
 ### MacOS
-N.B. With the current Catalina issue a MacOS XP11 build will follow once the latest version for Windows/Linux is tested and deployed.
+install openJDK
+https://adoptopenjdk.net/
 
 In "XPlane-11-AutoATC-plugin":
 > make clean
