@@ -378,7 +378,7 @@ void AircraftSounds::showActive(){
 }
 void AircraftSounds::land(int aircraftid){
 	 v apos = aircrafts[aircraftid].getSndSrc();
-    landsnd.dist=3000.0f;
+    landsnd.dist=300.0f; //Was 3000
     landsnd.pos=v(0,0,0);
     landsnd.velocity=v(0,0,0);
 	XPLMCameraPosition_t camera;
@@ -395,6 +395,7 @@ void AircraftSounds::land(int aircraftid){
 			landsnd.pause();
 			ALfloat	pos[3] = { landsnd.pos.x/50.0f,landsnd.pos.y/50.0f,landsnd.pos.z/50.0f } ;
 			landsnd.setPosition(pos);
+            landsnd.setVolume(sound_vol);
             landsnd.play();
             landsnd.paused=true;
         }
