@@ -378,7 +378,7 @@ void AircraftSounds::showActive(){
 }
 void AircraftSounds::land(int aircraftid){
 	 v apos = aircrafts[aircraftid].getSndSrc();
-    landsnd.dist=300.0f; //Was 3000
+    landsnd.dist=300.0f; // Was 3000 m
     landsnd.pos=v(0,0,0);
     landsnd.velocity=v(0,0,0);
 	XPLMCameraPosition_t camera;
