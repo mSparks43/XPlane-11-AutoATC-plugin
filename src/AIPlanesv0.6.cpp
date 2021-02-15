@@ -297,7 +297,7 @@ void Aircraft::PrepareAircraftData()
 		data_mutex.unlock();
 		return;
 	}
-	
+	soundSystem.showActive();
 	if(inLoading==0&&toLoadAirframe){
 		visible=false;
 		toLoadAirframe=false;
@@ -964,7 +964,7 @@ std::thread m_thread(&do_model);
 std::thread m_simthread(&do_simulation);
 void initPlanes(){
 
-	soundSystem.showActive();
+	
 
     /*gPlaneX = XPLMFindDataRef("sim/flightmodel/position/local_x");
 	gPlaneY = XPLMFindDataRef("sim/flightmodel/position/local_y");

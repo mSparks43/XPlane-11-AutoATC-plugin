@@ -177,7 +177,7 @@ PLUGIN_API int XPluginStart(
                                1,              // Receive input before plugin windows.
                                (void *)0);     // inRefcon. */
 
-    acarsCommand = XPLMCreateCommand("AutoATC/ACARS", "send ACARS message");
+   /* acarsCommand = XPLMCreateCommand("AutoATC/ACARS", "send ACARS message");
 
     XPLMRegisterCommandHandler(acarsCommand, // in Command name
                                acarsHandler, // in Handler

@@ -70,7 +70,8 @@ char * WaveFile::chunk_end(char * chunk_start, int swapped)
 int sound_id=0;
 ALuint buffers[5];
 ALuint snd_srcs[8];
-ALuint WaveFile::load_wave(const char * file_name)
+
+ALuint WaveFile::load_wave(const char * file_name,int thisID)
 {
 	// First: we open the file and copy it into a single large memory buffer for processing.
 
@@ -203,16 +204,17 @@ ALuint WaveFile::load_wave(const char * file_name)
 	
 	//ALuint buf_id = buffers[sound_id];
 	//CHECK_ERR();
-	if(sound_id==0)
-		alGenBuffers(4, buffers);
+	//if(thisID==0)
+		
 	//CHECK_ERR();
-	if(buffers[sound_id] == 0){
+	if(buffers[thisID] == 0){
 			XPLMDebugString("Could not generate buffer id.\n"); 
 			free(mem);
+			return -1;
 		}
 			//("Could not generate buffer id.\n");
 	
-	alBufferData(buffers[sound_id], fmt->bits_per_sample == 16 ? 
+	alBufferData(buffers[thisID], fmt->bits_per_sample == 16 ? 
 							(fmt->num_channels == 2 ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16) :
 							(fmt->num_channels == 2 ? AL_FORMAT_STEREO8 : AL_FORMAT_MONO8),
 					data, data_bytes, fmt->sample_rate);
@@ -221,53 +223,50 @@ ALuint WaveFile::load_wave(const char * file_name)
 	char error[2056];
 	sprintf(error,"AutoATC: WAVE file loaded:%s\n",file_name);
 	XPLMDebugString(error);	
-	return buffers[sound_id];
+	return buffers[thisID];
 }
 //WaveFile buffers[2];
 WaveFile wav;
-
-AircraftSound::AircraftSound()
+void AircraftSound::LoadSound()
 {
-   // WaveFile wav;
-    ALfloat	zero[3] = { 0 } ;
+	ALfloat	zero[3] = { 0 } ;
 
 	char xp_soundpath[512];
 	XPLMGetSystemPath(xp_soundpath);
 	CHECK_ERR();
 	float looping=1.0f;
 	char path[1024];
-	if(sound_id==0){
-		alGenSources(6,snd_srcs);
+	if(local_snd_id==0){
 		looping=0.0f;
-		snd_src=snd_srcs[sound_id];
+		snd_src=snd_srcs[local_snd_id];
 		sprintf (path, "%s",  "Resources/plugins/AutoATC/audio/screech.wav");
-		snd_buffer=wav.load_wave(path);
-		sound_id++;
-	}
-	else if(sound_id==1){
+		snd_buffer=wav.load_wave(path,local_snd_id);
 		
-		snd_src=snd_srcs[sound_id];
+	}
+	else if(local_snd_id==1){
+		
+		snd_src=snd_srcs[local_snd_id];
 		sprintf (path, "%s",  "Resources/plugins/AutoATC/audio/prop.wav");
-		snd_buffer=wav.load_wave(path);
-		sound_id++;
+		snd_buffer=wav.load_wave(path,local_snd_id);
+		
 	}
-	else if(sound_id==2){
-		snd_src=snd_srcs[sound_id];
+	else if(local_snd_id==2){
+		snd_src=snd_srcs[local_snd_id];
 		sprintf (path, "%s",  "Resources/plugins/AutoATC/audio/heli2.wav");//heli
-		snd_buffer=wav.load_wave(path);
-		sound_id++;
+		snd_buffer=wav.load_wave(path,local_snd_id);
+		
 	}
-	else if(sound_id==3){
-		snd_src=snd_srcs[sound_id];
+	else if(local_snd_id==3){
+		snd_src=snd_srcs[local_snd_id];
 		sprintf (path, "%s",  "Resources/plugins/AutoATC/audio/jet.wav");
-		snd_buffer=wav.load_wave(path);
-		sound_id++;
+		snd_buffer=wav.load_wave(path,local_snd_id);
+		
 	}
 	
 	else{
-		snd_src=snd_srcs[sound_id];
+		snd_src=snd_srcs[local_snd_id];
 		snd_buffer=buffers[3];
-		sound_id++;
+		
 	}
 	
 	CHECK_ERR();
@@ -283,10 +282,18 @@ AircraftSound::AircraftSound()
     //zero[0]=2.0f;
     zero[2]=5.0f;
     alSource3f(snd_src,AL_POSITION, zero[0],zero[1],zero[2]);
-	printf("AutoATC:load sound %d\n",sound_id);
+	printf("AutoATC:load sound %d\n",local_snd_id);
 	CHECK_ERR();
 }
+AircraftSound::AircraftSound()
+{
+   // WaveFile wav;
+    local_snd_id=sound_id;
+	sound_id++;
+}
 void AircraftSound::play(){
+	if(!snd_src)
+		LoadSound();
     if(snd_src)
 		{
             CHECK_ERR();
@@ -360,19 +367,23 @@ AircraftSounds::AircraftSounds(Aircraft *aircraft)
 {
     aircrafts=aircraft;
 	
-    start();
-    ALfloat	zero[3] = { 0,0,0 } ;
-    ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};	// Listener facing into the screen
-	
-    alListenerfv(AL_POSITION,zero);
-    alListenerfv(AL_VELOCITY,zero);
-    alListenerfv(AL_ORIENTATION,listenerOri); 	// Orientation ...
+    //start();
+    
 }
 void AircraftSounds::showActive(){
-    if(!live)
+    if(!live){
         start();
-    XPLMDebugString("AutoATC:OpenAL device active.\n");
-    
+
+		alGenSources(6,snd_srcs);
+		alGenBuffers(4, buffers);
+		ALfloat	zero[3] = { 0,0,0 } ;
+    	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};	// Listener facing into the screen
+	
+    	alListenerfv(AL_POSITION,zero);
+    	alListenerfv(AL_VELOCITY,zero);
+    	alListenerfv(AL_ORIENTATION,listenerOri); 	// Orientation ...
+    	XPLMDebugString("AutoATC:OpenAL device active.\n");
+	}
     //snd.play();
 
 }
@@ -642,8 +653,10 @@ void AircraftSounds::start()
 		printf("AutoATC:0x%08x: I found someone else's openAL context 0x%08x.\n", old_ctx);
 		old_ctx=old_ctx;
 	}
+	
 	live=true;
 	XPLMDebugString("AutoATC:Using OpenAL device.\n");
+	
     //buffers[0].load_wave("/media/storage2/X-Plane 11/X-Plane 11_11.30/Resources/plugins/AutoATC/sound4.wav");
 	/*CHECK_ERR();
 	alGenBuffers(3, buffers);
@@ -667,6 +680,7 @@ void AircraftSounds::stop()
 		
 		alcCloseDevice(my_dev);
 	}	
+	live=false;
     //snd1.stop();
     //snd2.stop();
 }
