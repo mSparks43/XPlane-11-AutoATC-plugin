@@ -241,6 +241,17 @@ static void	seti(void * refA, int val)
 	int_dref *  ref = (int_dref *) refA;
 	ref->data=val;
 }
+static int	get_logPage(void * refA)
+{
+	JVM *jvmO = getJVM();
+	return jvmO->logPage;
+}
+
+static void	set_logPage(void * refA, int val)
+{
+	JVM *jvmO = getJVM();
+	jvmO->logPage=val;
+}
 void registerDatarefs(){
 	const char * cls_drefs[15]={ "traf/mw_def",
 	"traf/nw_def",
@@ -394,6 +405,15 @@ void registerDatarefs(){
 						NULL, NULL,
 						NULL, NULL,
 						NULL, NULL,
-						&onlineAcars, &onlineAcars);										
+						&onlineAcars, &onlineAcars);
+						
+	XPLMRegisterDataAccessor("autoatc/logpage", xplmType_Int, true,
+						get_logPage, set_logPage,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL);																
 	
 }

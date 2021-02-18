@@ -307,7 +307,7 @@ PLUGIN_API void XPluginReceiveMessage(
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/cdu");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/received");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/online");  //tell dref editor about it
-        
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/logpage");
     }
     else if (inMessage == XPLM_MSG_PLANE_UNLOADED){
         g_is_acf_inited = 0;
@@ -356,16 +356,16 @@ void setStndby()
         if (jvmO->logPage == 3){
             int selected=XPLMGetDatai(HSI_source);
             if(selected==1)
-                XPLMSetDatai(nav2_stdby_freq_hz, nf);
+                XPLMSetDatai(nav2_stdby_freq_hz, nf/10);
             else
-                XPLMSetDatai(nav1_stdby_freq_hz, nf);
+                XPLMSetDatai(nav1_stdby_freq_hz, nf/10);
         }
         else if (jvmO->logPage == 4){
             int selected=XPLMGetDatai(HSI_source);
             if(selected==1)
-                XPLMSetDatai(adf2_stdby_freq_hz, nf);
+                XPLMSetDatai(adf2_stdby_freq_hz, nf/10);
             else
-                XPLMSetDatai(adf1_stdby_freq_hz, nf);
+                XPLMSetDatai(adf1_stdby_freq_hz, nf/10);
         }
         else
             XPLMSetDatai(com1_stdby_freq_hz, nf);
