@@ -481,12 +481,13 @@ void AircraftSounds::update(float latest_sound_vol){
         }
         
     }
-	char debugStr[512];
+	//
 	for(int n=0;n<3;n++){
     if(jetsnd[n].dist<3000.0f&&aircrafts[jetsnd[n].aircraftid].airFrameIndex>=0){
         //float	*apos = aircrafts[closest].getSndSrc();
       if(jetsnd[n].lastAFID!=jetsnd[n].aircraftid){
 #if defined(DEBUG_STRINGS)
+		  char debugStr[512];
 		   sprintf(debugStr,"got plane snd1 af=%d index=%d %f %f %f %f %f %f %d %d\n",jetsnd[n].aircraftid,aircrafts[jetsnd[n].aircraftid].airFrameIndex,jetsnd[n].pos.x,jetsnd[n].pos.y,jetsnd[n].pos.z, jetsnd[n].velocity.x, jetsnd[n].velocity.y, jetsnd[n].velocity.z,jetsnd[n].snd_src,jetsnd[n].snd_buffer);
 		  	XPLMDebugString(debugStr);
 #endif
@@ -650,7 +651,7 @@ void AircraftSounds::start()
 	} 
 	else
 	{
-		printf("AutoATC:0x%08x: I found someone else's openAL context 0x%08x.\n", old_ctx);
+		printf("AutoATC: I found someone else's openAL context.\n");
 		old_ctx=old_ctx;
 	}
 	
