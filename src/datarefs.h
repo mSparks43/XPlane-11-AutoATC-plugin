@@ -5,6 +5,7 @@ struct	string_dref {
 struct	int_dref {
 	int					data;
 };
+static string_dref sayarray;
 static string_dref acarsoutarray;
 static string_dref cduoutarray;
 static string_dref acarsinarray;

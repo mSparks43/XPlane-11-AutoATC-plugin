@@ -47,9 +47,11 @@ const char* plugin_version = "About:0.9.5.1 for XP10";
 #endif
 char gBob_debstr2[2048];
 char xp_path[512];
+
 char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC/airframes_940.txt";
  bool file_exists (const std::string& name);
  void				draw_atc_text(XPLMWindowID in_window_id, void * in_refcon);
+  void				draw_say_text(XPLMWindowID in_window_id, void * in_refcon);
 void				draw_about_text(XPLMWindowID in_window_id, void * in_refcon);
 void	            draw_jvm_text(XPLMWindowID in_window_id, void * in_refcon);
 int					dummy_mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * in_refcon) { return 0; }
@@ -79,7 +81,7 @@ XPLMDataRef  mslPressureRef = NULL;
 XPLMDataRef fpmRef = NULL;
 XPLMDataRef  pitchRef = NULL;
 XPLMDataRef  rollRef = NULL;
-
+ XPLMDataRef say_dref= NULL;
  String::String(const char *c) 
 { 
     size = strlen(c); 
@@ -1132,9 +1134,10 @@ void JVM::getCommandData(){
                 std::string dataref = commandData.substr (0,found);
                // printf("dataref %s %s\n",commandsList[i]->s,dataref.c_str());
                 XPLMDataRef dRef = XPLMFindDataRef(dataref.c_str());
-                
+                std::string::size_type obrace = dataref.find('[');
+		        std::string::size_type cbrace = dataref.find(']');
                 if(dRef!=NULL){
-                   // printf("found dataref %s\n",dataref.c_str());
+                    printf("found dataref %s\n",dataref.c_str());
                     std::string value = commandData.substr (found+1);
                     //std::size_t decimalF = value.find(".");
                     XPLMDataTypeID type = XPLMGetDataRefTypes(dRef);
@@ -1154,6 +1157,46 @@ void JVM::getCommandData(){
                         const char * begin = value.c_str();
 		                const char * end = begin + value.size();
                         XPLMSetDatab(dRef, (void *) begin, 0, end - begin);
+                    }
+                }
+                else{
+                    
+                    if(obrace != dataref.npos && cbrace != dataref.npos)			// Gotta have found the braces
+                    if(obrace > 0)														// dref name can't be empty
+                    if(cbrace > obrace)													// braces must be in-order - avoids unsigned math insanity
+                    if((cbrace - obrace) > 1)											// Gotta have SOMETHING in between the braces
+                    {
+                        std::string number =dataref.substr(obrace+1,cbrace - obrace - 1);
+			            std::string refname = dataref.substr(0,obrace);
+			
+			            XPLMDataRef arr = XPLMFindDataRef(refname.c_str());				// Only if we have a valid name
+                        if(arr)
+			            {
+                            //printf("found arr dref %s\n",dataref.c_str());
+                            XPLMDataTypeID tid = XPLMGetDataRefTypes(arr);
+                            if(tid & (xplmType_FloatArray | xplmType_IntArray))			// AND are array type
+                            {
+                                int idx = atoi(number.c_str());							// AND have a non-negetive index
+                                if(idx >= 0)
+                                {
+                                     //printf("setting dref %s [%d]\n",refname.c_str(),idx);
+                                     std::string value = commandData.substr (found+1);
+                                     char* end;
+                                     if(tid & xplmType_FloatArray)
+                                        {
+                                            double xpvalue=strtod(value.c_str(),&end);
+                                            float r = (float)xpvalue;
+                                            XPLMSetDatavf(arr, &r, idx, 1);
+                                        }
+                                        else if(tid & xplmType_IntArray)
+                                        {
+                                            long xpvalue=strtol(value.c_str(),&end,10);
+                                            int r = (int)xpvalue;
+                                            XPLMSetDatavi(arr, &r, idx, 1);
+                                        }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1323,6 +1366,69 @@ void JVM::processAcars(){
 
 }
 int offsetStringY=0;
+void JVM::showSayWindow(){
+    #if defined(XP11)
+    bool vr_is_enabled = false;
+    
+    XPLMDataRef vr_dref =XPLMFindDataRef("sim/graphics/VR/enabled");
+    vr_is_enabled = XPLMGetDatai(vr_dref);
+    
+    offsetStringY=0;
+    if(say_window==NULL){
+        say_dref =XPLMFindDataRef("autoatc/yousay");
+         XPLMCreateWindow_t params;
+        params.structSize = sizeof(params);
+        params.visible = 1;
+        params.drawWindowFunc = draw_say_text;
+        // Note on "dummy" handlers:
+        // Even if we don't want to handle these events, we have to register a "do-nothing" callback for them
+        params.handleMouseClickFunc = dummy_mouse_handler;
+        params.handleRightClickFunc = dummy_mouse_handler;
+        params.handleMouseWheelFunc = dummy_wheel_handler;
+        params.handleKeyFunc = dummy_key_handler;
+        params.handleCursorFunc = dummy_cursor_status_handler;
+        params.refcon = NULL;
+        params.layer = xplm_WindowLayerFloatingWindows;
+        if(vr_is_enabled)
+            params.decorateAsFloatingWindow = xplm_WindowDecorationSelfDecoratedResizable;//xplm_WindowDecorationRoundRectangle;
+        else
+            params.decorateAsFloatingWindow = xplm_WindowDecorationNone;//xplm_WindowDecorationRoundRectangle;
+        // Set the window's initial bounds
+        // Note that we're not guaranteed that the main monitor's lower left is at (0, 0)...
+        // We'll need to query for the global desktop bounds!
+        int left, bottom, right, top;
+        XPLMGetScreenBoundsGlobal(&left, &top, &right, &bottom);
+        params.left = left + 50;
+        params.bottom = bottom + 150;
+        params.right = params.left + 400;
+        params.top = params.bottom + 50;
+        
+        say_window = XPLMCreateWindowEx(&params);
+ 
+        
+        // Limit resizing our window: maintain a minimum width/height of 100 boxels and a max width/height of 300 boxels
+        XPLMSetWindowResizingLimits(say_window, 200, 50, 500, 500);
+        XPLMSetWindowTitle(say_window, "You Say");
+
+    }
+    if(vr_is_enabled)
+        {
+            XPLMSetWindowPositioningMode(say_window, xplm_WindowVR, 0);
+        }
+        else
+            XPLMSetWindowPositioningMode(say_window, xplm_WindowPositionFree, -1);
+    /*else{
+        XPLMSetWindowIsVisible(say_window,1);
+    }*/
+    char say_Text[1024];
+     
+    int size=XPLMGetDatab(say_dref,say_Text,0,1024);
+    if(size==0)
+        XPLMSetWindowIsVisible(say_window,0);
+    else
+        XPLMSetWindowIsVisible(say_window,1);
+     #endif
+}
 void JVM::toggleLogWindow(){
     #if defined(XP11)
     bool vr_is_enabled = false;
@@ -1332,7 +1438,7 @@ void JVM::toggleLogWindow(){
     
     offsetStringY=0;
     if(log_window==NULL||vr_is_enabled!=loginVR){
-        if(vr_is_enabled!=loginVR)
+        if(log_window!=NULL&&vr_is_enabled!=loginVR)
             XPLMSetWindowIsVisible(log_window,0);
          XPLMCreateWindow_t params;
         params.structSize = sizeof(params);
@@ -1545,7 +1651,88 @@ int	mouse_handler(XPLMWindowID in_window_id, int x, int y, int is_down, void * i
     //printf("scroll set =%d %d\n",x,y);
     return 0;
 }
-  void	draw_atc_text(XPLMWindowID in_window_id, void * in_refcon)
+
+void	draw_say_text(XPLMWindowID in_window_id, void * in_refcon)
+{
+	// Mandatory: We *must* set the OpenGL state before drawing
+	// (we can't make any assumptions about it)
+	XPLMSetGraphicsState(
+						 0 /* no fog */,
+						 0 /* 0 texture units */,
+						 0 /* no lighting */,
+						 0 /* no alpha testing */,
+						 1 /* do alpha blend */,
+						 1 /* do depth testing */,
+						 0 /* no depth writing */
+						 );
+	
+	int l, t, r, b;
+	XPLMGetWindowGeometry(in_window_id, &l, &t, &r, &b);
+	XPLMDrawTranslucentDarkBox(l, t, r+10, b);
+	float col_white[] = {1.0, 1.0, 1.0}; // red, green, blue
+    int ww=r-l;
+    int wh=b-t;
+    
+    JVM* jvmO=getJVM();
+    if(jvmO->hasjvm){
+
+        char astring[1024]={0};
+     
+        int size=XPLMGetDatab(say_dref,astring,0,1022);
+        //char* astring ="belgrade tower yankee tango delta good day";
+
+  
+        int height;
+	    XPLMGetFontDimensions(xplmFont_Proportional, NULL, &height, NULL);
+
+        if(scrolling){
+            auto end = std::chrono::system_clock::now();
+            std::chrono::duration<double> diff = end-start;
+            if(diff.count()>1.0){
+                offsetStringY--;
+            }
+            if(offsetStringY<0){
+                offsetStringY=0;
+                start = std::chrono::system_clock::now();
+                scrolling=false;
+
+            }
+        }
+        std::istringstream stream(astring);
+        std::string line;
+        int lineNo=0;
+        height+=6;//3px line spacing
+        //bottom left is 0,0
+        while(std::getline(stream, line)) {
+            int lineLength=line.length();
+            float length=XPLMMeasureString(xplmFont_Basic,astring,lineLength);
+            length=length+10;
+            int noLines=(length/ww)+1;
+            char * lineS=(char *)line.c_str();
+
+            int ypos=lineNo*(height+2);
+            if(offsetStringY-ypos<height && (20+offsetStringY-ypos-noLines*height)>(wh+height)){
+               // XPLMDrawTranslucentDarkBox(l + 5,t - 25+offsetStringY-ypos,r-5,t - 25+offsetStringY-ypos+noLines*6);
+               int bTop=t - 20+offsetStringY-ypos;
+               XPLMDrawTranslucentDarkBox(l-5, bTop+height-4, r+10, bTop-4-height*(noLines-1));
+               XPLMDrawTranslucentDarkBox(l-5, bTop+height-4, r+10, bTop-4-height*(noLines-1));
+                XPLMDrawString(col_white, l + 10, t - 20+offsetStringY-ypos, lineS, &ww, xplmFont_Proportional);
+            }
+            lineNo+=noLines;
+        }  
+        
+        maxScroll=((lineNo+1)*height)+wh;
+        
+    
+    }
+    else{
+        char text[]="Java VM not found,\n AutoATC cannot continue \n";
+         jvmFailed=true;
+        XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
+    }
+}
+
+void	draw_atc_text(XPLMWindowID in_window_id, void * in_refcon)
 {
 	// Mandatory: We *must* set the OpenGL state before drawing
 	// (we can't make any assumptions about it)

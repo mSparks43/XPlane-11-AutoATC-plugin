@@ -151,6 +151,7 @@ private:
    
    jfloat planeData[14];
     XPLMWindowID	log_window = NULL;
+    XPLMWindowID	say_window = NULL;
   #if defined(__linux__)
   void *libnativehelper;
    #elif defined(_WIN64)
@@ -242,6 +243,7 @@ public:
     void setICAO();
     void updateAirframes();
     void toggleLogWindow();
+    void showSayWindow();
     void LogPageWindowPlus();
     void processAcars();
     void getCommandData();

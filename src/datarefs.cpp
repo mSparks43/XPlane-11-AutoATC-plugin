@@ -180,6 +180,25 @@ static void setvb(void * refA, void * in_values, int in_offset, int in_max)
 	//printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());	
 
 }
+static void setsayvb(void * refA, void * in_values, int in_offset, int in_max)
+{
+    const char * source = (const char *) in_values;
+	int new_length = in_offset + in_max;
+
+	string_dref * ref =(string_dref *)refA;
+	ref->string_data.resize(new_length);
+	for(int i = 0; i < in_max; ++i)
+		ref->string_data[i + in_offset] = source[i];
+	char command[1024]={0};
+	//printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());
+	//sprintf(command,"doCommand:sendAcars:%s",ref->string_data.c_str());
+    //sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
+    printf("You say = %s\n",ref->string_data.c_str());
+	JVM *jvmO = getJVM();
+	jvmO->showSayWindow();	
+    //
+
+}
 static void setacarsvb(void * refA, void * in_values, int in_offset, int in_max)
 {
     const char * source = (const char *) in_values;
@@ -315,7 +334,7 @@ void registerDatarefs(){
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL);
 	}
-	for(int i=0;i<17;i++){
+	for(int i=0;i<7;i++){
 
 		XPLMRegisterDataAccessor(acf_drefs[i], xplmType_Float, 0, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -382,6 +401,14 @@ void registerDatarefs(){
 						NULL, NULL,
 						getvb, setacarsvb,
 						&acarsoutarray, &acarsoutarray);
+	XPLMRegisterDataAccessor("autoatc/yousay", xplmType_Data, true,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						getvb, setsayvb,
+						&sayarray, &sayarray);					
 	XPLMRegisterDataAccessor("autoatc/cdu", xplmType_Data, true,
 						NULL, NULL,
 						NULL, NULL,
