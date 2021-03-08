@@ -75,7 +75,9 @@ class AircraftSounds
     AircraftSound landsnd;
     AircraftSound propsnd;
     AircraftSound helisnd;
-    AircraftSound jetsnd[3];
+    AircraftSound tpropsnd;
+    AircraftSound jetsnd[2];
+
    // AircraftSound landsnd;
     Aircraft *aircrafts;
     
