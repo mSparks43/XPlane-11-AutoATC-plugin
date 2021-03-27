@@ -145,6 +145,7 @@ private:
 	double headingRollover;
 	bool rolledOver;
 	bool visible;
+	float visibleTime;
 	v velocity;
 	bool inHover;//for helo taxi
 	Simulation* ll;

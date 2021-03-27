@@ -298,6 +298,8 @@ void Aircraft::PrepareAircraftData()
 		return;
 	}
 	soundSystem.showActive();
+	if(!visible)
+		visibleTime=jvmO->getSysTime();
 	if(inLoading==0&&toLoadAirframe){
 		visible=false;
 		toLoadAirframe=false;
@@ -513,6 +515,7 @@ void Aircraft::PrepareAircraftData()
 		}
 		if((!data.engineoff&&deviation<100)||(data.engineoff&&deviation<5)){
 			visible=true;
+			visibleTime=jvmO->getSysTime();
 	#if defined(DEBUG_STRINGS)		
 			printf("AUTOATC: made %d visible with %f\n",id,deviation);
 	#endif
@@ -795,16 +798,20 @@ void Aircraft::SetAircraftData(void)
     		
     
 		}
-		if(visible&&i==0)
+		bool isVisible=false;
+		float nowT=jvmO->getSysTime();
+		if(nowT>(visibleTime+5))
+			isVisible=true;
+		if(isVisible&&i==0)
 			tcasAPI->SetData(id+1,1,(float)dr.x,(float)dr.y,(float)dr.z,(float)dr.heading,thisData.lat,thisData.lon,thisData.alt,icon);
 		float engineon=!data.engineoff?1.0:0.0;
 		if(ref_style==0){	//cls_drefs	
-			float drefVals[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,(float)dr.y,NULL};
+			float drefVals[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,isVisible?(float)dr.y:0.0f,NULL};
 			
 			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
 		else if(ref_style==1){//wt3_drefs
-			float drefVals[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,(float)dr.y,NULL};
+			float drefVals[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,isVisible?(float)dr.y:0.0f,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
 		else if(ref_style==3){
@@ -833,7 +840,7 @@ void Aircraft::SetAircraftData(void)
 		}
 		else{ //xmp_drefs
 			//float drefVals[21] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,(float)dr.y,NULL};
-			float drefVals[20] = {engineon,engineon,engineon,gear,flaps,landingLights,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,(float)dr.y,NULL};
+			float drefVals[20] = {engineon,engineon,engineon,gear,flaps,landingLights,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,isVisible?(float)dr.y:0.0f,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
      
