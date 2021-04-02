@@ -800,18 +800,24 @@ void Aircraft::SetAircraftData(void)
 		}
 		bool isVisible=false;
 		float nowT=jvmO->getSysTime();
-		if(nowT>(visibleTime+5))
+		float altitude=0.0;
+		if(nowT>(visibleTime+5)){
 			isVisible=true;
-		if(isVisible&&i==0)
+			altitude=(float)thisData.alt;
+		}
+		//printf("%d visibility:%f %f %d %f\n",id,nowT,visibleTime,isVisible,altitude);	
+		if(visible&&i==0)
 			tcasAPI->SetData(id+1,1,(float)dr.x,(float)dr.y,(float)dr.z,(float)dr.heading,thisData.lat,thisData.lon,thisData.alt,icon);
+		
+
 		float engineon=!data.engineoff?1.0:0.0;
 		if(ref_style==0){	//cls_drefs	
-			float drefVals[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,isVisible?(float)dr.y:0.0f,NULL};
+			float drefVals[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,altitude,NULL};
 			
 			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
 		else if(ref_style==1){//wt3_drefs
-			float drefVals[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,isVisible?(float)dr.y:0.0f,NULL};
+			float drefVals[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,altitude,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
 		else if(ref_style==3){
@@ -840,7 +846,7 @@ void Aircraft::SetAircraftData(void)
 		}
 		else{ //xmp_drefs
 			//float drefVals[21] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,(float)dr.y,NULL};
-			float drefVals[20] = {engineon,engineon,engineon,gear,flaps,landingLights,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,isVisible?(float)dr.y:0.0f,NULL};
+			float drefVals[20] = {engineon,engineon,engineon,gear,flaps,landingLights,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,altitude,NULL};
 			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 		}
      
