@@ -717,6 +717,7 @@ void JVM::start(void)
     fireTransmit=false;
     isIntercom=false;
     fireNewFreq=true;
+    hasNewFreq=false;
     XPLMDebugString(gBob_debstr2);
      
      
@@ -932,14 +933,19 @@ jstring JVM::getStringData(const char* reference){
 int JVM::getStndbyFreq(int roll){
     if(!hasjvm)
         return -1;
-    printf("get standby %d\n",roll);  
+    if(roll==-9999)
+        roll=standbyRoll;
+   // printf("get standby %d\n",roll);  
 
     //jint fOnehundred = (jint) env->CallStaticIntMethod(commandsClass, getStndbyMethod,roll,logPage);
     int retVal=0;
     int_mutex.lock();
     retVal=standbyFreqInt*10;
-    standbyRoll=roll;
-    fireNewFreq=true;
+    if(standbyRoll!=roll){
+        standbyRoll=roll;
+        fireNewFreq=true;
+        hasNewFreq=false;
+    }
     int_mutex.unlock();
 
     return retVal;
@@ -954,6 +960,7 @@ void JVM::updateStndbyFreq(){
     printf("set standbyRoll %d\n",fOnehundred);  
  #endif   
     fireNewFreq=false;
+    hasNewFreq=true;
     int_mutex.unlock();
 }
 void JVM::setThreadData(){
@@ -1423,7 +1430,7 @@ void JVM::showSayWindow(){
     char say_Text[1024];
      
     int size=XPLMGetDatab(say_dref,say_Text,0,1024);
-    if(size==0)
+    if(size<=1)
         XPLMSetWindowIsVisible(say_window,0);
     else
         XPLMSetWindowIsVisible(say_window,1);

@@ -203,6 +203,7 @@ public:
     bool fireTransmit;
     bool isIntercom;
     bool fireNewFreq;
+    bool hasNewFreq;
     char notepad[1024]={0};
     JVM();
     ~JVM();

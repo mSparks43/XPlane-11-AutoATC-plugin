@@ -544,6 +544,7 @@ void AircraftSounds::update(float latest_sound_vol){
        // printf("got plane %f %f %f %f %f %f\n",closest.x,closest.y,closest.z,velocity.x,velocity.y,velocity.z);
        if(propsnd.lastAFID!=propsnd.aircraftid){
 #if defined(DEBUG_STRINGS)
+			char debugStr[512];
 		   sprintf(debugStr,"got plane snd2 af=%d index=%d %f %f %f %f %f %f %d %d\n",propsnd.aircraftid,aircrafts[propsnd.aircraftid].airFrameIndex,propsnd.pos.x,propsnd.pos.y,propsnd.pos.z, propsnd.velocity.x, propsnd.velocity.y, propsnd.velocity.z,propsnd.snd_src,propsnd.snd_buffer);
 		   XPLMDebugString(debugStr);
 #endif
@@ -579,6 +580,7 @@ void AircraftSounds::update(float latest_sound_vol){
        // printf("got plane %f %f %f %f %f %f\n",closest.x,closest.y,closest.z,velocity.x,velocity.y,velocity.z);
        if(tpropsnd.lastAFID!=tpropsnd.aircraftid){
 #if defined(DEBUG_STRINGS)
+			char debugStr[512];
 		   sprintf(debugStr,"got plane snd2 af=%d index=%d %f %f %f %f %f %f %d %d\n",tpropsnd.aircraftid,aircrafts[tpropsnd.aircraftid].airFrameIndex,tpropsnd.pos.x,tpropsnd.pos.y,tpropsnd.pos.z, tpropsnd.velocity.x, tpropsnd.velocity.y, tpropsnd.velocity.z,tpropsnd.snd_src,tpropsnd.snd_buffer);
 		   XPLMDebugString(debugStr);
 #endif
@@ -614,6 +616,7 @@ void AircraftSounds::update(float latest_sound_vol){
        // printf("got plane %f %f %f %f %f %f\n",closest.x,closest.y,closest.z,velocity.x,velocity.y,velocity.z);
        if(helisnd.lastAFID!=helisnd.aircraftid){
 #if defined(DEBUG_STRINGS)
+			char debugStr[512];
 		   sprintf(debugStr,"got plane snd3 af=%d index=%d %f %f %f %f %f %f %d %d\n",helisnd.aircraftid,aircrafts[helisnd.aircraftid].airFrameIndex,helisnd.pos.x,helisnd.pos.y,helisnd.pos.z, helisnd.velocity.x, helisnd.velocity.y, helisnd.velocity.z,helisnd.snd_src,helisnd.snd_buffer);
 		   XPLMDebugString(debugStr);
 #endif

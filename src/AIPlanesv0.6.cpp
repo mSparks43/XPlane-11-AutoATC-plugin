@@ -63,10 +63,12 @@ Aircraft::Aircraft()
 	yOffset=5.0;//yOffsetp;
 	airFrameIndex=-1;
 	toLoadAirframe=false;
-	//ll=new Simulation(0.01);
+	
 	ll=new Simulation(0.1);
 	rp=new Simulation(0.01);
 	ahs=new Simulation(0.01);
+
+
 	thisData.live=false;
 	thisData.x=0.0;
     thisData.y=0.0;
@@ -324,6 +326,7 @@ void Aircraft::PrepareAircraftData()
 		}
 #endif
 #if defined(DEBUG_STRINGS)
+		char debugStr[512];
 		XPLMDebugString("toLoadAirframe\n");
 		sprintf(debugStr,"searching for id=%d afI=%d to %s sound=%d\n",id,airFrameIndex,af,soundIndex);
 		XPLMDebugString(debugStr);
@@ -516,13 +519,15 @@ void Aircraft::PrepareAircraftData()
 		if((!data.engineoff&&deviation<100)||(data.engineoff&&deviation<5)){
 			visible=true;
 			visibleTime=jvmO->getSysTime();
-	#if defined(DEBUG_STRINGS)		
+#if defined(DEBUG_STRINGS)		
 			printf("AUTOATC: made %d visible with %f\n",id,deviation);
-	#endif
+	
 		}
-		/*else{
+		else{
 			printf("AUTOATC: %d invisible with %f\n",id,deviation);
-		}*/
+		
+#endif
+		}
 	}
     data_mutex.unlock();
 	XPLMProbeInfo_t outInfo;
@@ -806,48 +811,49 @@ void Aircraft::SetAircraftData(void)
 			altitude=(float)thisData.alt;
 		}
 		//printf("%d visibility:%f %f %d %f\n",id,nowT,visibleTime,isVisible,altitude);	
-		if(visible&&i==0)
+		if(isVisible&&i==0)
 			tcasAPI->SetData(id+1,1,(float)dr.x,(float)dr.y,(float)dr.z,(float)dr.heading,thisData.lat,thisData.lon,thisData.alt,icon);
 		
-
-		float engineon=!data.engineoff?1.0:0.0;
-		if(ref_style==0){	//cls_drefs	
-			float drefVals[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,altitude,NULL};
-			
-			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
-		}
-		else if(ref_style==1){//wt3_drefs
-			float drefVals[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,altitude,NULL};
-			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
-		}
-		else if(ref_style==3){
-			float spin=((int)(thrust)%360);;
-			float nowT=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
-			
-			if(nowT>(nextFlakTime)){
-				startFlakTime=nowT+1+((float)(rand()%4)) / 3.0;
-				nextFlakTime=nowT+10+(rand() % 10);
-				flak=((float)(rand()%9)) / 10.0;
+		if(isVisible){
+			float engineon=!data.engineoff?1.0:0.0;
+			if(ref_style==0){	//cls_drefs	
+				float drefVals[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,altitude,NULL};
+				
+				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 			}
-			if(nowT>(startFlakTime)){
-				flak=1.0;
+			else if(ref_style==1){//wt3_drefs
+				float drefVals[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,altitude,NULL};
+				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 			}
-			
-			
-			
-			//printf("damage %d=%f",id,donedamage);	
-			acModelDef *acDef=jvmO->getModelPart(airFrameIndex,i);
-			dr.x = ll->getX()+acDef->partoffsets.x;//data.x;
-			dr.y = ahs->getX()+yOffset+acDef->partoffsets.y;//data.y+yOffset;
-			dr.z = ll->getY()+acDef->partoffsets.z;
-			
-			float drefVals[10] = {(float)8.0,(float)8.0,spin,spin,flak,engineon,gear,thisdamage,NULL};
-			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
-		}
-		else{ //xmp_drefs
-			//float drefVals[21] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,(float)dr.y,NULL};
-			float drefVals[20] = {engineon,engineon,engineon,gear,flaps,landingLights,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,altitude,NULL};
-			XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
+			else if(ref_style==3){
+				float spin=((int)(thrust)%360);;
+				float nowT=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
+				
+				if(nowT>(nextFlakTime)){
+					startFlakTime=nowT+1+((float)(rand()%4)) / 3.0;
+					nextFlakTime=nowT+10+(rand() % 10);
+					flak=((float)(rand()%9)) / 10.0;
+				}
+				if(nowT>(startFlakTime)){
+					flak=1.0;
+				}
+				
+				
+				
+				//printf("damage %d=%f",id,donedamage);	
+				acModelDef *acDef=jvmO->getModelPart(airFrameIndex,i);
+				dr.x = ll->getX()+acDef->partoffsets.x;//data.x;
+				dr.y = ahs->getX()+yOffset+acDef->partoffsets.y;//data.y+yOffset;
+				dr.z = ll->getY()+acDef->partoffsets.z;
+				
+				float drefVals[10] = {(float)8.0,(float)8.0,spin,spin,flak,engineon,gear,thisdamage,NULL};
+				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
+			}
+			else{ //xmp_drefs
+				//float drefVals[21] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,(float)dr.y,NULL};
+				float drefVals[20] = {engineon,engineon,engineon,gear,flaps,landingLights,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,altitude,NULL};
+				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
+			}	
 		}
      
     }
@@ -996,7 +1002,11 @@ void initPlanes(){
 	acY = XPLMFindDataRef("autoatc/aircraft/y");
 	acZ = XPLMFindDataRef("autoatc/aircraft/z");
 	sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
-
+	com1_stdby_freq_hz = XPLMFindDataRef("sim/cockpit2/radios/actuators/com1_standby_frequency_hz_833");
+    nav1_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/nav1_stdby_freq_hz");
+    nav2_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/nav2_stdby_freq_hz");
+    adf1_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/adf1_stdby_freq_hz");
+    adf2_stdby_freq_hz = XPLMFindDataRef("sim/cockpit/radios/adf2_stdby_freq_hz");
 	BeginAI();
 	
 	//
@@ -1085,6 +1095,7 @@ void aircraftLoop()
 		canopy_ratio = XPLMFindDataRef("sim/operation/sound/users_canopy_open_ratio");
 		door_open_ratio = XPLMFindDataRef("sim/operation/sound/users_door_open_ratio");
 	}
+
 	float sound_vol=1.0;
 	int enable=XPLMGetDatai(sound_on);
 	int paused=XPLMGetDatai(sound_paused);
@@ -1096,7 +1107,31 @@ void aircraftLoop()
 	static float doorarray [10] = { }; //Door open ratio array
 	static float doorsum = 0.0; //Helper
 	int dooropen = 0; //Is any door open (1 = yes)?
-	
+	JVM *jvmO = getJVM();
+	if(jvmO->hasNewFreq){
+		int nf = jvmO->getStndbyFreq(-9999);
+		if (nf > 0)
+		{
+			//printf("C got standby %d\n",nf);  
+			if (jvmO->logPage == 3){
+				int selected=XPLMGetDatai(HSI_source);
+				if(selected==1)
+					XPLMSetDatai(nav2_stdby_freq_hz, nf/10);
+				else
+					XPLMSetDatai(nav1_stdby_freq_hz, nf/10);
+			}
+			else if (jvmO->logPage == 4){
+				int selected=XPLMGetDatai(HSI_source);
+				if(selected==1)
+					XPLMSetDatai(adf2_stdby_freq_hz, nf/10);
+				else
+					XPLMSetDatai(adf1_stdby_freq_hz, nf/10);
+			}
+			else
+				XPLMSetDatai(com1_stdby_freq_hz, nf);
+		}
+		jvmO->hasNewFreq=false;
+	}
 
 	//Get door array dref values
 	XPLMGetDatavf(door_open_ratio,doorarray,0,9);

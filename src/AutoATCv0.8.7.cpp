@@ -348,12 +348,14 @@ int TriggerIntercomHandler(XPLMCommandRef inCommand,
 }
 
 int roll = 0;
+
 void setStndby()
 {
     JVM *jvmO = getJVM();
     int nf = jvmO->getStndbyFreq(roll);
-    if (nf > 0)
+    /*if (nf > 0)
     {
+        printf("C got standby %d\n",nf);  
         if (jvmO->logPage == 3){
             int selected=XPLMGetDatai(HSI_source);
             if(selected==1)
@@ -370,7 +372,7 @@ void setStndby()
         }
         else
             XPLMSetDatai(com1_stdby_freq_hz, nf);
-    }
+    }*/
 }
 int nextComHandler(XPLMCommandRef inCommand,
                    XPLMCommandPhase inPhase,

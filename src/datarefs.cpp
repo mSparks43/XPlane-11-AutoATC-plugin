@@ -193,7 +193,7 @@ static void setsayvb(void * refA, void * in_values, int in_offset, int in_max)
 	//printf("AutoATC:set string to ((%s))\n",ref->string_data.c_str());
 	//sprintf(command,"doCommand:sendAcars:%s",ref->string_data.c_str());
     //sprintf(acarsoutdata,"doCommand:sendAcars:%s",acarsoutdata);
-    printf("You say = %s\n",ref->string_data.c_str());
+    //printf("You say = %s\n",ref->string_data.c_str());
 	JVM *jvmO = getJVM();
 	jvmO->showSayWindow();	
     //
