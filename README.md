@@ -22,7 +22,7 @@ In order to use ATC services and have a better text to speech output, two compan
 ## Dependencies
 * openAL
 * [X-Plane SDK](https://developer.x-plane.com/sdk/plugin-sdk-downloads/)
-* Make (building for Linux or MacOS) and/or mingw64 (building for Windows)
+* Make (building for Linux or MacOS) or Visual Studio Community (building for Windows)
 
 ## Prerequisites
 * The "XPLM", "Wrappers" and "Widgets" folders from the X-Plane SDK must be located in the "SDK\CHeaders" folder, resulting in the following paths:
