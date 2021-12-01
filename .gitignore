@@ -2,6 +2,7 @@
 .vs
 .vscode
 deploy/obj64/*
+.DS_Store
 # airportMaps folder
 airportMaps/*
 Release/
