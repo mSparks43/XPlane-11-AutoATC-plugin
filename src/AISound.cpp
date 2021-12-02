@@ -231,8 +231,6 @@ void AircraftSound::LoadSound()
 {
 	ALfloat	zero[3] = { 0 } ;
 
-	char xp_soundpath[512];
-	XPLMGetSystemPath(xp_soundpath);
 	CHECK_ERR();
 	float looping=1.0f;
 	char path[1024];

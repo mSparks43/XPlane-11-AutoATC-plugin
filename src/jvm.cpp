@@ -46,7 +46,7 @@ const char* plugin_version = "About:0.9.6.1";
 const char* plugin_version = "About:0.9.6.1 for XP10";
 #endif
 char gBob_debstr2[2048];
-char xp_path[512];
+//char xp_path[512];
 
 char CONFIG_FILE_DEFAULT_AIRFRAMES[] ="Resources/plugins/AutoATC/airframes_940.txt";
  bool file_exists (const std::string& name);
@@ -108,8 +108,7 @@ void AirframeDef::setData(std::string inLine){
     std::size_t found4 = inLine.find(",",found3+1);
     std::string drefStyleS = inLine.substr (found3+1,found4);
     std::string iconS = inLine.substr (found4+1);
-    XPLMGetSystemPath(xp_path);
-    sprintf (path, "%s%s", xp_path, pathS.c_str());
+    sprintf (path, "%s", pathS.c_str());
     char* end;
     //
     yOffset=strtod(offsetS.c_str(),&end);
@@ -591,7 +590,7 @@ void JVM::init_parameters ()
 })"_json;
     
     airframeDefs.clear();
-    XPLMGetSystemPath(xp_path);
+    //XPLMGetSystemPath(xp_path);
     transponder_codeRef = XPLMFindDataRef("sim/cockpit/radios/transponder_code");
     latitudeRef = XPLMFindDataRef("sim/flightmodel/position/latitude");
     longitudeRef = XPLMFindDataRef("sim/flightmodel/position/longitude");
@@ -627,18 +626,7 @@ void JVM::init_parameters ()
     
     live=false;
 }
-/*void JVM::init_parameters (char * jvmsettingstxt)
-{
- // struct file_parameters * lparms=&parms;
-  //strncpy (win,jvmfilename, MAXLEN);
-  //strncpy (lin,jvmfilename, MAXLEN);
-  //strncpy (mac,jvmfilename, MAXLEN);
-  strncpy (settingstxt,jvmsettingstxt, MAXLEN);
-  strncpy (device,"any", MAXLEN);
-  strncpy (slave,"0", MAXLEN);
-  //airframeDefs.clear();
-  XPLMGetSystemPath(xp_path);
-}*/
+
 
 void JVM::parse_config (char * filename)
 {
@@ -712,7 +700,7 @@ void JVM::start(void)
 {
     if(!hasjvm)
         return;
-    XPLMGetSystemPath(xp_path);
+   // XPLMGetSystemPath(xp_path);
     sprintf(gBob_debstr2,"AutoATC: Start!\n");
     fireTransmit=false;
     isIntercom=false;
