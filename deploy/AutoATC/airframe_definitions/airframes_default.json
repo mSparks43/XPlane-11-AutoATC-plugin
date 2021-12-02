@@ -1,0 +1,7 @@
+{"dref":"libxplanemp","path":"Resources/plugins/AutoATC/objects/followme_car.obj","offset":0.0,"af":"CARS_FMX","icon":1,"type":"prop"}
+{"dref":"libxplanemp","path":"Resources/plugins/IVAO_CSL/CSL/CARS/ZZZC2.obj","offset":0.0,"af":"CARS_FMC","icon":1,"type":"prop"}
+{"dref":"libxplanemp","path":"Resources/plugins/AutoATC/objects/follow_me/fm_truck.obj","offset":0.0,"af":"CARS_FMT","icon":1,"type":"prop"}
+{"dref":"libxplanemp","path":"Resources/plugins/AutoATC/objects/follow_me/fm_van.obj","offset":0.0,"af":"CARS_FMV","icon":1,"type":"prop"}
+{"dref":"libxplanemp","path":"Resources/default scenery/sim objects/apt_aircraft/jet/A320_ACA/A320_ACA_static.obj","offset":0.0,"af":"AnUnknownjet_NAN","icon":4,"type":"jet"}
+{"dref":"libxplanemp","path":"Resources/default scenery/sim objects/apt_aircraft/helo/S76_coastguard/S76_coastguard_static.obj","offset":0.0,"af":"AnUnknownheli_NAN","icon":2,"type":"heli"}
+{"dref":"libxplanemp","path":"Resources/default scenery/sim objects/apt_aircraft/turboprop/AT72_DLH/ATR72-500_Lufthansa_Regional.obj","offset":0.0,"af":"AnUnknownProp_NAN","icon":1,"type":"prop"}
