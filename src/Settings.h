@@ -35,7 +35,7 @@ public:
     
     SettingsWidget(void);
     void updateData();
-    void setIP(char * jvmBuffer,char * ipbuffer);
+    void setIP(char * ipbuffer);
     void setSlave(int isSlave);
     //void test(char * jvmBuffer,char *ipbuffer);
     void reset();

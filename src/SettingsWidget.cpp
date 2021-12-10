@@ -22,7 +22,7 @@ be distributed under different terms and without source code for the larger work
 
 JVM* getJVM();//jvm.cpp
 static  XPWidgetID	w_window;
-static XPWidgetID jvmField;
+//static XPWidgetID jvmField;
 static XPWidgetID ipField;
 static XPWidgetID isSlaveField;
 static XPWidgetID setButton;
@@ -41,12 +41,12 @@ static float	displaySettingsStatus(
                                    float                inElapsedTimeSinceLastFlightLoop,    
                                    int                  inCounter,    
                                    void *               inRefcon); 
-void SettingsWidget::setIP(char * jvmBuffer,char *ipbuffer){
-    char text[512];
+void SettingsWidget::setIP(char *ipbuffer){
+   /*char text[512];
     sprintf(text,"Apply %s\n",jvmBuffer);
      printf(text);
      char gBob_debstr2[128];
-     sprintf(gBob_debstr2,text);
+     sprintf(gBob_debstr2,text);*/
      //XPLMDebugString(gBob_debstr2); 
      char com[512];
      sprintf(com,"Network mobile:phone=%s",ipbuffer);
@@ -55,9 +55,9 @@ void SettingsWidget::setIP(char * jvmBuffer,char *ipbuffer){
       if(!jvmO->hasjvm)
         return;
      jvmO->getData(com);
-     XPLMUnregisterFlightLoopCallback(displaySettingsStatus, NULL);
+     /*XPLMUnregisterFlightLoopCallback(displaySettingsStatus, NULL);
 	XPDestroyWidget(w_window, 1);
-    hasSettingsWindow=false;
+    hasSettingsWindow=false;*/
 }
 void SettingsWidget::setSlave(int isSlave){
     char text[512];
@@ -196,8 +196,8 @@ void SettingsWidget::init(){
     XPSetWidgetProperty(ecCaption, xpProperty_CaptionLit, 1);    
     XPSetWidgetProperty(resetButton, xpProperty_ButtonType, xpPushButton);
 
-    setButton = XPCreateWidget(x2-60, y-70, x2-20, y-90,
-					1, "Apply", 0, w_window,
+    setButton = XPCreateWidget(x2-80, y-70, x2-20, y-90,
+					1, "Connect", 0, w_window,
 					xpWidgetClass_Button);
 
     XPSetWidgetProperty(setButton, xpProperty_ButtonType, xpPushButton);
@@ -236,7 +236,7 @@ int SettingsWidgetsHandler(
     if (inMessage == xpMsg_PushButtonPressed)
 	{
         char ipbuffer[255],jvmBuffer[255];
-        XPGetWidgetDescriptor(jvmField, jvmBuffer, sizeof(jvmBuffer));
+        //XPGetWidgetDescriptor(jvmField, jvmBuffer, sizeof(jvmBuffer));
         XPGetWidgetDescriptor(ipField, ipbuffer, sizeof(ipbuffer));
         /*if (inParam1 == (intptr_t)resetButton)
         {
@@ -251,7 +251,7 @@ int SettingsWidgetsHandler(
         }else */
         if (inParam1 == (intptr_t)setButton)
         {
-            settings.setIP(jvmBuffer,ipbuffer);
+            settings.setIP(ipbuffer);
             return 1;
         }
     }
