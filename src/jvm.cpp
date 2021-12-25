@@ -1094,6 +1094,7 @@ void JVM::getThreadCommandData(){
         command_mutex.lock();
         for(std::string s:getDataList){
             incominggetDataList.push_back(s);
+           // printf("got data %s\n",s.c_str());
         }
         getDataList.clear();
         command_mutex.unlock();
