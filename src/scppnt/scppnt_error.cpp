@@ -46,8 +46,8 @@ namespace SCPPNT
     if (s == 0)
       return; // return if pointer is null
 
-    int len = std::strlen(s);
-    int currlen = std::strlen(message);
+    int len = (int)std::strlen(s);
+    int currlen = (int)std::strlen(message);
     int freechar = MaxChar() - currlen;
 
     if (freechar <= 0 || len == 0)

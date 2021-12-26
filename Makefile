@@ -27,20 +27,21 @@ SOURCES = \
 	src/map_layer.cpp \
 	src/datarefs.cpp
 
-LIBS = -FSDK/Libraries/Mac/ -framework XPLM -framework XPWidgets -L/Library/Java/JavaVirtualMachines/adoptopenjdk-8-openj9.jdk/Contents/Home/jre/lib/server -lstdc++ -framework OpenAL
+LIBS = -FSDK/Libraries/Mac/ -v -framework XPLM -framework XPWidgets -L/Library/Java/JavaVirtualMachines/ibm-semeru-open-17.jdk/Contents/Home/lib/server -lstdc++ -framework OpenAL
 
 #-L/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/jre/lib/server \
 #        -l XPLM_64 -ljvm -lstdc++
+# jdk 17 from https://developer.ibm.com/languages/java/semeru-runtimes/downloads
 
 INCLUDES = \
         -I$(SRC_BASE)/SDK/CHeaders/XPLM \
         -I$(SRC_BASE)/SDK/CHeaders/Widgets \
-        -I/Library/Java/JavaVirtualMachines/adoptopenjdk-8-openj9.jdk/Contents/Home/include \
-        -I/Library/Java/JavaVirtualMachines/adoptopenjdk-8-openj9.jdk/Contents/Home/include/darwin
+        -I/Library/Java/JavaVirtualMachines/ibm-semeru-open-17.jdk/Contents/Home/include \
+        -I/Library/Java/JavaVirtualMachines/ibm-semeru-open-17.jdk/Contents/Home/include/darwin
         
 
 
-DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=1 -DIBM=0 -DLIN=0 -DXPLM200 -DXPLM_210  -DXPLM300=1 -DXPLM301=1 -std=c++11 -shared -static -static-libgcc -static-libstdc++ -DXP11=1
+DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=1 -DIBM=0 -DLIN=0 -DXPLM200 -DXPLM_210  -DXPLM300=1 -DXPLM301=1 -std=c++11 -shared -static -static-libgcc -static-libstdc++ -DXP11=1 --target=x86_64
 ############################################################################
 
 
@@ -82,7 +83,7 @@ $(TARGET): $(BUILDDIR)/$(TARGET)/64/mac.xpl
 $(BUILDDIR)/$(TARGET)/64/mac.xpl: $(ALL_OBJECTS64)
 	@echo Linking $@
 	mkdir -p $(dir $@)
-	gcc -m64 -shared -Wl, -o $@ $(ALL_OBJECTS64) $(LIBS)
+	gcc --target=x86_64 -m64 -shared -Wl, -o $@ $(ALL_OBJECTS64) $(LIBS)
 	rm -rf $(BUILDDIR)/obj64
 
 # Compiler rules

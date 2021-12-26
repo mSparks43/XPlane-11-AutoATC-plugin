@@ -352,7 +352,8 @@ int roll = 0;
 void setStndby()
 {
     JVM *jvmO = getJVM();
-    int nf = jvmO->getStndbyFreq(roll);
+    //int nf =
+    jvmO->getStndbyFreq(roll);
     /*if (nf > 0)
     {
         printf("C got standby %d\n",nf);  

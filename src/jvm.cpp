@@ -84,7 +84,7 @@ XPLMDataRef  rollRef = NULL;
  XPLMDataRef say_dref= NULL;
  String::String(const char *c) 
 { 
-    size = strlen(c); 
+    size = (int)strlen(c);
     s = new char[size+1]; 
     strcpy(s,c); 
 } 
@@ -112,9 +112,9 @@ void AirframeDef::setData(std::string inLine){
     char* end;
     //
     yOffset=strtod(offsetS.c_str(),&end);
-    soundIndex=strtol(soundS.c_str(),&end,10);
-    drefStyle=strtol(drefStyleS.c_str(),&end,10);
-    icon=strtol(iconS.c_str(),&end,10);
+    soundIndex=(int)strtol(soundS.c_str(),&end,10);
+    drefStyle=(int)strtol(drefStyleS.c_str(),&end,10);
+    icon=(int)strtol(iconS.c_str(),&end,10);
     //printf("set aircraft data %s %d\n",path,icon);
 }
 char* AirframeDef::getPath(void){
@@ -282,7 +282,7 @@ bool JVM::connectJVM() {
     sprintf(gBob_debstr2,"AutoATC: Found CreateJavaVM\n");
     XPLMDebugString(gBob_debstr2);
 #elif defined(__APPLE__)
-    os="mac";
+    os=(char*)"mac";
     printf("JVM library is %s\n",jsettings[os]["library"].get<std::string>().c_str());
      sprintf(gBob_debstr2,"AutoATC:Loading jvm dylib '%s' \n", jsettings[os]["library"].get<std::string>().c_str());
      XPLMDebugString(gBob_debstr2);
@@ -344,7 +344,7 @@ bool JVM::connectJVM() {
        
         std::vector<std::string> optionsV=jsettings[os]["options"].get<std::vector<std::string>>();
         
-        int numOptions=optionsV.size();    
+        int numOptions=(int)optionsV.size();
         JavaVMOption* options = new JavaVMOption[numOptions]; //one more for lib path
         for(int i=0;i<optionsV.size();i++){
             
@@ -354,7 +354,7 @@ bool JVM::connectJVM() {
              XPLMDebugString(gBob_debstr2);
             options[i].optionString = opt;
         }
-        char classpath[MAXLEN];
+        //char classpath[MAXLEN];
         
         /*sprintf(classpath,"-Djava.class.path=%s\n",jsettings[os]["classpath"].get<std::string>().c_str());
         sprintf(gBob_debstr2,"AutoATC: Using classpath=%s",classpath);
@@ -1152,7 +1152,7 @@ void JVM::getCommandData(){
                     else if (type&xplmType_Data){
                         const char * begin = value.c_str();
 		                const char * end = begin + value.size();
-                        XPLMSetDatab(dRef, (void *) begin, 0, end - begin);
+                        XPLMSetDatab(dRef, (void *) begin, 0, (int)(end - begin));
                     }
                 }
                 else{
@@ -1674,7 +1674,8 @@ void	draw_say_text(XPLMWindowID in_window_id, void * in_refcon)
 
         char astring[1024]={0};
      
-        int size=XPLMGetDatab(say_dref,astring,0,1022);
+        //int size=
+        XPLMGetDatab(say_dref,astring,0,1022);
         //char* astring ="belgrade tower yankee tango delta good day";
 
   
@@ -1700,7 +1701,7 @@ void	draw_say_text(XPLMWindowID in_window_id, void * in_refcon)
         height+=6;//3px line spacing
         //bottom left is 0,0
         while(std::getline(stream, line)) {
-            int lineLength=line.length();
+            int lineLength=(int)line.length();
             float length=XPLMMeasureString(xplmFont_Basic,astring,lineLength);
             length=length+10;
             int noLines=(length/ww)+1;
@@ -1790,7 +1791,7 @@ void	draw_atc_text(XPLMWindowID in_window_id, void * in_refcon)
         height+=6;//3px line spacing
         //bottom left is 0,0
         while(std::getline(stream, line)) {
-            int lineLength=line.length();
+            int lineLength=(int)line.length();
             float length=XPLMMeasureString(xplmFont_Basic,astring,lineLength);
             length=length+10;
             int noLines=(length/ww)+1;
@@ -1883,7 +1884,8 @@ float SendATCData(float                inElapsedSinceLastCall,
     return -1;
 }
 void JVM::popupNoJVM(){
-    JVM* jvmO=getJVM();
+    //JVM* jvmO=
+    getJVM();
     if(jvmFailed)
         return;
         //printf("popup no jvm\n");
@@ -1960,7 +1962,8 @@ void JVM::setDevice( char* newdevice){
     int ww=r-l;
 
         char text[]="Java VM not found,\n AutoATC cannot continue \n";
-         JVM* jvmO=getJVM();
+         //JVM* jvmO=
+         getJVM();
          jvmFailed=true;
         XPLMDrawString(col_white, l + 10, t - 20, text, &ww, xplmFont_Proportional);
         

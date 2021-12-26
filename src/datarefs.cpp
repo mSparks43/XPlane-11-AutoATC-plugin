@@ -158,7 +158,7 @@ static int getvb(void * refA, void * out_values, int in_offset, int in_max)
     char * destination = (char *) out_values;
 	string_dref * ref =(string_dref *)refA;
 	if(out_values == NULL)
-		return ref->string_data.size();
+		return (int)ref->string_data.size();
 	if(in_offset >= ref->string_data.size())
 		return 0;
 	int count = std::min(in_max, (int)(ref->string_data.size()) - in_offset);

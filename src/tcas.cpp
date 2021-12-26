@@ -73,7 +73,7 @@ void my_planes_now()
     XPLMSetDatai(tcasAPI.override, 1);      // If you try to set this dataref when not owning the planes, it will fail!
     XPLMSetDatai(XPLMFindDataRef("sim/operation/override/override_multiplayer_map_layer"),1); //disable lame broken xplane map layer (ffs)
     // query the array size. This might change with X-Plane updates.
-    std::size_t max_targets = XPLMGetDatavi(tcasAPI.id, NULL, 0, 0);
+    //std::size_t max_targets = XPLMGetDatavi(tcasAPI.id, NULL, 0, 0);
     //assert(TARGETS < max_targets);
 
     XPLMSetActiveAircraftCount(TARGETS+1);  // This will give you four targets, even if the user's AI plane count is set to 0. This can be as high as 63!
@@ -94,8 +94,8 @@ void my_planes_now()
     // But it is nice to see the tainumber on the map obviously!
     int mode=1200;
     for (int i = 1; i <= TARGETS; ++i){
-        XPLMSetDatab(tcasAPI.flt_id, tcasAPI.tailnum[i - 1], i * 8, strnlen(tcasAPI.tailnum[i-1], 8));  // copy at most 8 characters, but not more than we actually have.
-        XPLMSetDatab(tcasAPI.icaoType, tcasAPI.icaonum[i - 1], i * 8, strnlen(tcasAPI.icaonum[i-1], 8));
+        XPLMSetDatab(tcasAPI.flt_id, tcasAPI.tailnum[i - 1], i * 8, (int)strnlen(tcasAPI.tailnum[i-1], 8));  // copy at most 8 characters, but not more than we actually have.
+        XPLMSetDatab(tcasAPI.icaoType, tcasAPI.icaonum[i - 1], i * 8, (int)strnlen(tcasAPI.icaonum[i-1], 8));
         XPLMSetDatavi(tcasAPI.modeC_code,&mode,i,1);
     }
 
@@ -110,6 +110,8 @@ void my_planes_now()
 void someone_elses_planes_now()
 {
     // stop updating
+    if(!tcasAPI.plugin_owns_tcas)
+        return;
     XPLMUnregisterFlightLoopCallback(floop_cb, NULL);
     //XPLMUnregisterFlightLoopCallback(reset_cb, NULL);
     // relinquish control
@@ -126,7 +128,7 @@ void retry_acquiring_planes(void*)
     {
         // Damn, someone else cut in the queue before us!
         // this can happen if more than two plugins are all competing for AI. 
-        XPLMDebugString("TCAS test plugin could not get the AI planes, even after the previous plugin gave them up. We are waiting for the next chance\n");
+        XPLMDebugString("AutoATC TCAS could not get the AI planes, even after the previous plugin gave them up. We are waiting for the next chance\n");
     }
     else
     {
@@ -195,7 +197,7 @@ void TCASAPI::Enable()
         char who[256];
         XPLMCountAircraft(&total, &active, &controller);
         XPLMGetPluginInfo(controller, who, NULL, NULL, NULL);
-        XPLMDebugString("TCAS test plugin could not get the AI planes, because ");
+        XPLMDebugString("AutoATC TCAS could not get the AI planes, because ");
         XPLMDebugString(who);
         XPLMDebugString(" owns the AI planes now. We'll get them when he relinquishes control.\n");
         // Note that the retry callback will be called when this other guy gives up the planes.
@@ -215,19 +217,7 @@ void TCASAPI::Disable()
 
 void TCASAPI::ReceiveMessage(XPLMPluginID from, int msg, void* param)
 {
-    //if (msg == XPLM_MSG_RELEASE_PLANES)
-    {
-        // Some other plugin wants the AI planes. Since this is just a dummy traffic provider, we yield
-        // to a real traffic provider. Deactivate myself now!
-        // If this was send to a VATSIM plugin while the user is connected, of course it would just ignore this message.
-        someone_elses_planes_now();
-
-        char name[256];
-        XPLMGetPluginInfo(from, name, NULL, NULL, NULL);
-        XPLMDebugString("TCAS test plugin has given up control of the AI planes to ");
-        XPLMDebugString(name);
-        XPLMDebugString("\n");
-    }
+    
 }
 
 TCASAPI* getTCASAPI(){

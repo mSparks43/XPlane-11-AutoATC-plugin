@@ -49,8 +49,13 @@ In "XPlane-11-AutoATC-plugin":
 Output is "lin.xpl" in "deploy/XP1X/AutoATC/64/"
 
 ### MacOS
-install openJDK
-https://adoptopenjdk.net/
+install jdk17
+https://developer.ibm.com/languages/java/semeru-runtimes/downloads
+
+install the xcode-select
+
+xcode-select --install
+
 
 In "XPlane-11-AutoATC-plugin":
 > make clean

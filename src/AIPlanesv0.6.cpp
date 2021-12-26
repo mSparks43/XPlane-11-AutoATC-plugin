@@ -98,7 +98,7 @@ static void loadedobject(XPLMObjectRef inObject, void *inRef){
 	int id=acDef.acID;//*(int *)inRef;
 	int modelPart=acDef.pID;//*(int *)modelPartRef;
 	char debugStr[512];
-	sprintf(debugStr,"loaded object C++id=%d ref=%d (%d)\n",id,inObject,inLoading);
+	sprintf(debugStr,"loaded object C++id=%d ref=%d (%d)\n",id,(long)(inObject),inLoading);
 	printf(debugStr);
 #if defined(DEBUG_STRINGS)
 	
@@ -149,7 +149,8 @@ void Aircraft::GetAircraftData(){
 	try{
 		jvmO=getJVM();
 		
-		PlaneData newData=jvmO->getPlaneData(id,jvmO->env);
+		//PlaneData newData=
+        jvmO->getPlaneData(id,jvmO->env);
 		//thisData.live=newData.live;
 		//if(!newData.live)
 		//	return;
@@ -536,7 +537,7 @@ void Aircraft::PrepareAircraftData()
 	double requestedAGL=1000.0;
 	double targetAGL=1000.0;
 	//XPLMProbeTerrainXYZ(ground_probe,data.x,data.y,data.z,&outInfo);
-	double thisRequestedAGL=1000;
+	//double thisRequestedAGL=1000;
 	if(!data.inTransit){
 	 	XPLMProbeTerrainXYZ(ground_probe,data.x,data.y,data.z,&outInfo);
 		requestedAGL=data.y-outInfo.locationY;

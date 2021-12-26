@@ -17,7 +17,7 @@ be distributed under different terms and without source code for the larger work
 #include "XPStandardWidgets.h"
 #include "XPLMProcessing.h"
 #include "jvm.h"
-
+#include <string.h>
 
 
 JVM* getJVM();//jvm.cpp
@@ -60,19 +60,25 @@ void SettingsWidget::setIP(char *ipbuffer){
     hasSettingsWindow=false;*/
 }
 void SettingsWidget::setSlave(int isSlave){
-    char text[512];
-    sprintf(text,"Apply Slave %d\n",isSlave);
-     printf(text);
-     char gBob_debstr2[128];
-     sprintf(gBob_debstr2,text);
+    //char text[512];
+    //sprintf(text,"Apply Slave %d\n",isSlave);
+     //printf(text);
+    //std:string text=
+     //char gBob_debstr2[128];
+     //sprintf(gBob_debstr2,text);
      //XPLMDebugString(gBob_debstr2); 
-    char com[512];
-     sprintf(com,"Network mobile:isSlave=%d",isSlave);
+    //char com[512];
+     //sprintf(com,"Network mobile:isSlave=%d",isSlave);
+     std::string com="Network mobile:isSlave=";
+    if(isSlave)
+        com=com+"true";
+    else
+        com=com+"false";
       JVM* jvmO;
       jvmO=getJVM();
       if(!jvmO->hasjvm)
         return;
-     jvmO->getData(com);
+     jvmO->getData(com.c_str());
      jvmO->setisSlave((long)isSlave);
 }
 
@@ -104,8 +110,8 @@ void SettingsWidget::updateData(){
         sprintf(Buffer, "%s",astring); 
         std::string inLine = Buffer;
         std::size_t lastFound=0;
-        char gBob_debstr2[1024]={0};
-        sprintf(gBob_debstr2,Buffer);
+        //char gBob_debstr2[1024]={0};
+        //sprintf(gBob_debstr2,Buffer);
         //XPLMDebugString(gBob_debstr2); 
         
         for(int i=0;i<5;i++){
@@ -235,7 +241,7 @@ int SettingsWidgetsHandler(
 	}
     if (inMessage == xpMsg_PushButtonPressed)
 	{
-        char ipbuffer[255],jvmBuffer[255];
+        char ipbuffer[255];//,jvmBuffer[255];
         //XPGetWidgetDescriptor(jvmField, jvmBuffer, sizeof(jvmBuffer));
         XPGetWidgetDescriptor(ipField, ipbuffer, sizeof(ipbuffer));
         /*if (inParam1 == (intptr_t)resetButton)

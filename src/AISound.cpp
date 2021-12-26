@@ -84,7 +84,7 @@ ALuint WaveFile::load_wave(const char * file_name,int thisID)
 		return 0;
 	}
 	fseek(fi,0,SEEK_END);
-	int file_size = ftell(fi);
+	int file_size = (int)ftell(fi);
 	fseek(fi,0,SEEK_SET);
 	char * mem = (char*) malloc(file_size);
 	if(mem == NULL)
@@ -182,7 +182,7 @@ ALuint WaveFile::load_wave(const char * file_name,int thisID)
 			//FAIL("I could not find the DATA chunk.\n")
 	
 	int sample_size = fmt->num_channels * fmt->bits_per_sample / 8;
-	int data_bytes = chunk_end(data,swapped) - data;
+	int data_bytes = (int)(chunk_end(data,swapped) - data);
 	int data_samples = data_bytes / sample_size;
 	
 	// If the file is swapped and we have 16-bit audio, we need to endian-swap the audio too or we'll 

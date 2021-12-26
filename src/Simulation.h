@@ -17,7 +17,7 @@ be distributed under different terms and without source code for the larger work
 #include "scppnt/matop.h"
 #include "scppnt/transv.h"
 #include "scppnt/region2d.h"
-
+#include "scppnt/scppnt_error.h"
 using namespace SCPPNT;
 
 class Simulation{
