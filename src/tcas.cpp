@@ -69,7 +69,7 @@ float floop_cb(float elapsed1, float elapsed2, int ctr, void* refcon)
 // Arthur says: BRILLIANT! My Jets Now!
 void my_planes_now()
 {
-    XPLMDebugString("TCAS test plugin now has the AI planes!\n");
+    XPLMDebugString("AutoATC plugin now has TCAS\n");
     XPLMSetDatai(tcasAPI.override, 1);      // If you try to set this dataref when not owning the planes, it will fail!
     XPLMSetDatai(XPLMFindDataRef("sim/operation/override/override_multiplayer_map_layer"),1); //disable lame broken xplane map layer (ffs)
     // query the array size. This might change with X-Plane updates.

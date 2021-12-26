@@ -215,7 +215,7 @@ PLUGIN_API int XPluginStart(
     sysTimeRef = XPLMFindDataRef("sim/time/total_running_time_sec");
     
     HSI_source = XPLMFindDataRef("sim/cockpit2/radios/actuators/HSI_source_select_pilot");
-    
+    XPLMSetDatai(XPLMFindDataRef("sim/atc/atis_enabled"),0); //disable XP ATIS
     registerDatarefs();
     jvmO->start();
     XPLMSetActiveAircraftCount(0);
