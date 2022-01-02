@@ -1,3 +1,5 @@
+
+![Github All Releases download count](https://img.shields.io/github/downloads/mSparks43/XPlane-11-AutoATC-plugin/total.svg?style=flat)
 # XPlane-11-AutoATC-plugin
 C/C++ Source code for the AutoATC plugin for X-Plane 11.
 
@@ -16,7 +18,7 @@ In order to use ATC services and have a better text to speech output, two compan
 
 
 # Installing
-* Extract "AutoATC" and "AutoATC_java" to "X-Plane/Resources/plugins"
+* Extract the "AutoATC" folder to "X-Plane/Resources/plugins"
 
 # Building
 ## Dependencies
