@@ -123,11 +123,11 @@ struct format_info {
 };
 static bool __CHECK_ERR(const char * f, int l)
 {
-    ALuint e = alGetError();
+   /* ALuint e = alGetError();
     if (e != AL_NO_ERROR){
         printf("ERROR: %d (%s:%d\n", e, f, l);
         return true;
-    }
+    }*/
     return false;
 }
 #define CHECK_ERR() __CHECK_ERR(__FILE__,__LINE__)

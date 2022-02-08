@@ -24,7 +24,7 @@ be distributed under different terms and without source code for the larger work
 #include "XPLMScenery.h"
 #include "XPLMInstance.h"
 #include "XPLMPlugin.h"
-#if defined(__APPLE__)
+/*#if defined(__APPLE__)
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #elif defined(_WIN64)
@@ -33,7 +33,7 @@ be distributed under different terms and without source code for the larger work
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
-#endif
+#endif*/
 #include <time.h>
 #include "XPLMCamera.h"
 #include "jvm.h"
@@ -214,10 +214,10 @@ ALuint WaveFile::load_wave(const char * file_name,int thisID)
 		}
 			//("Could not generate buffer id.\n");
 	
-	alBufferData(buffers[thisID], fmt->bits_per_sample == 16 ? 
+	/*alBufferData(buffers[thisID], fmt->bits_per_sample == 16 ? 
 							(fmt->num_channels == 2 ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16) :
 							(fmt->num_channels == 2 ? AL_FORMAT_STEREO8 : AL_FORMAT_MONO8),
-					data, data_bytes, fmt->sample_rate);
+					data, data_bytes, fmt->sample_rate);*/
 	free(mem);
     //snd_buffer=
 	char error[2056];
@@ -229,7 +229,7 @@ ALuint WaveFile::load_wave(const char * file_name,int thisID)
 WaveFile wav;
 void AircraftSound::LoadSound()
 {
-	ALfloat	zero[3] = { 0 } ;
+	/*ALfloat	zero[3] = { 0 } ;
 
 	CHECK_ERR();
 	float looping=1.0f;
@@ -290,7 +290,7 @@ void AircraftSound::LoadSound()
     zero[2]=5.0f;
     alSource3f(snd_src,AL_POSITION, zero[0],zero[1],zero[2]);
 	printf("AutoATC:load sound %d\n",local_snd_id);
-	CHECK_ERR();
+	CHECK_ERR();*/
 }
 AircraftSound::AircraftSound()
 {
@@ -299,7 +299,7 @@ AircraftSound::AircraftSound()
 	sound_id++;
 }
 void AircraftSound::play(){
-	if(!snd_src)
+	/*if(!snd_src)
 		LoadSound();
     if(snd_src)
 		{
@@ -308,20 +308,20 @@ void AircraftSound::play(){
             alSourcef(snd_src,AL_PITCH,pitch);
 			alSourcePlay(snd_src);
             CHECK_ERR();
-        }
+        }*/
 }
 void AircraftSound::pause(){
-    if(snd_src)
+   /* if(snd_src)
 		{
             //alSourcef(snd_src,AL_PITCH,pitch);
 			alSourceStop(snd_src);
 			alSourceRewind(snd_src);
         }
     paused=true;
-    playing=false;
+    playing=false;*/
 }
 void AircraftSound::setPosition(ALfloat pos[]){
-	JVM* jvmO=getJVM();
+	/*JVM* jvmO=getJVM();
     float nowT=jvmO->getSysTime();//clock()/(CLOCKS_PER_SEC*1.0f);
     if(nowT<(startPitchChange+5)){
         double achange=targetPitch-pitch;
@@ -333,27 +333,27 @@ void AircraftSound::setPosition(ALfloat pos[]){
     }
     else
         alSourcef(snd_src,AL_PITCH,targetPitch);
-    alSource3f(snd_src,AL_POSITION, pos[0],pos[1],pos[2]);
+    alSource3f(snd_src,AL_POSITION, pos[0],pos[1],pos[2]);*/
 }
 void AircraftSound::setVelocity(ALfloat pos[]){
-    //alSourcef(snd_src,AL_PITCH,pitch);
-    alSource3f(snd_src,AL_VELOCITY, pos[0],pos[1],pos[2]);
+    
+    //alSource3f(snd_src,AL_VELOCITY, pos[0],pos[1],pos[2]);
 }
 
 
 // Simple mixer to control AI aircraft volume
 void AircraftSound::setVolume(float sound_vol){
 	
-	alSourcef(snd_src,AL_GAIN,sound_vol);
+	//alSourcef(snd_src,AL_GAIN,sound_vol);
 }
 void AircraftSound::stop(){
-    if(snd_src)		alDeleteSources(1,&snd_src);
-    if(snd_buffer) alDeleteBuffers(1,&snd_buffer);
+   // if(snd_src)		alDeleteSources(1,&snd_src);
+   // if(snd_buffer) alDeleteBuffers(1,&snd_buffer);
 	//if(buffers[0].snd_buffer) alDeleteBuffers(1,&buffers[0].snd_buffer);
    // if(buffers[1].snd_buffer) alDeleteBuffers(1,&buffers[1].snd_buffer);
 }
 void AircraftSound::setPitch(float setpitch){
-    if(setpitch==targetPitch)
+    /*if(setpitch==targetPitch)
         return;
     //pitch=targetPitch;
 	JVM* jvmO=getJVM();
@@ -368,7 +368,7 @@ void AircraftSound::setPitch(float setpitch){
     else
         pitch=targetPitch;
     startPitchChange=jvmO->getSysTime();//clock()/CLOCKS_PER_SEC*1.0f; 
-    targetPitch= setpitch;  
+    targetPitch= setpitch;  */
 }
 AircraftSounds::AircraftSounds(Aircraft *aircraft)
 {
@@ -378,7 +378,7 @@ AircraftSounds::AircraftSounds(Aircraft *aircraft)
     
 }
 void AircraftSounds::showActive(){
-    if(!live){
+   /* if(!live){
         start();
 
 		alGenSources(6,snd_srcs);
@@ -390,12 +390,12 @@ void AircraftSounds::showActive(){
     	alListenerfv(AL_VELOCITY,zero);
     	alListenerfv(AL_ORIENTATION,listenerOri); 	// Orientation ...
     	XPLMDebugString("AutoATC:OpenAL device active.\n");
-	}
-    //snd.play();
+	}*/
+
 
 }
 void AircraftSounds::land(int aircraftid){
-	 v apos = aircrafts[aircraftid].getSndSrc();
+	/* v apos = aircrafts[aircraftid].getSndSrc();
     landsnd.dist=300.0f; // Was 3000 m
     landsnd.pos=v(0,0,0);
     landsnd.velocity=v(0,0,0);
@@ -416,11 +416,11 @@ void AircraftSounds::land(int aircraftid){
             landsnd.setVolume(sound_vol);
             landsnd.play();
             landsnd.paused=true;
-        }
+        }*/
 }
 void AircraftSounds::update(float latest_sound_vol){
     
-    XPLMCameraPosition_t camera;
+    /*XPLMCameraPosition_t camera;
     XPLMReadCameraPosition(&camera);
     ALfloat	zero[3] = { 0,0,0 } ;//sin(camera.heading*PI/180.0)
     ALfloat	listenerOri[]={(ALfloat)sin(camera.heading*PI/180.0f),0.0f,(ALfloat)cos(camera.heading*PI/180.0f), 0.0f,-1.0f,0.0f};	// Listener facing into the screen
@@ -644,12 +644,12 @@ void AircraftSounds::update(float latest_sound_vol){
     else if(!helisnd.paused){
             helisnd.pause();
             
-    }
+    }*/
     
 }
 void AircraftSounds::start()
 {
-    if(live)
+   /* if(live)
         return;
     live=false;
     CHECK_ERR();
@@ -725,7 +725,7 @@ void AircraftSounds::stop()
 	printf("AutoATC:stopping sound.\n");
 	
 
-	landsnd.stop();
+	/*landsnd.stop();
     propsnd.stop();
     helisnd.stop();
 	tpropsnd.stop();
@@ -739,5 +739,5 @@ void AircraftSounds::stop()
 	}	
 	live=false;
     //snd1.stop();
-    //snd2.stop();
+    //snd2.stop();*/
 }

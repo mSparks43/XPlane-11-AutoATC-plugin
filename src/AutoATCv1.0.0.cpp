@@ -11,6 +11,7 @@ However, a larger work using the licensed work through interfaces provided by th
 be distributed under different terms and without source code for the larger work.
 *****************************************************************************************
 */
+#include "../XTLua/XTLua/src/xluaplugin.h"
 #include "XPLMPlugin.h"
 
 #include "XPLMGraphics.h"
@@ -119,6 +120,9 @@ PLUGIN_API int XPluginStart(
     strcpy(outName, "AutoATC");
     strcpy(outSig, "zem.AutoATC.RadioTransciever");
     strcpy(outDesc, "Receive AutoATC communications and relay aircraft data");
+    XPLMCommandRef	reload_cmd=XPLMCreateCommand("xtlua/reloadatcScripts","Reload autoatc xtlua scripts");
+	XPLMRegisterCommandHandler(reload_cmd, reloadScripts, 1,  (void *)0);
+	XTLuaXPluginStart(NULL);
     XPLMEnableFeature("XPLM_USE_NATIVE_WIDGET_WINDOWS", 1);
     //enabledATCPro=false;
     initJVM();
@@ -226,6 +230,8 @@ PLUGIN_API int XPluginStart(
 static int				g_is_acf_inited = 0;
 PLUGIN_API void XPluginStop(void)
 {
+    XPLMDebugString("AUTOATC: XTLuaXPluginStop\n"); 
+    XTLuaXPluginStop();
     XPLMDebugString("AUTOATC: XPluginStop\n"); 
     JVM *jvmO = getJVM();
     jvmO->unregisterFlightLoop();//make sure the flight loop is stopped
@@ -245,6 +251,9 @@ PLUGIN_API void XPluginStop(void)
 
 PLUGIN_API void XPluginDisable(void)
 {
+    XPLMDebugString("AUTOATC: XTLuaXPluginDisable\n");
+    XTLuaXPluginDisable();
+
     XPLMDebugString("AUTOATC: XPluginDisable\n"); 
     JVM *jvmO = getJVM();
     
@@ -263,6 +272,7 @@ PLUGIN_API void XPluginDisable(void)
 #define MSG_ADD_DATAREF 0x01000000           //  Add dataref to DRE message
 PLUGIN_API int XPluginEnable(void)
 {
+
     JVM *jvmO = getJVM();
     // enabledATCPro=false;
     //return 1;
@@ -285,7 +295,7 @@ PLUGIN_API int XPluginEnable(void)
     TCASAPI* tcasAPI=getTCASAPI();
     tcasAPI->Enable();
     MapLayerEnable();
-    return 1;
+    return XTLuaXPluginEnable();
 }
 
 PLUGIN_API void XPluginReceiveMessage(
@@ -320,6 +330,7 @@ PLUGIN_API void XPluginReceiveMessage(
             g_is_acf_inited = 1;
         }
     }
+    XTLuaXPluginReceiveMessage(inFromWho,inMessage,inParam);
 }
 
 int TriggerBroadcastHandler(XPLMCommandRef inCommand,

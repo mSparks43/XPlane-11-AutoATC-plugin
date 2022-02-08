@@ -862,8 +862,8 @@ void Aircraft::SetAircraftData(void)
 }
 
 
-bool liveThread=false;
-bool run=true;
+bool livePlaneThread=false;
+bool runPlaneThread=true;
 //std::mutex g_ac_mutex[30];
 void sendData(){
 	JVM* jvmO=getJVM();
@@ -874,13 +874,13 @@ void sendData(){
 	}
 }
 static void do_simulation(){
-	while(!liveThread&&run){
+	while(!livePlaneThread&&runPlaneThread){
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 	printf("AutoATC: simulation thread woke up\n");
 	char gBob_debstr2[128];
     sprintf(gBob_debstr2,"AutoATC: simulation thread woke up\n");
-	while(liveThread&&run){
+	while(livePlaneThread&&runPlaneThread){
 		auto start = std::chrono::high_resolution_clock::now();
 		for(int i=0;i<30;i++){
 			aircraft[i].SimulateAircraftThreadData();
@@ -901,11 +901,11 @@ static void do_model(){
 	try{
 		bool attached=false;
 	JVM* jvmO=getJVM();
-	while(!liveThread&&run){
+	while(!livePlaneThread&&runPlaneThread){
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		//std::this_thread::sleep_for(std::chrono::seconds(15));
 		if(jvmO->loadLibraryFailed)
-			run=false;
+			runPlaneThread=false;
 		if(jvmO->hasjvm&&!attached){
 			jvmO->joinThread();
 			attached=true;
@@ -931,7 +931,7 @@ static void do_model(){
 #endif
 	int rolls=0;
 	//printf("thread ready\n");
-	while(liveThread&&run){
+	while(livePlaneThread&&runPlaneThread){
 		auto start = std::chrono::high_resolution_clock::now();
 		sendData();
 		
@@ -980,7 +980,7 @@ static void do_model(){
 	printf("AutoATC: plane thread stopped\n");
 #endif
 }
-std::thread m_thread(&do_model);
+std::thread m_model_thread(&do_model);
 
 std::thread m_simthread(&do_simulation);
 void initPlanes(){
@@ -1015,7 +1015,7 @@ void initPlanes(){
     for(int i=0;i<30;i++){
 		aircraft[i].id=i+1;
 	}
-	liveThread=true;
+	livePlaneThread=true;
 
 
 }
@@ -1023,10 +1023,10 @@ void stopPlanes(){
 	printf("stopPlanes\n");
 	soundSystem.stop();
 
-	liveThread=false;
-	run=false;
-	if(m_thread.joinable())
-		m_thread.join();
+	livePlaneThread=false;
+	runPlaneThread=false;
+	if(m_model_thread.joinable())
+		m_model_thread.join();
 	
 	char gBob_debstr2[128];
     sprintf(gBob_debstr2,"AutoATC: plane thread stopped\n");
@@ -1073,7 +1073,7 @@ int call=0;
 void aircraftLoop()
 {
 	
-    if(!liveThread)
+    if(!livePlaneThread)
 		return;
 	// Get User Aircraft data
 	//printf("flight loop\n");

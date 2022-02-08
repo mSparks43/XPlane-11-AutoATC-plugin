@@ -1,0 +1,3 @@
+[submodule "XTLua"]
+	path = XTLua
+	url = https://github.com/mSparks43/XTLua.git

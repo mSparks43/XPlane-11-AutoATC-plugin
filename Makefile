@@ -133,7 +133,7 @@ SRC_BASE	:=	.
 #TARGET		:= AutoATC
 ifeq ($(TARGET), AutoATC)
 SOURCES = \
-	src/AutoATCv0.8.7.cpp \
+	src/AutoATCv1.0.0.cpp \
 	src/AIPlanesv0.6.cpp \
 	src/AISound.cpp \
 	src/jvm.cpp \
@@ -142,13 +142,22 @@ SOURCES = \
 	src/scppnt/scppnt_error.cpp \
 	src/tcas.cpp \
 	src/map_layer.cpp \
-	src/datarefs.cpp
-#LIBS = -L/home/mSparks/Downloads/jdk1.8.0_40/jre/lib/amd64/server \
-	-ljvm 
+	src/datarefs.cpp \
+	XTLua/XTLua/src/lua_helpers.cpp \
+	XTLua/XTLua/src/module.cpp \
+	XTLua/XTLua/src/xlua.cpp \
+	XTLua/XTLua/src/xpcommands.cpp \
+	XTLua/XTLua/src/xpdatarefs.cpp \
+	XTLua/XTLua/src/xpfuncs.cpp \
+	XTLua/XTLua/src/xpmtdatarefs.cpp \
+	XTLua/XTLua/src/xptimers.cpp
+	
+LIBS = -LXTLua/lua_sdk -lluajit 
 else ifeq ($(TARGET), Java)
 SOURCES = \
 	javatest.cpp
 endif
+
 
 	
 INCLUDES = \
@@ -156,10 +165,10 @@ INCLUDES = \
 	-I$(SRC_BASE)/SDK/CHeaders/Widgets \
 	-I$(SRC_BASE)/include/lin/include \
 	-I$(SRC_BASE)/include/lin/include/linux \
-	-I/usr/include/AL \
+	-I$(SRC_BASE)/XTLua/lua_sdk 
 	
 ifeq ($(XPVER),11)
-DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=0 -DIBM=0 -DLIN=1 -DXPLM300=1 -DXPLM301=1 -std=c++11 -DXP11=1
+DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=0 -DIBM=0 -DLIN=1 -DXPLM300=1 -DXPLM301=1 -std=c++11 -DXP11=1 -DXPLM303=1
 else ifeq ($(XPVER), 10)
 DEFINES = -DXPLM200=1 -DXPLM210=1 -DAPL=0 -DIBM=0 -DLIN=1 -std=c++11
 endif
