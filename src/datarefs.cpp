@@ -153,6 +153,28 @@ static void setvf(void * ref, float * in_values, int in_offset, int in_max)
     for(n = 0; n < r; ++n)
         g_my_array[n+ in_offset] = in_values[n];
 }
+static int getobjectDatavf(void * ref, float * out_values, int in_offset, int in_max)
+{
+	int n, r;
+	if(out_values == NULL)
+        return 2;
+	r = ARRAY_DIM - in_offset;
+	
+    if(r > in_max) r = in_max;
+
+	// Now copy the actual items from our array to the returned memory.
+    for(n = 0; n < r; ++n) out_values[n] = 0.0f; return r; 	
+}
+static void setobjectDatavf(void * ref, float * in_values, int in_offset, int in_max)
+{
+	printf("Begin objectData set\n");
+	int n, r; // Calculate the number of items to copy in. This is the lesser of the number // the caller writes and the end of our array. 
+	// Copy the actual data.
+    for(n = 0; n < (in_max); ++n)
+        printf("Set %d %f\n",n+in_offset, in_values[n]);
+	printf("End objectData set\n");
+	printf("Set %d to %d\n",in_offset, in_max);
+}
 static int getvb(void * refA, void * out_values, int in_offset, int in_max)
 {
     char * destination = (char *) out_values;
@@ -387,7 +409,12 @@ void registerDatarefs(){
     NULL, NULL, NULL, 
     NULL, NULL,getvf, setvf, 
     NULL, NULL,g_my_damagearray, g_my_damagearray);//create it
-
+	XPLMRegisterDataAccessor("autoatc/aircraft/data", xplmType_FloatArray, true, 
+    NULL,NULL,  NULL, 
+    NULL, NULL, NULL, 
+    NULL, NULL,getobjectDatavf, setobjectDatavf, 
+    NULL, NULL,NULL, NULL);//create it
+	
 	XPLMRegisterDataAccessor("autoatc/acars/in", xplmType_Data, true,
 						NULL, NULL,
 						NULL, NULL,
