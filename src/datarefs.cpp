@@ -41,6 +41,7 @@ int g_my_zarray[ARRAY_DIM] = { 0 };
 int g_my_damagearray[ARRAY_DIM] = { 0 };
 //static string_dref acarsinarray;
 double g_objectArray[30*7] = { 0.0 };
+double g_incomingObjectArray[30*7] = { 0.0 };
 static int_dref receivedAcars;
 static int_dref onlineAcars;
 
@@ -154,6 +155,23 @@ static void setvf(void * ref, float * in_values, int in_offset, int in_max)
     for(n = 0; n < r; ++n)
         g_my_array[n+ in_offset] = in_values[n];
 }
+
+static int getautoatcDatavf(void * ref, float * out_values, int in_offset, int in_max)
+{
+	int n, r;
+	if(out_values == NULL)
+        return 30*7;
+	r = 30*7 - in_offset;
+	
+    if(r > in_max) r = in_max;
+
+	// Now copy the actual items from our array to the returned memory.
+    for(n = 0; n < r; ++n) 
+		out_values[n] = g_incomingObjectArray[n+in_offset]; 
+		
+	return r; 	
+}
+
 static int getobjectDatavf(void * ref, float * out_values, int in_offset, int in_max)
 {
 	int n, r;
@@ -179,12 +197,27 @@ static void setobjectDatavf(void * ref, float * in_values, int in_offset, int in
 	printf("End objectData set\n");
 	printf("Set %d to %d\n",in_offset, in_max);
 }
+void setXTLuaPlanedata(int id,PlaneData inVal)
+{
+	int startIndex=(id-1)*7;
+	if(inVal.live==false){
+		g_incomingObjectArray[startIndex]=-1;
+		return;
+	}
+	g_incomingObjectArray[startIndex]=inVal.airframe;
+	g_incomingObjectArray[startIndex+1]=inVal.lat;
+    g_incomingObjectArray[startIndex+2]=inVal.lon;
+    g_incomingObjectArray[startIndex+3]=inVal.alt;
+    g_incomingObjectArray[startIndex+4]=inVal.the;
+    g_incomingObjectArray[startIndex+5]=inVal.phi;
+    g_incomingObjectArray[startIndex+6]=inVal.psi;
+}
 PlaneData getXTLuaPlanedata(int id){
 	PlaneData retVal;
 	
 	int startIndex=(id-1)*7;
 	int airframe=g_objectArray[startIndex];
-	if(airframe==0.0){
+	if(airframe<=0.0){
 		retVal.live=false;
 		return retVal;
 	}
@@ -442,7 +475,11 @@ void registerDatarefs(){
     NULL, NULL, NULL, 
     NULL, NULL,getobjectDatavf, setobjectDatavf, 
     NULL, NULL,NULL, NULL);//create it
-	
+	XPLMRegisterDataAccessor("autoatc/aircraft/incomingdata", xplmType_FloatArray, false, 
+    NULL,NULL,  NULL, 
+    NULL, NULL, NULL, 
+    NULL, NULL,getautoatcDatavf, NULL, 
+    NULL, NULL,NULL, NULL);//create it
 	XPLMRegisterDataAccessor("autoatc/acars/in", xplmType_Data, true,
 						NULL, NULL,
 						NULL, NULL,

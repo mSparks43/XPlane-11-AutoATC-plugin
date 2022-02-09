@@ -1000,7 +1000,7 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
             caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);   
             return retVal;
         }
-        XPLMWorldToLocal(element[0],element[1],element[2],&retVal.x,&retVal.y,&retVal.z);
+        //XPLMWorldToLocal(element[0],element[1],element[2],&retVal.x,&retVal.y,&retVal.z);
         /*etVal.x=element[0];
         retVal.y=element[1];
         retVal.z=element[2];*/
@@ -1053,7 +1053,7 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
         retVal.live=true;
         if(aiplaneData[i+2]==-9999.0)
             return retVal;
-        XPLMWorldToLocal(aiplaneData[i+0],aiplaneData[i+1],aiplaneData[i+2],&retVal.x,&retVal.y,&retVal.z);
+        //XPLMWorldToLocal(aiplaneData[i+0],aiplaneData[i+1],aiplaneData[i+2],&retVal.x,&retVal.y,&retVal.z);
         /*retVal.x=aiplaneData[i+0];
         retVal.y=aiplaneData[i+1];
         retVal.z=aiplaneData[i+2];*/
@@ -1067,7 +1067,7 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
         retVal.throttle=aiplaneData[i+7];
         retVal.timeStamp=aiplaneData[i+8];
         retVal.airframe=(int)aiplaneData[i+9];
-         //printf("data %d = %f\n",i,retVal.airframe);
+        // printf("incoming data %d = %f\n",i,retVal.airframe);
     }
         //return retVal;
     

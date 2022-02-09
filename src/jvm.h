@@ -264,3 +264,4 @@ public:
 void initJVM();
 JVM *getJVM();
 PlaneData getXTLuaPlanedata(int id);
+void setXTLuaPlanedata(int id,PlaneData inVal);

@@ -199,9 +199,11 @@ void Aircraft::GetAircraftThreadData(){
 	try{
 		jvmO=getJVM();
 		//Depreciated, get from xtlua
-		//PlaneData newData=jvmO->getPlaneData(id,jvmO->plane_env);
+		PlaneData incomingData=jvmO->getPlaneData(id,jvmO->plane_env);
 		
 		data_mutex.lock();
+		
+		setXTLuaPlanedata(id,incomingData);
 		PlaneData newData=getXTLuaPlanedata(id);
 		thisData.live=newData.live;
 		thisData.airframe=newData.airframe;
