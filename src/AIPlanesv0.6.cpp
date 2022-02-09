@@ -172,7 +172,7 @@ void Aircraft::SimulateAircraftThreadData(){
 
 	float speed=velocity/velocity;
 
-	if(speed>0.02){
+	/*if(speed>0.02){
 		data.psi=(atan2(velocity.x,-velocity.z)* (180.0/3.141592653589793238463));
 	}
 
@@ -183,7 +183,7 @@ void Aircraft::SimulateAircraftThreadData(){
 		ahs->last_x[1][0]=data.psi;//180.0+ahs->last_x[1][0];
 
 		
-	}
+	}*/
 
 	ahs->yPos=data.psi;
 	rp->xPos=data.the;
@@ -198,10 +198,11 @@ void Aircraft::GetAircraftThreadData(){
 	JVM* jvmO;
 	try{
 		jvmO=getJVM();
-		
-		PlaneData newData=jvmO->getPlaneData(id,jvmO->plane_env);
+		//Depreciated, get from xtlua
+		//PlaneData newData=jvmO->getPlaneData(id,jvmO->plane_env);
 		
 		data_mutex.lock();
+		PlaneData newData=getXTLuaPlanedata(id);
 		thisData.live=newData.live;
 		thisData.airframe=newData.airframe;
 		if(!newData.live){
@@ -489,8 +490,8 @@ void Aircraft::PrepareAircraftData()
 	data.z = z;
 	data.the=thisData.the;
     data.phi=thisData.phi;
-		
-	float setPHI=data.phi;//so we can unlock sooner
+	data.psi=thisData.psi;	
+	//float setPHI=data.phi;//so we can unlock sooner
 	int inAirframe=thisData.airframe;//so we can unlock sooner
 	if(thisData.gearDown==3.0){
 		data.inTransit=true;
@@ -579,73 +580,16 @@ void Aircraft::PrepareAircraftData()
 				soundSystem.land(id-1);
 				inTouchDown=false;
 			}
-			data.the=-1.0;
-    		data.phi=0.0;
-			if(soundIndex==2){//Heli
-				
-				float now=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
-				if(speed>0.1f){
-					
-					if(now<(startMoveTime+3))
-					{
-						double sComplete=(now-startMoveTime)/3.0;
-						//printf("lift off %f %f\n",sComplete,startMoveTime);
-						if(sComplete>0.5f)
-							inHover=true;
-						data.y+=(2.0*sComplete);
-						data.the-=(2.0*sComplete);
-					}
-					else if(speed<5&&rpm==1500){//we're moving but in the frame before we ascend
-						data.y+=2.0;//always air taxi
-						data.the-=2.0;//lift nose
-					}else if(rpm>100){
-						//inHover=true;
-						data.y+=2;//always air taxi
-						data.the-=3.0;//drop nose
-					}
-					
-				}
-				else if(now<(startMoveTime+3))
-				{
-						double sComplete=1.0-((now-startMoveTime)/3.0);
-						if(sComplete<0.5f)
-							inHover=false;
-						//printf("land %f %f\n",sComplete,startMoveTime);
-						data.y+=(2.0*sComplete);
-						data.the=0.0;
-				}
-				else if(inHover){//we're stopped, but in the frame before we descend
-					data.y+=2.0;
-					//printf("ready land %f\n",startMoveTime);
-				}
-				if(data.the>-1.0)
-					data.the=-1.0;
-			}
+			
 		}
 		else if(requestedAGL<=198.0){
 			//data.the=0.0;
 			
-    		data.phi=setPHI/3;
+    		//data.phi=setPHI/3;
 			if(soundIndex!=2)//no screech for helos
 				inTouchDown=true;
 			requestedAGL=((requestedAGL-18.0)*1.1);
-			if(soundIndex==2){
-				requestedAGL+=2;
-				if(data.the>-1.0){
-					data.the=-1.0;
-					data.phi=setPHI/3;
-				}
-			}
 			data.y=outInfo.locationY+requestedAGL;
-		}else if(soundIndex==2){
-			if(data.the>-1.0)
-				data.the=-1.0;
-			data.y+=2;		
-		}
-
-		if( data.the>0){
-			double lift=25.0*tan(data.the*PI/180.0);
-			data.y=data.y+lift;
 		}
 		//check model
 		if((airFrameIndex==-1&&airFrameIndex!=inAirframe)||(inAirframe>0&&airFrameIndex!=inAirframe)){
@@ -714,7 +658,10 @@ void Aircraft::SetAircraftData(void)
 	dr.pitch = rp->getX();//data.the;
 	dr.heading = ahs->getY();//data.psi;
 	dr.roll = rp->getY();//data.phi;
-
+	
+	/*dr.pitch = data.the;
+	dr.heading = data.psi;
+	dr.roll = data.phi;*/
 	float timeNow = (clock()*60/CLOCKS_PER_SEC)%90+id*10.0;
 	float touchDownSmoke=0.0;
 	//if(((double)clock())/CLOCKS_PER_SEC<(touchDownTime+3))
@@ -865,6 +812,7 @@ void Aircraft::SetAircraftData(void)
 bool livePlaneThread=false;
 bool runPlaneThread=true;
 //std::mutex g_ac_mutex[30];
+//Object thread, send local plane data
 void sendData(){
 	JVM* jvmO=getJVM();
 	if(jvmO->setIcaov){
@@ -1037,7 +985,7 @@ void stopPlanes(){
     XPLMDebugString(gBob_debstr2);
 }
 bool loaded=false;
-
+//main thread
 float	BeginAI()
 {
 	//int AircraftIndex;

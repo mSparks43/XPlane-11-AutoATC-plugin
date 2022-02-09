@@ -13,6 +13,7 @@ be distributed under different terms and without source code for the larger work
 */
 #define NOMINMAX
  #include "XPLMDataAccess.h"
+ #include "XPLMGraphics.h"
 #include "datarefs.h"
  #include <stdlib.h>
  #include <string>
@@ -39,7 +40,7 @@ int g_my_yarray[ARRAY_DIM] = { 0 };
 int g_my_zarray[ARRAY_DIM] = { 0 };
 int g_my_damagearray[ARRAY_DIM] = { 0 };
 //static string_dref acarsinarray;
-
+double g_objectArray[30*7] = { 0.0 };
 static int_dref receivedAcars;
 static int_dref onlineAcars;
 
@@ -165,15 +166,42 @@ static int getobjectDatavf(void * ref, float * out_values, int in_offset, int in
 	// Now copy the actual items from our array to the returned memory.
     for(n = 0; n < r; ++n) out_values[n] = 0.0f; return r; 	
 }
+
 static void setobjectDatavf(void * ref, float * in_values, int in_offset, int in_max)
 {
 	printf("Begin objectData set\n");
 	int n, r; // Calculate the number of items to copy in. This is the lesser of the number // the caller writes and the end of our array. 
 	// Copy the actual data.
-    for(n = 0; n < (in_max); ++n)
+    for(n = 0; n < (in_max); ++n){
         printf("Set %d %f\n",n+in_offset, in_values[n]);
+		g_objectArray[n+in_offset]=in_values[n];
+	}
 	printf("End objectData set\n");
 	printf("Set %d to %d\n",in_offset, in_max);
+}
+PlaneData getXTLuaPlanedata(int id){
+	PlaneData retVal;
+	
+	int startIndex=(id-1)*7;
+	int airframe=g_objectArray[startIndex];
+	if(airframe==0.0){
+		retVal.live=false;
+		return retVal;
+	}
+	JVM* jvmO=getJVM();
+	//printf("getting getXTLuaPlanedata for %d\n",id);
+	//TODO, move this to setobjectDatavf
+	retVal.live=true;
+	retVal.airframe=(int)g_objectArray[startIndex];
+	retVal.lat=g_objectArray[startIndex+1];
+    retVal.lon=g_objectArray[startIndex+2];
+    retVal.alt=g_objectArray[startIndex+3];
+	XPLMWorldToLocal(retVal.lat,retVal.lon,retVal.alt,&retVal.x,&retVal.y,&retVal.z);
+    retVal.the=(float)g_objectArray[startIndex+4];
+    retVal.phi=(float)g_objectArray[startIndex+5];
+    retVal.psi=(float)g_objectArray[startIndex+6];
+	retVal.timeStamp=jvmO->getSysTime();
+	return retVal;
 }
 static int getvb(void * refA, void * out_values, int in_offset, int in_max)
 {
