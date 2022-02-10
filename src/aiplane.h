@@ -29,7 +29,9 @@ public:
 	float		the;//pitch
 	float		phi;//roll
 	float		psi;//heading
+	float agl;
 	//float		gear_deploy;
+
 	//bool		engineoff;
 	bool		inTransit;
 	//float		throttle[8];
@@ -164,6 +166,7 @@ public:
 	*/
 	int icon;
 	int airFrameIndex=-1;
+	double agl;
 	PlaneData thisData;
 	AircraftData data;
 	AircraftData lastData;

@@ -200,6 +200,7 @@ void Aircraft::GetAircraftThreadData(){
 		jvmO=getJVM();
 		//Depreciated, get from xtlua
 		PlaneData incomingData=jvmO->getPlaneData(id,jvmO->plane_env);
+		incomingData.agl=agl;
 		
 		data_mutex.lock();
 		
@@ -217,7 +218,8 @@ void Aircraft::GetAircraftThreadData(){
    		thisData.z=newData.z;
 		thisData.lat=newData.lat;
     	thisData.lon=newData.lon;
-   		thisData.alt=newData.alt;   
+   		thisData.alt=newData.alt;
+		thisData.agl=newData.agl;     
     	//thisData.gearDown=newData.gearDown;
     	//thisData.throttle=newData.throttle;
     	thisData.the=newData.the;
@@ -231,6 +233,7 @@ void Aircraft::GetAircraftThreadData(){
 			lastData.x=thisData.x;
 			lastData.y=thisData.y;
 			lastData.z=thisData.z;
+			lastData.agl=thisData.agl; 
 			lastData.the=thisData.the;
 			lastData.phi=thisData.phi;
 			lastData.psi=thisData.psi;
@@ -254,6 +257,7 @@ void Aircraft::GetAircraftThreadData(){
 			lastData.the=nextData.the;
 			lastData.phi=nextData.phi;
 			lastData.psi=nextData.psi;
+			lastData.agl=nextData.agl; 
 			//set next data to this new position
 			nextData.remoteTimestamp=thisData.timeStamp;
 			nextData.time=timeNow+CLOCKS_PER_SEC;
@@ -263,6 +267,7 @@ void Aircraft::GetAircraftThreadData(){
 			nextData.the=thisData.the;
 			nextData.phi=thisData.phi;
 			nextData.psi=thisData.psi;
+			nextData.agl=thisData.agl; 
 			data_mutex.unlock();
 		//}
 	}catch(...){
@@ -541,6 +546,7 @@ void Aircraft::PrepareAircraftData()
 	double targetAGL=1000.0;
 	//XPLMProbeTerrainXYZ(ground_probe,data.x,data.y,data.z,&outInfo);
 	//double thisRequestedAGL=1000;
+	//printf("getting agl for %d is %f\n",id,thisData.agl);
 	if(!data.inTransit){
 	 	XPLMProbeTerrainXYZ(ground_probe,data.x,data.y,data.z,&outInfo);
 		requestedAGL=data.y-outInfo.locationY;
@@ -576,7 +582,8 @@ void Aircraft::PrepareAircraftData()
 		//data.onGround=false;
 		if(requestedAGL<18.0){
 			//data.onGround=true;
-			data.y=outInfo.locationY;
+			agl=0.0;
+			data.y=outInfo.locationY+thisData.agl;
 			if(inTouchDown&&targetAGL<0.5){
 				touchDownTime=jvmO->getSysTime();///CLOCKS_PER_SEC;
 				soundSystem.land(id-1);
@@ -591,7 +598,12 @@ void Aircraft::PrepareAircraftData()
 			if(soundIndex!=2)//no screech for helos
 				inTouchDown=true;
 			requestedAGL=((requestedAGL-18.0)*1.1);
-			data.y=outInfo.locationY+requestedAGL;
+			this->agl=requestedAGL;
+			data.y=outInfo.locationY+requestedAGL+thisData.agl;
+		}
+		else
+		{
+			this->agl=requestedAGL;
 		}
 		//check model
 		if((airFrameIndex==-1&&airFrameIndex!=inAirframe)||(inAirframe>0&&airFrameIndex!=inAirframe)){

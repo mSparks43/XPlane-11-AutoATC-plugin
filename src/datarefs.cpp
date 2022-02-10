@@ -187,15 +187,15 @@ static int getobjectDatavf(void * ref, float * out_values, int in_offset, int in
 
 static void setobjectDatavf(void * ref, float * in_values, int in_offset, int in_max)
 {
-	printf("Begin objectData set\n");
+	//printf("Begin objectData set\n");
 	int n, r; // Calculate the number of items to copy in. This is the lesser of the number // the caller writes and the end of our array. 
 	// Copy the actual data.
     for(n = 0; n < (in_max); ++n){
-        printf("Set %d %f\n",n+in_offset, in_values[n]);
+        //printf("Set %d %f\n",n+in_offset, in_values[n]);
 		g_objectArray[n+in_offset]=in_values[n];
 	}
-	printf("End objectData set\n");
-	printf("Set %d to %d\n",in_offset, in_max);
+	//printf("End objectData set\n");
+	//printf("Set %d to %d\n",in_offset, in_max);
 }
 void setXTLuaPlanedata(int id,PlaneData inVal)
 {
@@ -211,6 +211,8 @@ void setXTLuaPlanedata(int id,PlaneData inVal)
     g_incomingObjectArray[startIndex+4]=inVal.the;
     g_incomingObjectArray[startIndex+5]=inVal.phi;
     g_incomingObjectArray[startIndex+6]=inVal.psi;
+	g_incomingObjectArray[startIndex+7]=inVal.state;
+	g_incomingObjectArray[startIndex+8]=inVal.agl;
 }
 PlaneData getXTLuaPlanedata(int id){
 	PlaneData retVal;
@@ -233,6 +235,8 @@ PlaneData getXTLuaPlanedata(int id){
     retVal.the=(float)g_objectArray[startIndex+4];
     retVal.phi=(float)g_objectArray[startIndex+5];
     retVal.psi=(float)g_objectArray[startIndex+6];
+	retVal.agl=(float)g_objectArray[startIndex+7];
+	//printf("getting getXTLuaPlanedata for %d is %f\n",id,retVal.agl);
 	retVal.timeStamp=jvmO->getSysTime();
 	return retVal;
 }
