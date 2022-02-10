@@ -73,8 +73,8 @@ Aircraft::Aircraft()
 	thisData.x=0.0;
     thisData.y=0.0;
     thisData.z=0.0;
-    thisData.gearDown=0.0;
-    thisData.throttle=0.0;
+    //thisData.gearDown=0.0;
+    //thisData.throttle=0.0;
     thisData.the=0.0;
 	thisData.phi=0.0;
 	thisData.psi=0.0;
@@ -218,8 +218,8 @@ void Aircraft::GetAircraftThreadData(){
 		thisData.lat=newData.lat;
     	thisData.lon=newData.lon;
    		thisData.alt=newData.alt;   
-    	thisData.gearDown=newData.gearDown;
-    	thisData.throttle=newData.throttle;
+    	//thisData.gearDown=newData.gearDown;
+    	//thisData.throttle=newData.throttle;
     	thisData.the=newData.the;
 		thisData.phi=newData.phi;
 		thisData.psi=newData.psi;
@@ -495,7 +495,7 @@ void Aircraft::PrepareAircraftData()
 	data.psi=thisData.psi;	
 	//float setPHI=data.phi;//so we can unlock sooner
 	int inAirframe=thisData.airframe;//so we can unlock sooner
-	if(thisData.gearDown==3.0){
+	/*if(thisData.gearDown==3.0){
 		data.inTransit=true;
 		data.engineoff=false;
 		//printf("%d in transit\n",id);
@@ -509,18 +509,18 @@ void Aircraft::PrepareAircraftData()
 	else{
 		data.engineoff=false;//false;
 		data.inTransit=false;
-	}
+	}*/
 	if(!visible){
 		
 		v distanceV=v(x-ll->getX(),y-ahs->getX(),z-ll->getY());
 
 		double deviation=distanceV/distanceV;
-		if(data.engineoff){
+		/*if(data.engineoff){
 			nextData.y-=50.0;
 			lastData.y-=50.0;
 			data.y-=50.0;//make parked aircraft rise from the grave :p
-		}
-		if((!data.engineoff&&deviation<100)||(data.engineoff&&deviation<5)){
+		}*/
+		if((deviation<100)){
 			visible=true;
 			visibleTime=jvmO->getSysTime();
 #if defined(DEBUG_STRINGS)		
@@ -554,7 +554,7 @@ void Aircraft::PrepareAircraftData()
 			printf("%f above terrain\n",thisRequestedAGL);
 		}
 	}*/
-	double gearDown=0.0;
+	/*double gearDown=0.0;
 	if(requestedAGL<200)
 		gearDown=1.0;
 	else if(requestedAGL<250){
@@ -568,14 +568,14 @@ void Aircraft::PrepareAircraftData()
 	{
 		data.throttle[Throttle] = 0.0;//thisData.throttle;
 		
-	}
+	}*/
 
 	
     {
 	
-		data.onGround=false;
+		//data.onGround=false;
 		if(requestedAGL<18.0){
-			data.onGround=true;
+			//data.onGround=true;
 			data.y=outInfo.locationY;
 			if(inTouchDown&&targetAGL<0.5){
 				touchDownTime=jvmO->getSysTime();///CLOCKS_PER_SEC;
@@ -670,13 +670,13 @@ void Aircraft::SetAircraftData(void)
 	if(jvmO->getSysTime()<(touchDownTime+3))
 		touchDownSmoke=1.0;
 	float thrust=timeNow+171.0;
-	float gear=data.gear_deploy;
-	float landingLights=0.0;
-	float flaps=0.0;
-	if((!data.onGround&&!data.inTransit)||touchDownSmoke>0.0)
-		landingLights=1.0;
-	if(!data.inTransit&&!data.engineoff)	
-		flaps=0.7;
+	//float gear=data.gear_deploy;
+	//float landingLights=0.0;
+	//float flaps=0.0;
+	//if((!data.onGround&&!data.inTransit)||touchDownSmoke>0.0)
+	//	landingLights=1.0;
+	//if(!data.inTransit&&!data.engineoff)	
+	//	flaps=0.7;
 	if(velocity/velocity>0.1f){
 		if(rpm<=100){
 			//begin move
@@ -696,29 +696,6 @@ void Aircraft::SetAircraftData(void)
 			else
 				rpm=1500;
 		}
-	}else if(!data.engineoff){
-		if(rpm==1500){
-			startMoveTime=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f); 
-			rpm=1400;
-			//printf(" 2 start %f %f\n", startMoveTime,rpm);
-		}
-		else if(rpm!=100){
-			float nowT=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
-			if(nowT<(startMoveTime+1)){
-				
-        		double change=((nowT-startMoveTime)/1.0f);
-				rpm=1499-1401*change;
-				
-			}
-			else{
-				inHover=false;
-				rpm=100;
-			}
-			
-		}
-	}else{
-		inHover=false;
-		rpm=0;
 	}
 	if(currentrpm<rpm)
 		currentrpm++;
@@ -765,14 +742,14 @@ void Aircraft::SetAircraftData(void)
 			tcasAPI->SetData(id+1,1,(float)dr.x,(float)dr.y,(float)dr.z,(float)dr.heading,thisData.lat,thisData.lon,thisData.alt,icon);
 		
 		if(isVisible){
-			float engineon=!data.engineoff?1.0:0.0;
+			float engineon=0.0;//!data.engineoff?1.0:0.0;
 			if(ref_style==0){	//cls_drefs	
-				float drefVals[19] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,altitude,NULL};
+				float drefVals[19] = {0,0,0.0,0.0,0,1.0,1.0,0.0,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,altitude,NULL};
 				
 				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 			}
 			else if(ref_style==1){//wt3_drefs
-				float drefVals[21] = {0,0,gear,gear,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,altitude,NULL};
+				float drefVals[21] = {0,0,0.0,0.0,0,1.0,1.0,0.0,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,altitude,NULL};
 				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 			}
 			else if(ref_style==3){
@@ -796,12 +773,12 @@ void Aircraft::SetAircraftData(void)
 				dr.y = ahs->getX()+yOffset+acDef->partoffsets.y;//data.y+yOffset;
 				dr.z = ll->getY()+acDef->partoffsets.z;
 				
-				float drefVals[10] = {(float)8.0,(float)8.0,spin,spin,flak,engineon,gear,thisdamage,NULL};
+				float drefVals[10] = {(float)8.0,(float)8.0,spin,spin,flak,engineon,0.0,thisdamage,NULL};
 				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 			}
 			else{ //xmp_drefs
 				//float drefVals[21] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,(float)dr.y,NULL};
-				float drefVals[20] = {engineon,engineon,engineon,gear,flaps,landingLights,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,altitude,NULL};
+				float drefVals[20] = {engineon,engineon,engineon,0.0,0.0,0.0,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,altitude,NULL};
 				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
 			}	
 		}

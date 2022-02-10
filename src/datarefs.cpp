@@ -40,8 +40,8 @@ int g_my_yarray[ARRAY_DIM] = { 0 };
 int g_my_zarray[ARRAY_DIM] = { 0 };
 int g_my_damagearray[ARRAY_DIM] = { 0 };
 //static string_dref acarsinarray;
-double g_objectArray[30*7] = { 0.0 };
-double g_incomingObjectArray[30*7] = { 0.0 };
+double g_objectArray[30*8] = { 0.0 };
+double g_incomingObjectArray[30*9] = { 0.0 };
 static int_dref receivedAcars;
 static int_dref onlineAcars;
 
@@ -160,8 +160,8 @@ static int getautoatcDatavf(void * ref, float * out_values, int in_offset, int i
 {
 	int n, r;
 	if(out_values == NULL)
-        return 30*7;
-	r = 30*7 - in_offset;
+        return 30*9;
+	r = 30*9 - in_offset;
 	
     if(r > in_max) r = in_max;
 
@@ -199,7 +199,7 @@ static void setobjectDatavf(void * ref, float * in_values, int in_offset, int in
 }
 void setXTLuaPlanedata(int id,PlaneData inVal)
 {
-	int startIndex=(id-1)*7;
+	int startIndex=(id-1)*9;
 	if(inVal.live==false){
 		g_incomingObjectArray[startIndex]=-1;
 		return;
@@ -215,7 +215,7 @@ void setXTLuaPlanedata(int id,PlaneData inVal)
 PlaneData getXTLuaPlanedata(int id){
 	PlaneData retVal;
 	
-	int startIndex=(id-1)*7;
+	int startIndex=(id-1)*8;
 	int airframe=g_objectArray[startIndex];
 	if(airframe<=0.0){
 		retVal.live=false;

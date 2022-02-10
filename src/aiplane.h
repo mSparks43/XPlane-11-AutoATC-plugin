@@ -29,14 +29,14 @@ public:
 	float		the;//pitch
 	float		phi;//roll
 	float		psi;//heading
-	float		gear_deploy;
-	bool		engineoff;
+	//float		gear_deploy;
+	//bool		engineoff;
 	bool		inTransit;
-	float		throttle[8];
+	//float		throttle[8];
 	float		time;
 	double      remoteTimestamp;
 	float      updateAlt=0;
-	bool onGround;
+	//bool onGround;
     AircraftData(void);
 
 };

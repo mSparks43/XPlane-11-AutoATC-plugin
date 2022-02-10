@@ -1010,8 +1010,8 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
         retVal.the=(float)element[3];
         retVal.phi=(float)element[4];
         retVal.psi=(float)element[5];
-        retVal.gearDown=(float)element[6];
-        retVal.throttle=element[7];
+        retVal.state=(int)element[6];
+        //retVal.throttle=element[7];
         retVal.timeStamp=element[8];
         retVal.airframe=(int)element[9];
         caller_env->ReleaseDoubleArrayElements(jplanedata,element,0);                   
@@ -1063,8 +1063,8 @@ PlaneData JVM::getPlaneData(int id,JNIEnv *caller_env){
         retVal.the=(float)aiplaneData[i+3];
         retVal.phi=(float)aiplaneData[i+4];
         retVal.psi=(float)aiplaneData[i+5];
-        retVal.gearDown=(float)aiplaneData[i+6];
-        retVal.throttle=aiplaneData[i+7];
+        retVal.state=(int)aiplaneData[i+6];
+        //retVal.throttle=aiplaneData[i+7];
         retVal.timeStamp=aiplaneData[i+8];
         retVal.airframe=(int)aiplaneData[i+9];
         // printf("incoming data %d = %f\n",i,retVal.airframe);

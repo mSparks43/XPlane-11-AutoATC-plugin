@@ -58,8 +58,8 @@ public:
     double x;
     double y;
     double z;
-    float gearDown;
-    float throttle;
+    float agl;
+    int state;
     float		the;
 	float		phi;
 	float		psi;
