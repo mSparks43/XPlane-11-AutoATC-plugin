@@ -1862,6 +1862,7 @@ float SendATCData(float                inElapsedSinceLastCall,
             if(!jvmO->setIcaov){
                 jvmO->setICAO();
                 jvmO->setIcaov=true;
+                printf("Set setIcaov\n");
             }
             float nowT=jvmO->getSysTime();//clock()/(CLOCKS_PER_SEC*1.0f);
             if(jvmO->lastFoundNav>0||nowT>jvmO->lastNavAudio+30){
