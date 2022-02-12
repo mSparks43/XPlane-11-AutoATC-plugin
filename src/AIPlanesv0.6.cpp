@@ -199,15 +199,15 @@ void Aircraft::GetAircraftThreadData(){
 	try{
 		jvmO=getJVM();
 
-		/*PlaneData incomingData=jvmO->getPlaneData(id,jvmO->plane_env);
+		PlaneData incomingData=jvmO->getPlaneData(id,jvmO->plane_env);
 		incomingData.agl=agl;
 		
 		data_mutex.lock();
 		
 		setXTLuaPlanedata(id,incomingData);
-		PlaneData newData=getXTLuaPlanedata(id);*/
+		PlaneData newData=getXTLuaPlanedata(id);
 
-		PlaneData newData=jvmO->getPlaneData(id,jvmO->plane_env);
+		//PlaneData newData=jvmO->getPlaneData(id,jvmO->plane_env);
 		thisData.live=newData.live;
 		thisData.airframe=newData.airframe;
 		if(!newData.live){
@@ -531,11 +531,11 @@ void Aircraft::PrepareAircraftData()
 			visible=true;
 			visibleTime=jvmO->getSysTime();
 #if defined(DEBUG_STRINGS)		
-			printf("AUTOATC: made %d visible with %f\n",id,deviation);
+			//printf("AUTOATC: made %d visible with %f\n",id,deviation);
 	
 		}
 		else{
-			printf("AUTOATC: %d invisible with %f\n",id,deviation);
+			//printf("AUTOATC: %d invisible with %f\n",id,deviation);
 		
 #endif
 		}
