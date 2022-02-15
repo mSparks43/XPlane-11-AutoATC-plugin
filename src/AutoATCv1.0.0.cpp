@@ -321,6 +321,12 @@ PLUGIN_API void XPluginReceiveMessage(
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/logpage");
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/data");
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/aircraft/incomingdata");
+        char debugStr[512];
+        for(int i=0;i<30;i++){
+            sprintf(debugStr,"autoatc/aircraft/setdrefs/%d",i);
+            XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)debugStr);
+		}
+	
     }
     else if (inMessage == XPLM_MSG_PLANE_UNLOADED){
         g_is_acf_inited = 0;

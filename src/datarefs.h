@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 struct	string_dref {
 	std::string					string_data;
 };
@@ -17,3 +18,5 @@ extern int g_my_xarray[ARRAY_DIM];
 extern int g_my_yarray[ARRAY_DIM];
 extern int g_my_zarray[ARRAY_DIM];
 extern int g_my_damagearray[ARRAY_DIM];
+std::vector<std::string> getDrefNames(int aircraftID);
+std::vector<float> getDrefValues(int aircraftID);

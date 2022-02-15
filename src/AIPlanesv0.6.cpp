@@ -129,9 +129,22 @@ void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
 	//XPLMCreateInstance(inObject, drefs);
 	if(inObject)
 	        {
+				
 				if(g_instance[partID])
 					XPLMDestroyInstance(g_instance[partID]);
-				if(ref_style==0)
+				std::vector<std::string> strings=getDrefNames(id);
+
+				std::vector<const char*> c_strs;
+				for(auto&& str:strings)
+					drefs.push_back(str.c_str());
+				drefs.push_back(NULL);	
+  
+				generic_drefs=drefs.data();
+				printf("inobject got %d\n",drefs.size());
+				printf("setting %s\n",drefs[1]);
+				g_instance[partID] = XPLMCreateInstance(inObject,generic_drefs);//drefs.data());	
+				printf("inobject created instance\n");
+				/*if(ref_style==0)
 					g_instance[partID] = XPLMCreateInstance(inObject, cls_drefs);
 				else if(ref_style==1)
 					g_instance[partID] = XPLMCreateInstance(inObject, wt3_drefs);
@@ -139,7 +152,9 @@ void Aircraft::setModelObject(XPLMObjectRef inObject,int partID){
 					g_instance[partID] = XPLMCreateInstance(inObject, acf_drefs);	
 				}
 				else if(ref_style==2)
-					g_instance[partID] = XPLMCreateInstance(inObject, xmp_drefs);
+					g_instance[partID] = XPLMCreateInstance(inObject, xmp_drefs);*/
+
+
             }
 	#endif
 }
@@ -755,46 +770,8 @@ void Aircraft::SetAircraftData(void)
 		if(isVisible&&i==0)
 			tcasAPI->SetData(id+1,1,(float)dr.x,(float)dr.y,(float)dr.z,(float)dr.heading,thisData.lat,thisData.lon,thisData.alt,icon);
 		
-		if(isVisible){
-			float engineon=0.0;//!data.engineoff?1.0:0.0;
-			if(ref_style==0){	//cls_drefs	
-				float drefVals[19] = {0,0,0.0,0.0,0,1.0,1.0,0.0,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thisdamage,altitude,NULL};
-				
-				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
-			}
-			else if(ref_style==1){//wt3_drefs
-				float drefVals[21] = {0,0,0.0,0.0,0,1.0,1.0,0.0,useNavLights,0,0,0,touchDownSmoke,thrust,thrust,thrust,thrust,thisdamage,altitude,NULL};
-				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
-			}
-			else if(ref_style==3){
-				float spin=((int)(thrust)%360);;
-				float nowT=jvmO->getSysTime();//((double)clock())/(CLOCKS_PER_SEC*1.0f);
-				
-				if(nowT>(nextFlakTime)){
-					startFlakTime=nowT+1+((float)(rand()%4)) / 3.0;
-					nextFlakTime=nowT+10+(rand() % 10);
-					flak=((float)(rand()%9)) / 10.0;
-				}
-				if(nowT>(startFlakTime)){
-					flak=1.0;
-				}
-				
-				
-				
-				//printf("damage %d=%f",id,donedamage);	
-				acModelDef *acDef=jvmO->getModelPart(airFrameIndex,i);
-				dr.x = ll->getX()+acDef->partoffsets.x;//data.x;
-				dr.y = ahs->getX()+yOffset+acDef->partoffsets.y;//data.y+yOffset;
-				dr.z = ll->getY()+acDef->partoffsets.z;
-				
-				float drefVals[10] = {(float)8.0,(float)8.0,spin,spin,flak,engineon,0.0,thisdamage,NULL};
-				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
-			}
-			else{ //xmp_drefs
-				//float drefVals[21] = {0,0,gear,gear*0.5f,0,1.0,1.0,gear*useNavLights,useNavLights,0,0,0,touchDownSmoke,(float)rpm,(float)rpm,thrust,thrust,0,thisdamage,(float)dr.y,NULL};
-				float drefVals[20] = {engineon,engineon,engineon,0.0,0.0,0.0,thrust,thrust,thrust,thrust,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,(float)rpm,0.0,thisdamage,altitude,NULL};
-				XPLMInstanceSetPosition(g_instance[i], &dr, drefVals);
-			}	
+		if(isVisible){	
+			XPLMInstanceSetPosition(g_instance[i], &dr, getDrefValues(id).data());
 		}
      
     }

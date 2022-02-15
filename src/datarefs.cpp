@@ -155,6 +155,49 @@ static void setvf(void * ref, float * in_values, int in_offset, int in_max)
     for(n = 0; n < r; ++n)
         g_my_array[n+ in_offset] = in_values[n];
 }
+std::vector<std::vector<std::string>> drefsDefs;
+std::vector<std::vector<float>> drefsValues;
+static int getautoatcDataRefvf(void * ref, float * out_values, int in_offset, int in_max)
+{
+	int n, r;
+	if(out_values == NULL)
+        return 2;
+	
+
+	return 2;
+}
+std::vector<float> getDrefValues(int aircraftID){
+	std::vector<std::string> strings=drefsDefs[aircraftID-1];
+	std::vector<float> values=drefsValues[aircraftID-1];
+	if(values.size()<strings.size())
+	{
+		int count=strings.size()-values.size();
+		for(int n=0;n<count;n++)
+			values.push_back(0.0);
+	}
+	return values;
+	 
+	//const char ** rV=c_strs.data();
+	//return rV;
+
+}
+static void setautoatcDataRefvf(void * ref, float * in_values, int in_offset, int in_max)
+{
+	long ac_id=(long)ref;
+	printf("set drefs for %d\n",ac_id);
+	std::vector<float> theseValues;
+	for(int n = 0; n < (in_max); ++n){
+        printf("Set %d %f\n",n+in_offset, in_values[n]);
+		theseValues.push_back(in_values[n]);
+	}
+	if(ac_id+1>drefsValues.size()){
+		drefsValues.push_back(theseValues);
+	}
+	else{
+		drefsValues[ac_id]=theseValues;
+	}
+
+}
 
 static int getautoatcDatavf(void * ref, float * out_values, int in_offset, int in_max)
 {
@@ -196,6 +239,33 @@ static void setobjectDatavf(void * ref, float * in_values, int in_offset, int in
 	}
 	//printf("End objectData set\n");
 	//printf("Set %d to %d\n",in_offset, in_max);
+}
+//incoming json string array of datarefs for an aircraft
+
+
+void setXTLuaPlanedatarefs(void * refA, void * in_values, int in_offset, int in_max)
+{
+	int new_length = in_offset + in_max;
+	const char * source = (const char *) in_values;
+
+	std::string	string_data;
+	string_data.resize(new_length);
+	for(int i = 0; i < in_max; ++i)
+		string_data[i + in_offset] = source[i];
+	json jdatarefs =json::parse(string_data);
+	int ac_id=jdatarefs["id"].get<int>();
+	std::vector<std::string> drefs=jdatarefs["datarefs"].get<std::vector<std::string>>();
+	//printf("got string datarefs def:%s\n",string_data.c_str());
+	//printf("first is:%s\n",drefs[0].c_str());
+	drefsDefs.push_back(drefs);
+}
+std::vector<std::string> getDrefNames(int aircraftID){
+	std::vector<std::string> strings=drefsDefs[aircraftID-1];
+	return strings;
+	 
+	//const char ** rV=c_strs.data();
+	//return rV;
+
 }
 void setXTLuaPlanedata(int id,PlaneData inVal)
 {
@@ -484,6 +554,21 @@ void registerDatarefs(){
     NULL, NULL, NULL, 
     NULL, NULL,getautoatcDatavf, NULL, 
     NULL, NULL,NULL, NULL);//create it
+	char debugStr[512];
+	for(int i=0;i<30;i++){
+		
+		sprintf(debugStr,"autoatc/aircraft/setdrefs/%d",i);
+		XPLMRegisterDataAccessor(debugStr, xplmType_FloatArray, true, 
+		NULL,NULL,  NULL, 
+		NULL, NULL, NULL, 
+		NULL, NULL,getautoatcDataRefvf, setautoatcDataRefvf, 
+		NULL, NULL,(void *)i, (void *)i);//create it
+	}
+	XPLMRegisterDataAccessor("autoatc/definedatarefs", xplmType_Data, true, 
+    NULL,NULL,  NULL, 
+    NULL, NULL, NULL, 
+    NULL, NULL,NULL, NULL, 
+    NULL, setXTLuaPlanedatarefs,NULL, NULL);//create it
 	XPLMRegisterDataAccessor("autoatc/acars/in", xplmType_Data, true,
 						NULL, NULL,
 						NULL, NULL,

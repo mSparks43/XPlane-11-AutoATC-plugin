@@ -71,6 +71,8 @@ private:
 	XPLMInstanceRef g_instance[12]={NULL};
 	#endif
 	int modelCount=1;
+	const char** generic_drefs;
+	std::vector<const char*> drefs;
 	const char * cls_drefs[19]={ "traf/mw_def",
 	"traf/nw_def",
 	"traf/lgear",
@@ -93,6 +95,13 @@ private:
 	"autoatc/flak",
 	"autoatc/engineon",
 	"autoatc/altitude","autoatc/destroyed",NULL};
+	const char * t_drefs[7]={ "sim/graphics/animation/ground_traffic/wiper_angle_deg",
+	"sim/graphics/animation/ground_traffic/tire_steer_deg[0]",
+	"sim/graphics/animation/ground_traffic/tire_rotation_angle_deg[0]",
+	"sim/graphics/animation/ground_traffic/tire_rotation_angle_deg[1]",
+	"sim/graphics/animation/ground_traffic/tire_rotation_angle_deg[2]",
+	"sim/graphics/animation/ground_traffic/tire_rotation_angle_deg[3]",
+	NULL};
 	const char * wt3_drefs[21]={ "traf/mw_def",
 	"traf/nw_def",
 	"cjs/world_traffic/main_gear_retraction_ratio",
@@ -171,6 +180,8 @@ public:
 	AircraftData data;
 	AircraftData lastData;
 	AircraftData nextData;
+	std::vector<std::string> datarefs;
+	std::vector<double> datarefValues;
 	bool toLoadAirframe;
     //typedef XPLMPlaneDrawState_t* state;
 	//Aircraft(int AircraftNo,double yOffsetp);
