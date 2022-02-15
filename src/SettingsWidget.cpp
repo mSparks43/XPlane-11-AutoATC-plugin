@@ -25,6 +25,7 @@ static  XPWidgetID	w_window;
 //static XPWidgetID jvmField;
 static XPWidgetID ipField;
 static XPWidgetID isSlaveField;
+static XPWidgetID audioDeviceField;
 static XPWidgetID setButton;
 //static XPWidgetID testButton;
 static XPWidgetID resetButton;
@@ -60,15 +61,6 @@ void SettingsWidget::setIP(char *ipbuffer){
     hasSettingsWindow=false;*/
 }
 void SettingsWidget::setSlave(int isSlave){
-    //char text[512];
-    //sprintf(text,"Apply Slave %d\n",isSlave);
-     //printf(text);
-    //std:string text=
-     //char gBob_debstr2[128];
-     //sprintf(gBob_debstr2,text);
-     //XPLMDebugString(gBob_debstr2); 
-    //char com[512];
-     //sprintf(com,"Network mobile:isSlave=%d",isSlave);
      std::string com="Network mobile:isSlave=";
     if(isSlave)
         com=com+"true";
@@ -81,7 +73,16 @@ void SettingsWidget::setSlave(int isSlave){
      jvmO->getData(com.c_str());
      jvmO->setisSlave((long)isSlave);
 }
-
+void SettingsWidget::setAudioDevice(int audioDevice){
+     std::string com="Network mobile:audioDevice=";
+      com=com+std::to_string(audioDevice);
+      printf("setting audio device:%s\n",com.c_str());
+      JVM* jvmO;
+      jvmO=getJVM();
+      if(!jvmO->hasjvm)
+        return;
+     jvmO->getData(com.c_str());
+}
 
 
 
@@ -177,15 +178,29 @@ void SettingsWidget::init(){
       XPSetWidgetProperty(w_bottom, xpProperty_SubWindowType, xpSubWindowStyle_Screen);                            
   //  XPSetWidgetProperty(w_bottom, xpProperty_SubWindowType, xpMainWindowStyle_Translucent);
        XPAddWidgetCallback(w_window, SettingsWidgetsHandler); 
+   XPWidgetID audioCaption=XPCreateWidget(x+10, y-25, x+60, y-40,
+					1, "Audio Device:", 0, w_window,
+					xpWidgetClass_Caption);
+    XPSetWidgetProperty(audioCaption, xpProperty_CaptionLit, 1);
+   audioDeviceField = XPCreateWidget(x+90, y-26, x2-15, y-41,
+					1,	// Visible
+					"audio device",	// desc
+					0,		// root
+					w_window,
+					xpWidgetClass_ScrollBar);  
+    XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarType, xpScrollBarTypeScrollBar);
+    XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarMin, 0);
+    XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarMax, 20);
+    XPAddWidgetCallback(audioDeviceField, SettingsWidgetsHandler); 
     JVM* jvmO=getJVM();
 
 
     ipCaption=XPCreateWidget(x+10, y-50, x+60, y-60,
-					1, "Device IP:", 0, w_window,
+					1, "Android IP:", 0, w_window,
 					xpWidgetClass_Caption);
     XPSetWidgetProperty(ipCaption, xpProperty_CaptionLit, 1);
     char* device=jvmO->getDevice();
-    ipField = XPCreateWidget(x+70, y-45, x2-20, y-65,
+    ipField = XPCreateWidget(x+80, y-45, x2-20, y-65,
 					1, device, 0, w_window,
 					xpWidgetClass_TextField);
     XPSetWidgetProperty(ipField, xpProperty_TextFieldType, xpTextEntryField);
@@ -266,6 +281,15 @@ int SettingsWidgetsHandler(
         {
             int tmp = (int)XPGetWidgetProperty(isSlaveField, xpProperty_ButtonState, NULL);
             settings.setSlave(tmp);
+            return 1;
+        }
+    }
+    if (inMessage == xpMsg_ScrollBarSliderPositionChanged){
+        printf("slider changed\n");
+        if (inParam1 == (intptr_t)audioDeviceField)
+        {
+            int tmp = (int)XPGetWidgetProperty(audioDeviceField, xpProperty_ScrollBarSliderPosition, NULL);
+            settings.setAudioDevice(tmp);
             return 1;
         }
     }
