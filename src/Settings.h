@@ -38,6 +38,7 @@ public:
     void setIP(char * ipbuffer);
     void setSlave(int isSlave);
     void setAudioDevice(int device);
+    void testAudioDevice(int device);
     //void test(char * jvmBuffer,char *ipbuffer);
     void reset();
     void init();

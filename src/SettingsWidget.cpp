@@ -83,7 +83,16 @@ void SettingsWidget::setAudioDevice(int audioDevice){
         return;
      jvmO->getData(com.c_str());
 }
-
+void SettingsWidget::testAudioDevice(int audioDevice){
+     std::string com="Network mobile:testAudioDevice=";
+      com=com+std::to_string(audioDevice);
+      printf("setting audio device:%s\n",com.c_str());
+      JVM* jvmO;
+      jvmO=getJVM();
+      if(!jvmO->hasjvm)
+        return;
+     jvmO->getData(com.c_str());
+}
 
 
 void SettingsWidget::reset(){
@@ -187,10 +196,13 @@ void SettingsWidget::init(){
 					"audio device",	// desc
 					0,		// root
 					w_window,
-					xpWidgetClass_ScrollBar);  
+					xpWidgetClass_ScrollBar);
+    XPLMDataRef num_device = XPLMFindDataRef("autoatc/audiodevice");
+    XPLMDataRef num_devices = XPLMFindDataRef("autoatc/num_audiodevices");                 
     XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarType, xpScrollBarTypeScrollBar);
     XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarMin, 0);
-    XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarMax, 20);
+    XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarMax,XPLMGetDatai(num_devices));
+    XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarSliderPosition,XPLMGetDatai(num_device));
     XPAddWidgetCallback(audioDeviceField, SettingsWidgetsHandler); 
     JVM* jvmO=getJVM();
 
@@ -273,6 +285,8 @@ int SettingsWidgetsHandler(
         if (inParam1 == (intptr_t)setButton)
         {
             settings.setIP(ipbuffer);
+            int tmp = (int)XPGetWidgetProperty(audioDeviceField, xpProperty_ScrollBarSliderPosition, NULL);
+            settings.testAudioDevice(tmp);
             return 1;
         }
     }

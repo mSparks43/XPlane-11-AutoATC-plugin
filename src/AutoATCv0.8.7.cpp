@@ -309,6 +309,8 @@ PLUGIN_API void XPluginReceiveMessage(
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/received");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/acars/online");  //tell dref editor about it
         XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/logpage");
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/audiodevice");
+        XPLMSendMessageToPlugin(XPLM_NO_PLUGIN_ID , MSG_ADD_DATAREF, (void*)"autoatc/num_audiodevices");
     }
     else if (inMessage == XPLM_MSG_PLANE_UNLOADED){
         g_is_acf_inited = 0;
