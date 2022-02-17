@@ -397,7 +397,7 @@
 					"/Library/Java/JavaVirtualMachines/ibm-semeru-open-17.jdk/Contents/Home/include/darwin",
 					"$(XPSDK_ROOT)/CHeaders/Widgets",
 				);
-				INSTALL_PATH = XP11/64/;
+				INSTALL_PATH = XP11/AutoATC/64/;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -456,7 +456,7 @@
 					"/Library/Java/JavaVirtualMachines/ibm-semeru-open-17.jdk/Contents/Home/include",
 					"/Library/Java/JavaVirtualMachines/ibm-semeru-open-17.jdk/Contents/Home/include/darwin",
 				);
-				INSTALL_PATH = XP11/64/;
+				INSTALL_PATH = XP11/AutoATC/64/;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
