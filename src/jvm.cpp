@@ -1478,7 +1478,7 @@ void JVM::toggleLogWindow(){
         XPLMSetWindowTitle(log_window, "AutoATC Pad");
         log_visible=true;
     }
-    else if(!log_visible){
+    else if(XPLMGetWindowIsVisible(log_window)!=1){
         XPLMSetWindowIsVisible(log_window,1);
         log_visible=true;
     }
