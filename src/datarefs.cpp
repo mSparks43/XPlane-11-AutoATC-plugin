@@ -420,6 +420,22 @@ static void	seti(void * refA, int val)
 	int_dref *  ref = (int_dref *) refA;
 	ref->data=val;
 }
+static int currentDevice;
+static int num_devices;
+static int get_caDevice(void * refA){
+	return currentDevice;
+}
+static void	set_caDevice(void * refA, int val)
+{
+	currentDevice=val;
+}
+static int get_numDevices(void * refA){
+	return num_devices;
+}
+static void	set_numDevices(void * refA, int val)
+{
+	num_devices=val;
+}
 static int	get_logPage(void * refA)
 {
 	JVM *jvmO = getJVM();
@@ -625,6 +641,22 @@ void registerDatarefs(){
 						NULL, NULL,
 						NULL, NULL,
 						NULL, NULL,
-						NULL, NULL);																
+						NULL, NULL);
+	XPLMRegisterDataAccessor("autoatc/audiodevice", xplmType_Int, true,
+						get_caDevice, set_caDevice,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL);
+	XPLMRegisterDataAccessor("autoatc/num_audiodevices", xplmType_Int, true,
+						get_numDevices, set_numDevices,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL,
+						NULL, NULL);																										
 	
 }
