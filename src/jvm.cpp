@@ -1932,8 +1932,8 @@ void JVM::popupNoJVM(){
  }
  
  char* JVM::getDevice(){
-     if (file_exists("Resources/plugins/AutoATC/usermobilesettings.txt"))
-        parse_config("Resources/plugins/AutoATC/usermobilesettings.txt");
+     if (file_exists(CONFIG_FILE_ANDROID))
+        parse_config(CONFIG_FILE_ANDROID);
      return ipdevice;
  }
  long JVM::getisSlave(){
