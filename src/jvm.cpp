@@ -675,7 +675,11 @@ void JVM::parse_config (char * filename)
       jsettings=json::parse(value);
     }
     else if (strcmp(name, "phone")==0)
-      strncpy (device, value, MAXLEN);
+      strncpy (ipdevice, value, MAXLEN);
+    else if (strcmp(name, "audioDevice")==0)
+      {
+          //nothing todo here, set by int dref
+      }
     else if (strcmp(name, "isSlave")==0)
       strncpy (slave, value, MAXLEN);
     else{
@@ -1928,14 +1932,16 @@ void JVM::popupNoJVM(){
  }
  
  char* JVM::getDevice(){
-     return device;
+     if (file_exists("Resources/plugins/AutoATC/usermobilesettings.txt"))
+        parse_config("Resources/plugins/AutoATC/usermobilesettings.txt");
+     return ipdevice;
  }
  long JVM::getisSlave(){
 
      return atol(slave);
  }
 void JVM::setDevice( char* newdevice){
-    strncpy (device,newdevice, MAXLEN);
+    strncpy (ipdevice,newdevice, MAXLEN);
  
  }
  void JVM::setisSlave(long newslave){

@@ -171,7 +171,7 @@ public:
     XPLMMenuID g_menu_id;
     int g_menu_container_idx=-1;
     json jsettings;
-    char device[MAXLEN]={0};
+    char ipdevice[MAXLEN]={0};
     char slave[MAXLEN]={0};
     bool hasjvm=false;
     bool setIcaov=false;
