@@ -159,8 +159,12 @@ void SettingsWidget::init(){
    // printf("called me 2\n");
    int x2 = x + w;
 	int y2 = y - h;
-    if(hasSettingsWindow)
-    return;
+    JVM* jvmO=getJVM();
+    if(hasSettingsWindow){
+        char* device=jvmO->getDevice();
+        XPSetWidgetDescriptor(ipField, device);
+        return;
+    }
      hasSettingsWindow=true;
 	w_window = XPCreateWidget(x, y, x2, y2,
 					1,	// Visible
@@ -204,7 +208,7 @@ void SettingsWidget::init(){
     XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarMax,XPLMGetDatai(num_devices));
     XPSetWidgetProperty(audioDeviceField, xpProperty_ScrollBarSliderPosition,XPLMGetDatai(num_device));
     XPAddWidgetCallback(audioDeviceField, SettingsWidgetsHandler); 
-    JVM* jvmO=getJVM();
+    
 
 
     ipCaption=XPCreateWidget(x+10, y-50, x+60, y-60,

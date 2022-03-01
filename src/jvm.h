@@ -25,6 +25,9 @@ be distributed under different terms and without source code for the larger work
 #include <vector>
 #include "json/json.hpp"
 #define MAXLEN 2048
+extern char CONFIG_FILE_DEFAULT[];
+//char CONFIG_FILE_USER[] = "Resources/plugins/AutoATC/jvmsettings.txt";
+extern char CONFIG_FILE_ANDROID[];
 using nlohmann::json;
 #define DEBUG_STRINGS
 #define XP11
@@ -171,7 +174,7 @@ public:
     XPLMMenuID g_menu_id;
     int g_menu_container_idx=-1;
     json jsettings;
-    char device[MAXLEN]={0};
+    char ipdevice[MAXLEN]={0};
     char slave[MAXLEN]={0};
     bool hasjvm=false;
     bool setIcaov=false;

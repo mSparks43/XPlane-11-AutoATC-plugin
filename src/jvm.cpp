@@ -675,7 +675,11 @@ void JVM::parse_config (char * filename)
       jsettings=json::parse(value);
     }
     else if (strcmp(name, "phone")==0)
-      strncpy (device, value, MAXLEN);
+      strncpy (ipdevice, value, MAXLEN);
+    else if (strcmp(name, "audioDevice")==0)
+      {
+          //nothing todo here, set by int dref
+      }
     else if (strcmp(name, "isSlave")==0)
       strncpy (slave, value, MAXLEN);
     else{
@@ -1478,7 +1482,7 @@ void JVM::toggleLogWindow(){
         XPLMSetWindowTitle(log_window, "AutoATC Pad");
         log_visible=true;
     }
-    else if(!log_visible){
+    else if(XPLMGetWindowIsVisible(log_window)!=1){
         XPLMSetWindowIsVisible(log_window,1);
         log_visible=true;
     }
@@ -1929,14 +1933,16 @@ void JVM::popupNoJVM(){
  }
  
  char* JVM::getDevice(){
-     return device;
+     if (file_exists(CONFIG_FILE_ANDROID))
+        parse_config(CONFIG_FILE_ANDROID);
+     return ipdevice;
  }
  long JVM::getisSlave(){
 
      return atol(slave);
  }
 void JVM::setDevice( char* newdevice){
-    strncpy (device,newdevice, MAXLEN);
+    strncpy (ipdevice,newdevice, MAXLEN);
  
  }
  void JVM::setisSlave(long newslave){
