@@ -1,9 +1,10 @@
 
 ![Github All Releases download count](https://img.shields.io/github/downloads/mSparks43/XPlane-11-AutoATC-plugin/total.svg?style=flat)
+
+[Server Status](http://autoatc.zem-solutions.com/Status.html)
+
 # XPlane-11-AutoATC-plugin
 C/C++ Source code for the AutoATC plugin for X-Plane 11.
-
-
 
 # About
 
@@ -14,8 +15,7 @@ AutoATC provides an ATC "chatbot" for X-Plane 11. It features server-controlled 
 
 See the [releases page](https://github.com/mSparks43/XPlane-11-AutoATC-plugin/releases) for the latest download.
 
-In order to use ATC services and have a better text to speech output, two companion apps for Android are available, in a basic [freeware version](https://play.google.com/store/apps/details?id=org.zem.atctrans) and a [payware version](https://play.google.com/store/apps/details?id=org.zem.atctranspro) with more features.
-
+In order to use ATC services use [AutoATC Trainer](https://play.google.com/store/apps/details?id=org.zem.atctranspro) for Android
 
 # Installing
 * Extract the "AutoATC" folder to "X-Plane/Resources/plugins"
