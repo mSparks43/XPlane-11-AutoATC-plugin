@@ -68,3 +68,9 @@ Output is "mac.xpl" in "build/AutoATC/64/"
 
 
 * Overwrite the .xpl file in "AutoATC/64/" with the one from the "deploy/XP1X/AutoATC/64/" folder (Where XP1X is either XP10 or XP11 depending on the XP version being targetted)
+
+## Release packages
+* Run the **Release packages** GitHub Actions workflow (or push a `v*` tag) to generate platform-specific zip archives:
+  * `AutoATC-windows.zip`
+  * `AutoATC-mac.zip`
+  * `AutoATC-linux.zip`

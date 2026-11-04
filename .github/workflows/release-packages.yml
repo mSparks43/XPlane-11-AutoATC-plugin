@@ -1,0 +1,74 @@
+name: Release packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package (${{ matrix.platform }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            binary: win.xpl
+          - platform: mac
+            binary: mac.xpl
+          - platform: linux
+            binary: lin.xpl
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create package archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_ROOT="$RUNNER_TEMP/package"
+          PLUGIN_ROOT="$PACKAGE_ROOT/AutoATC"
+
+          mkdir -p "$PLUGIN_ROOT/64"
+          cp -R deploy/AutoATC/. "$PLUGIN_ROOT/"
+          cp -R deploy/AutoATC_java "$PLUGIN_ROOT/AutoATC_java"
+          cp "deploy/XP11/AutoATC/64/${{ matrix.binary }}" "$PLUGIN_ROOT/64/${{ matrix.binary }}"
+          cp documentation/readme_autoatc.txt "$PACKAGE_ROOT/readme_autoatc.txt"
+
+          if [[ "${{ matrix.platform }}" == "windows" ]]; then
+            cp deploy/VC_redist.x64.exe "$PACKAGE_ROOT/"
+            cp deploy/vcredist_x64.exe "$PACKAGE_ROOT/"
+          fi
+
+          cd "$PACKAGE_ROOT"
+          zip -rq "$GITHUB_WORKSPACE/AutoATC-${{ matrix.platform }}.zip" .
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoATC-${{ matrix.platform }}
+          path: AutoATC-${{ matrix.platform }}.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish release assets
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: AutoATC-*
+          merge-multiple: true
+
+      - name: Upload assets to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
