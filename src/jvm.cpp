@@ -39,6 +39,9 @@ be distributed under different terms and without source code for the larger work
 #if defined(__linux__) || defined(__APPLE__)
 #include <dlfcn.h>
 #include <stdlib.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <strings.h>
 #endif
 #if defined(XP11)
 const char* plugin_version = "About:0.9.8.0";
@@ -682,6 +685,8 @@ void JVM::parse_config (char * filename)
       }
     else if (strcmp(name, "isSlave")==0)
       strncpy (slave, value, MAXLEN);
+    else if (strcmp(name, "cslPath")==0)
+      strncpy (cslPath, value, MAXLEN);
     else{
         /*sprintf(gBob_debstr2,"AutoATC: WARNING - %s/%s: Unknown name/value pair!\n",
         name, value);
@@ -802,7 +807,61 @@ void JVM::updateAirframes(void){
             airframeDefs.push_back(def);
         }
     }
+    if(cslPath[0]!=0){
+        autodetectCSL(cslPath);
+    }
 }
+#if defined(__linux__) || defined(__APPLE__)
+const char* JVM::getCSLPath(void){
+    return cslPath;
+}
+static bool hasObjSuffix(const char* s){
+    size_t n = strlen(s);
+    if(n < 4) return false;
+    return strcasecmp(s + n - 4, ".obj") == 0;
+}
+static void collectObjs(const char* dir, std::vector<std::string>& out){
+    DIR* d = opendir(dir);
+    if(!d) return;
+    struct dirent* ent;
+    while((ent = readdir(d)) != NULL){
+        if(!ent->d_name || ent->d_name[0] == '.') continue;
+        std::string full = dir;
+        if(full.size() && full.back() != '/') full += "/";
+        full += ent->d_name;
+        struct stat st;
+        if(stat(full.c_str(), &st) != 0) continue;
+        if(S_ISDIR(st.st_mode)){
+            collectObjs(full.c_str(), out);
+        }
+        else if(S_ISREG(st.st_mode) && hasObjSuffix(ent->d_name)){
+            out.push_back(full);
+        }
+    }
+    closedir(d);
+}
+void JVM::autodetectCSL(const char* path){
+    if(!path || path[0]==0) return;
+    std::vector<std::string> objs;
+    collectObjs(path, objs);
+    for(std::vector<std::string>::iterator it = objs.begin(); it != objs.end(); ++it){
+        AirframeDef def=AirframeDef();
+        std::string line = *it + ",0.0,0,0,1";
+        def.setData(line);
+        airframeDefs.push_back(def);
+    }
+    sprintf(gBob_debstr2,"AutoATC: autodetect CSL %d models from %s\n",(int)objs.size(),path);
+    XPLMDebugString(gBob_debstr2);
+}
+#else
+const char* JVM::getCSLPath(void){
+    return cslPath;
+}
+void JVM::autodetectCSL(const char* path){
+    // CSL autodetection currently implemented for POSIX hosts only
+    (void)path;
+}
+#endif
 void JVM::stop(void)
 {
    

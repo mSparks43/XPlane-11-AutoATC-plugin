@@ -176,6 +176,7 @@ public:
     json jsettings;
     char ipdevice[MAXLEN]={0};
     char slave[MAXLEN]={0};
+    char cslPath[MAXLEN]={0};
     bool hasjvm=false;
     bool setIcaov=false;
     bool loadedLibrary=false;
@@ -246,6 +247,8 @@ public:
     void popupNoJVM();
     void setICAO();
     void updateAirframes();
+    void autodetectCSL(const char* path);
+    const char* getCSLPath(void);
     void toggleLogWindow();
     void showSayWindow();
     void LogPageWindowPlus();
